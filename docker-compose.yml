@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: smartxerox-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: smartxerox_db
+      POSTGRES_USER: smartxerox_user
+      POSTGRES_PASSWORD: secure_password_here
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smartxerox_user -d smartxerox_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  smartxerox-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smartxerox-app
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgres://smartxerox_user:secure_password_here@postgres:5432/smartxerox_db
+      JWT_SECRET: production-grade-cryptographic-jwt-secret-smartxerox-2026
+      STORAGE_PATH: /app/private_storage
+      MAX_FILE_SIZE_MB: 50
+    ports:
+      - "5000:5000"
+    volumes:
+      - document_storage:/app/private_storage
+
+volumes:
+  pgdata:
+  document_storage:

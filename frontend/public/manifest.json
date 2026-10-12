@@ -1,0 +1,17 @@
+{
+  "short_name": "SmartXerox",
+  "name": "Smart Xerox — Private Document Printing",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0B192C",
+  "theme_color": "#0B192C",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/"
+}

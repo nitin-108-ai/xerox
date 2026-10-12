@@ -1,0 +1,8 @@
+{
+  "serverUrl": "http://localhost:5000",
+  "connectorToken": null,
+  "pairedShopId": null,
+  "pairedShopName": null,
+  "heartbeatIntervalMs": 15000,
+  "pollIntervalMs": 4000
+}

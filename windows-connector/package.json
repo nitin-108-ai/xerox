@@ -1,0 +1,13 @@
+{
+  "name": "smart-xerox-windows-connector",
+  "version": "1.0.0",
+  "description": "Smart Xerox Windows Desktop Direct Printing Connector for Local Shops",
+  "main": "src/connector.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/connector.js",
+    "pair": "node src/connector.js --pair",
+    "status": "node src/connector.js --status"
+  },
+  "dependencies": {}
+}

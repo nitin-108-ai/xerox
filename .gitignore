@@ -1,0 +1,43 @@
+# Node & Dependencies
+node_modules/
+**/node_modules/
+.npm/
+
+# Build artifacts
+dist/
+**/dist/
+build/
+**/build/
+.vite/
+.vite-temp/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Database & Private storage
+private_storage/
+**/private_storage/*
+!**/private_storage/.gitkeep
+**/public_uploads/*
+!**/public_uploads/.gitkeep
+data/
+**/data/
+*.db
+*.sqlite
+
+# Connector logs and temporary spooler files
+windows-connector/logs/
+windows-connector/temp/
+
+# Logs
+logs/
+**/logs/
+*.log
+npm-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
+Desktop.ini
