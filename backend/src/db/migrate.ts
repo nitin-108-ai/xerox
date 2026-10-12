@@ -10,10 +10,26 @@ export async function runMigrations() {
   console.log('Running database migrations...');
   await initDb();
   
-  const schemaPath = path.join(__dirname, 'schema.sql');
-  const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+  const candidateSchemaPaths = [
+    path.join(__dirname, 'schema.sql'),
+    path.resolve(process.cwd(), 'backend/src/db/schema.sql'),
+    path.resolve(process.cwd(), 'backend/dist/db/schema.sql'),
+    path.resolve(process.cwd(), 'src/db/schema.sql'),
+    path.resolve(__dirname, '../src/db/schema.sql'),
+  ];
+  let schemaSql = '';
+  for (const p of candidateSchemaPaths) {
+    if (fs.existsSync(p)) {
+      schemaSql = fs.readFileSync(p, 'utf8');
+      break;
+    }
+  }
 
-  await execSql(schemaSql);
+  if (schemaSql) {
+    await execSql(schemaSql);
+  } else {
+    console.warn('schema.sql file not located on disk. Proceeding with incremental table creation.');
+  }
 
   // Apply incremental schema alterations idempotently
   const alterationStatements = [
@@ -34,6 +50,7 @@ export async function runMigrations() {
     `ALTER TABLE shops ADD COLUMN IF NOT EXISTS is_storefront_visible BOOLEAN DEFAULT TRUE;`,
     `ALTER TABLE shop_services ADD COLUMN IF NOT EXISTS rate NUMERIC(10, 2) DEFAULT 0.00;`,
     `ALTER TABLE shop_services ADD COLUMN IF NOT EXISTS unit VARCHAR(32) DEFAULT 'per_page';`,
+    `ALTER TABLE shop_services DROP CONSTRAINT IF EXISTS shop_services_service_type_check;`,
 
     // Printer connectors table
     `CREATE TABLE IF NOT EXISTS printer_connectors (

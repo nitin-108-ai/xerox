@@ -29,19 +29,26 @@ export async function initDb() {
     }
   }
 
-  // Use embedded PGlite on local fast drive
+  // Use embedded PGlite on local fast drive or serverless /tmp
   isUsingPgLite = true;
-  const defaultDir = process.env.LOCALAPPDATA 
-    ? path.join(process.env.LOCALAPPDATA, 'smart_xerox_pgdata')
-    : path.join(process.cwd(), 'data', 'pglite');
+  const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT);
+  const defaultDir = isServerless
+    ? path.join('/tmp', 'smart_xerox_pgdata')
+    : (process.env.LOCALAPPDATA 
+        ? path.join(process.env.LOCALAPPDATA, 'smart_xerox_pgdata')
+        : path.join(process.cwd(), 'data', 'pglite'));
   const dataDir = process.env.PGLITE_DATA_DIR || defaultDir;
 
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+  try {
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    console.log(`Initializing in-process PostgreSQL (PGlite) engine at ${dataDir}...`);
+    pgliteInstance = new PGlite(dataDir);
+  } catch (err: any) {
+    console.warn(`Could not open filesystem PGlite at ${dataDir} (${err.message}). Using in-memory database engine.`);
+    pgliteInstance = new PGlite();
   }
-
-  console.log(`Initializing in-process PostgreSQL (PGlite) engine at ${dataDir}...`);
-  pgliteInstance = new PGlite(dataDir);
   console.log('PGlite engine initialized successfully.');
 }
 

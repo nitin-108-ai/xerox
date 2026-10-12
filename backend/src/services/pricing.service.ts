@@ -13,6 +13,7 @@ export interface PricingBreakdown {
   unitPrice: number;
   subtotal: number;
   discount: number;
+  minOrderAmount?: number;
   total: number;
   sheetsPerCopy: number;
   totalSheets: number;

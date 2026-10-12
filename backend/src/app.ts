@@ -41,7 +41,7 @@ app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
 // Health check endpoint
-app.get('/api/health', (_req: Request, res: Response) => {
+app.get(['/api/health', '/health'], (_req: Request, res: Response) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -57,18 +57,36 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Mount modular API routers
+// Mount modular API routers with and without /api prefix (for flexible proxies)
 app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
+
 app.use('/api/shops', shopRoutes);
+app.use('/shops', shopRoutes);
+
 app.use('/api/orders', orderRoutes);
+app.use('/orders', orderRoutes);
+
 app.use('/api/admin', adminRoutes);
+app.use('/admin', adminRoutes);
+
 app.use('/api/printers', printerRoutes);
+app.use('/printers', printerRoutes);
+
 // Static serving for public shop uploads (logos, gallery images)
-const publicUploadsDir = path.resolve(process.cwd(), 'public_uploads');
-if (!fs.existsSync(publicUploadsDir)) {
-  fs.mkdirSync(publicUploadsDir, { recursive: true });
-}
+const isServerlessEnv = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT);
+const publicUploadsDir = isServerlessEnv 
+  ? path.resolve('/tmp', 'public_uploads') 
+  : path.resolve(process.cwd(), 'public_uploads');
+
+try {
+  if (!fs.existsSync(publicUploadsDir)) {
+    fs.mkdirSync(publicUploadsDir, { recursive: true });
+  }
+} catch {}
+
 app.use('/api/uploads', express.static(publicUploadsDir));
+app.use('/uploads', express.static(publicUploadsDir));
 
 // 404 handler for unknown API routes
 app.all('/api/*', (_req: Request, res: Response) => {

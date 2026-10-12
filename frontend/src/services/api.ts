@@ -1,4 +1,19 @@
-const API_BASE = '/api';
+function resolveApiBase(): string {
+  // 1. Check Vite environment variable (e.g. configured in Vercel settings or .env)
+  const envUrl = (
+    (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_API_BASE_URL || import.meta.env?.VITE_API_URL)) ||
+    ''
+  ).trim();
+
+  if (envUrl) {
+    return envUrl.endsWith('/api') ? envUrl : `${envUrl.replace(/\/+$/, '')}/api`;
+  }
+
+  // 2. Default relative path for same-domain Express or Vercel serverless
+  return '/api';
+}
+
+export const API_BASE = resolveApiBase();
 
 function getAuthHeader(): Record<string, string> {
   const token = localStorage.getItem('smart_xerox_token');
@@ -12,7 +27,9 @@ async function handleResponse<T>(res: Response): Promise<T> {
       const data = await res.json();
       errMsg = data.error || data.message || errMsg;
     } catch {
-      // ignore JSON parse error
+      if (res.status === 404) {
+        errMsg = `Backend API route not found (404). If hosting on Vercel, please connect your backend server URL in Vercel project environment variables as VITE_API_URL.`;
+      }
     }
     throw new Error(errMsg);
   }
