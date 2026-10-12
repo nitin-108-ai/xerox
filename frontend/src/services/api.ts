@@ -124,6 +124,10 @@ export const api = {
     return handleResponse<any>(res);
   },
 
+  async updateOwnerShop(data: any) {
+    return this.updateOwnerProfile(data);
+  },
+
   async uploadOwnerImage(file: File) {
     const formData = new FormData();
     formData.append('image', file);
@@ -142,6 +146,17 @@ export const api = {
       body: JSON.stringify(pricingData),
     });
     return handleResponse<any>(res);
+  },
+
+  async getOwnerPricingRules() {
+    const res = await this.getOwnerShop();
+    return { rules: res.pricingRules || [] };
+  },
+
+  async createPricingRule(ruleData: any) {
+    return this.updateOwnerPricing({
+      pricingRules: [ruleData],
+    });
   },
 
   async getOwnerQr() {

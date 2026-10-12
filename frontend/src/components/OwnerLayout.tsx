@@ -23,6 +23,9 @@ interface OwnerLayoutProps {
   defaultPrinter?: any;
   connector?: any;
   onRefreshPrinters?: () => void;
+  title?: string;
+  subtitle?: string;
+  onRefresh?: () => void | Promise<void>;
 }
 
 export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
@@ -31,6 +34,9 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
   defaultPrinter,
   connector,
   onRefreshPrinters,
+  title,
+  subtitle,
+  onRefresh,
 }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
