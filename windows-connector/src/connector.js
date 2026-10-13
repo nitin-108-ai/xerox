@@ -27,7 +27,7 @@ function log(msg, ...args) {
 
 function loadConfig() {
   const defaultConfig = {
-    serverUrl: 'http://localhost:5000',
+    serverUrl: process.env.SMART_XEROX_SERVER_URL || 'https://xerox-oys6.onrender.com',
     connectorToken: null,
     pairedShopId: null,
     pairedShopName: null,

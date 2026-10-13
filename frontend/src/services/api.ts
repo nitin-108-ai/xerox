@@ -1,5 +1,5 @@
 function resolveApiBase(): string {
-  // 1. Check Vite environment variable (e.g. configured in Vercel settings or .env)
+  // 1. Check explicit Vite environment variable (e.g. configured in Vercel settings or .env)
   const envUrl = (
     (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_API_BASE_URL || import.meta.env?.VITE_API_URL)) ||
     ''
@@ -9,8 +9,13 @@ function resolveApiBase(): string {
     return envUrl.endsWith('/api') ? envUrl : `${envUrl.replace(/\/+$/, '')}/api`;
   }
 
-  // 2. Default relative path for same-domain Express or Vercel serverless
-  return '/api';
+  // 2. If running locally on localhost/127.0.0.1, use relative /api
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return '/api';
+  }
+
+  // 3. Default deployed cloud backend on Render
+  return 'https://xerox-oys6.onrender.com/api';
 }
 
 export const API_BASE = resolveApiBase();
