@@ -200,14 +200,88 @@ function AppContent() {
   );
 }
 
+// Global Error Boundary to prevent White Screen of Death
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Smart Xerox caught render error:', error, errorInfo);
+  }
+
+  handleReset = () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+      if ('caches' in window) {
+        caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+      }
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
+      }
+    } catch {
+      // Ignore cleanup error
+    }
+    window.location.href = '/';
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white rounded-2xl shadow-elevated border border-slate-200 p-8 text-center space-y-4">
+            <div className="w-12 h-12 rounded-xl bg-brand-50 border border-brand-200 text-brand-600 flex items-center justify-center mx-auto text-xl font-bold">
+              SX
+            </div>
+            <h1 className="text-xl font-bold text-navy-950">Smart Xerox</h1>
+            <p className="text-sm text-slate-600">
+              The page encountered an unexpected state. Click below to reload cleanly.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 pt-2 justify-center">
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="px-4 py-2.5 rounded-xl bg-navy-900 hover:bg-brand-600 text-white font-semibold text-xs transition-colors"
+              >
+                Reload Page
+              </button>
+              <button
+                type="button"
+                onClick={this.handleReset}
+                className="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors"
+              >
+                Clear Cache &amp; Reload
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 export function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
 export default App;
+
