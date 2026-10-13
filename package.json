@@ -1,7 +1,7 @@
 {
-  "name": "smart-xerox-platform",
+  "name": "smart-xerox",
   "version": "1.0.0",
-  "description": "Smart Xerox — QR-Based Private Document Printing Platform",
+  "description": "Smart Xerox",
   "private": true,
   "workspaces": [
     "backend",
