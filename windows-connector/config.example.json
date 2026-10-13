@@ -1,5 +1,5 @@
 {
-  "serverUrl": "https://xerox-oys6.onrender.com",
+  "serverUrl": "http://localhost:5000",
   "connectorToken": null,
   "pairedShopId": null,
   "pairedShopName": null,
