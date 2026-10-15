@@ -29,13 +29,15 @@ async function ensureDb() {
 export default async function handler(req: Request, res: Response) {
   await ensureDb();
 
-  // If invoked via catch-all [...path], reconstruct original URL
-  if ((req as any).query?.path) {
+  // Normalize req.url for Express router
+  if ((req as any).headers?.['x-matched-path']) {
+    req.url = (req as any).headers['x-matched-path'];
+  } else if ((req as any).query?.path) {
     const rawPath = (req as any).query.path;
     const subpath = Array.isArray(rawPath) ? rawPath.join('/') : rawPath;
     req.url = `/api/${subpath}`;
-  } else if ((req as any).headers?.['x-matched-path']) {
-    req.url = (req as any).headers['x-matched-path'];
+  } else if (!req.url.startsWith('/api')) {
+    req.url = `/api${req.url.startsWith('/') ? req.url : '/' + req.url}`;
   }
 
   // Handle CORS preflight explicitly

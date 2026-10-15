@@ -3472,12 +3472,14 @@ async function ensureDb() {
 }
 async function handler(req, res) {
   await ensureDb();
-  if (req.query?.path) {
+  if (req.headers?.["x-matched-path"]) {
+    req.url = req.headers["x-matched-path"];
+  } else if (req.query?.path) {
     const rawPath = req.query.path;
     const subpath = Array.isArray(rawPath) ? rawPath.join("/") : rawPath;
     req.url = `/api/${subpath}`;
-  } else if (req.headers?.["x-matched-path"]) {
-    req.url = req.headers["x-matched-path"];
+  } else if (!req.url.startsWith("/api")) {
+    req.url = `/api${req.url.startsWith("/") ? req.url : "/" + req.url}`;
   }
   if (req.method === "OPTIONS") {
     res.setHeader("Access-Control-Allow-Origin", "*");
