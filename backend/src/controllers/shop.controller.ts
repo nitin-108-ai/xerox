@@ -29,7 +29,7 @@ export async function getPublicStorefront(req: Request, res: Response) {
              min_order_amount, est_completion_time, is_storefront_visible,
              is_verified, is_active, business_hours, retention_hours
       FROM shops
-      WHERE (slug = $1 OR qr_code_token = $1)
+      WHERE (id = $1 OR slug = $1 OR qr_code_token = $1)
       LIMIT 1;
     `, [identifier]);
 
@@ -510,9 +510,10 @@ export async function getShopQr(req: Request, res: Response) {
     }
 
     const shop = shopRes.rows[0];
-    const canonicalStorefrontUrl = `${config.frontendUrl}/shop/${shop.slug}`;
+    const canonicalStorefrontUrl = `${config.frontendUrl}/s/${shop.id}`;
+    const slugUrl = `${config.frontendUrl}/shop/${shop.slug}`;
 
-    // Generate high resolution QR code PNG Data URL
+    // Generate high resolution QR code PNG Data URL pointing to permanent /s/:shopId link
     const qrDataUrl = await QRCode.toDataURL(canonicalStorefrontUrl, {
       errorCorrectionLevel: 'H',
       margin: 2,
@@ -524,9 +525,11 @@ export async function getShopQr(req: Request, res: Response) {
     });
 
     res.json({
+      shopId: shop.id,
       shopName: shop.name,
       slug: shop.slug,
       storefrontUrl: canonicalStorefrontUrl,
+      slugUrl,
       qrToken: shop.qr_code_token,
       qrDataUrl
     });

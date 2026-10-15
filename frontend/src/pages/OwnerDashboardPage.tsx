@@ -11,11 +11,52 @@ import {
   Clock,
   Sparkles,
   Check,
-  Bell
+  Bell,
+  XCircle,
+  RotateCcw,
+  Volume2,
+  VolumeX,
+  ShieldCheck,
+  PackageCheck
 } from 'lucide-react';
 import { OwnerLayout } from '../components/OwnerLayout';
 import { api } from '../services/api';
 import { DocumentPreviewModal } from '../components/DocumentPreviewModal';
+
+// Audio chime generator using browser Web Audio API
+function playChime() {
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    
+    // Note 1: 880 Hz (A5)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(880, ctx.currentTime);
+    gain1.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    osc1.start(ctx.currentTime);
+    osc1.stop(ctx.currentTime + 0.2);
+
+    // Note 2: 1320 Hz (E6)
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(1320, ctx.currentTime + 0.12);
+    gain2.gain.setValueAtTime(0.18, ctx.currentTime + 0.12);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.38);
+    osc2.start(ctx.currentTime + 0.12);
+    osc2.stop(ctx.currentTime + 0.38);
+  } catch {
+    // Audio might be prevented until first user gesture
+  }
+}
 
 export const OwnerDashboardPage: React.FC = () => {
   const [shop, setShop] = useState<any>(null);
@@ -24,19 +65,25 @@ export const OwnerDashboardPage: React.FC = () => {
   const [connector, setConnector] = useState<any>({ isPaired: false, isOnline: false });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Printing & Action states
   const [directPrintingId, setDirectPrintingId] = useState<string | null>(null);
   const [printAlert, setPrintAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [manualPrintOrder, setManualPrintOrder] = useState<any | null>(null);
+  const [rejectOrderModal, setRejectOrderModal] = useState<any | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [completeOrderModal, setCompleteOrderModal] = useState<any | null>(null);
+  const [enteredOtp, setEnteredOtp] = useState('');
   const [previewDoc, setPreviewDoc] = useState<any | null>(null);
   const [copiedRef, setCopiedRef] = useState<string | null>(null);
 
-  // Filter tab: 'ACTIVE' (New & Printing & Ready) vs 'ALL'
-  const [filterTab, setFilterTab] = useState<'ACTIVE' | 'ALL'>('ACTIVE');
+  // Queue Tab: 'INCOMING' | 'ACTIVE' | 'READY' | 'ALL'
+  const [queueTab, setQueueTab] = useState<'INCOMING' | 'ACTIVE' | 'READY' | 'ALL'>('ACTIVE');
 
   // Track previous count for sound/visual notification
-  const prevOrderCount = useRef<number>(0);
+  const prevSubmittedCount = useRef<number>(0);
+  const initialLoadDone = useRef<boolean>(false);
 
   const loadData = async (isSilent = false) => {
     try {
@@ -49,17 +96,31 @@ export const OwnerDashboardPage: React.FC = () => {
       ]);
 
       setShop(shopRes.shop);
-      const newOrders = ordersRes.orders || [];
-      setOrders(newOrders);
+
+      // Deduplicate orders by id and reference
+      const rawOrders = ordersRes.orders || [];
+      const seenIds = new Set<string>();
+      const deduped: any[] = [];
+      for (const o of rawOrders) {
+        if (!seenIds.has(o.id)) {
+          seenIds.add(o.id);
+          deduped.push(o);
+        }
+      }
+
+      setOrders(deduped);
       setPrinters(printersRes?.printers || []);
       setConnector(printersRes?.connector || { isPaired: false, isOnline: false });
 
-      // Visual chime if new orders arrived
-      const newSubmittedCount = newOrders.filter((o: any) => o.status === 'SUBMITTED').length;
-      if (prevOrderCount.current > 0 && newSubmittedCount > prevOrderCount.current) {
-        // Notification chime could trigger here
+      // Audio notification chime when new orders arrive
+      const currentSubmitted = deduped.filter((o: any) => o.status === 'SUBMITTED' || o.status === 'RECEIVED').length;
+      if (initialLoadDone.current && currentSubmitted > prevSubmittedCount.current) {
+        if (soundEnabled) {
+          playChime();
+        }
       }
-      prevOrderCount.current = newSubmittedCount;
+      prevSubmittedCount.current = currentSubmitted;
+      initialLoadDone.current = true;
     } catch (err: any) {
       console.warn('Dashboard fetch warning:', err);
     } finally {
@@ -71,26 +132,27 @@ export const OwnerDashboardPage: React.FC = () => {
   useEffect(() => {
     loadData();
 
-    // Auto-refresh every 5 seconds for real-time order updates
+    // Auto-refresh every 4 seconds for real-time live receiving
     const interval = setInterval(() => {
       loadData(true);
-    }, 5000);
+    }, 4000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [soundEnabled]);
 
   const defaultPrinter = printers.find((p) => p.isDefault) || printers[0];
 
-  // 1. Accept and Direct Print (Mode B)
-  const handleAcceptAndPrint = async (order: any) => {
+  // 1. Direct Print via Windows Spooler (Mode B)
+  const handleAcceptAndPrint = async (order: any, targetPrinterName?: string) => {
     try {
       setDirectPrintingId(order.id);
       setPrintAlert(null);
 
-      // Submit direct print job to Windows connector queue
+      const printerToUse = targetPrinterName || defaultPrinter?.name;
+
       const res = await api.submitDirectPrint({
         orderId: order.id,
-        printerName: defaultPrinter?.name,
+        printerName: printerToUse,
         copies: order.copies || 1,
         paperSize: order.paper_size || 'A4',
         colorMode: order.color_mode || 'BW',
@@ -98,14 +160,14 @@ export const OwnerDashboardPage: React.FC = () => {
 
       setPrintAlert({
         type: 'success',
-        message: `Print job sent to Windows Spooler for "${res.printerName || 'Printer'}". Paper will print shortly.`,
+        message: `Job dispatched to Windows Spooler for "${res.printerName || printerToUse || 'Default Printer'}". Status: QUEUED.`,
       });
 
       await loadData(true);
     } catch (err: any) {
       setPrintAlert({
         type: 'error',
-        message: `${err.message || 'Direct printing failed.'} Click "Manual Print" below to print via browser dialog.`,
+        message: `${err.message || 'Direct printing spooler failed.'} Click "Manual Print" to print via browser dialog.`,
       });
     } finally {
       setDirectPrintingId(null);
@@ -126,7 +188,7 @@ export const OwnerDashboardPage: React.FC = () => {
       setManualPrintOrder(null);
       setPrintAlert({
         type: 'success',
-        message: `Order #${manualPrintOrder.order_reference} marked as "${outcome.replace('_', ' ')}".`,
+        message: `Order #${manualPrintOrder.order_reference} marked as "${outcome.replace(/_/g, ' ')}".`,
       });
       await loadData(true);
     } catch (err: any) {
@@ -134,7 +196,7 @@ export const OwnerDashboardPage: React.FC = () => {
     }
   };
 
-  // 4. Update Status (Mark Ready or Completed)
+  // 4. Update Status (Lifecycle transitions)
   const handleUpdateStatus = async (orderId: string, nextStatus: string, note?: string) => {
     try {
       await api.updateOrderStatus(orderId, nextStatus, note);
@@ -144,18 +206,72 @@ export const OwnerDashboardPage: React.FC = () => {
     }
   };
 
+  // 5. Reject Order with reason
+  const handleRejectOrder = async () => {
+    if (!rejectOrderModal) return;
+    try {
+      await api.updateOrderStatus(
+        rejectOrderModal.id,
+        'REJECTED',
+        rejectReason.trim() || 'Declined by shop counter.'
+      );
+      setRejectOrderModal(null);
+      setRejectReason('');
+      setPrintAlert({
+        type: 'success',
+        message: `Order #${rejectOrderModal.order_reference} rejected.`,
+      });
+      await loadData(true);
+    } catch (err: any) {
+      alert(err.message || 'Failed to reject order.');
+    }
+  };
+
+  // 6. Complete Order with pickup verification
+  const handleCompleteOrder = async () => {
+    if (!completeOrderModal) return;
+    try {
+      await api.updateOrderStatus(
+        completeOrderModal.id,
+        'COMPLETED',
+        enteredOtp ? `Handover confirmed with OTP: ${enteredOtp}` : 'Handed over at counter.'
+      );
+      setCompleteOrderModal(null);
+      setEnteredOtp('');
+      setPrintAlert({
+        type: 'success',
+        message: `Order #${completeOrderModal.order_reference} marked as Completed & Handed Over.`,
+      });
+      await loadData(true);
+    } catch (err: any) {
+      alert(err.message || 'Failed to complete order.');
+    }
+  };
+
   const handleCopy = (refText: string) => {
     navigator.clipboard.writeText(refText);
     setCopiedRef(refText);
     setTimeout(() => setCopiedRef(null), 2000);
   };
 
-  // Filter orders: active vs all
-  const filteredOrders = filterTab === 'ACTIVE'
-    ? orders.filter((o) => ['SUBMITTED', 'ACCEPTED', 'PRINTING', 'PRINT_FAILED', 'READY_FOR_PICKUP'].includes(o.status))
-    : orders;
+  // Counts by category
+  const incomingCount = orders.filter((o) => o.status === 'SUBMITTED' || o.status === 'RECEIVED').length;
+  const readyCount = orders.filter((o) => o.status === 'READY_FOR_PICKUP').length;
+  const activeCount = orders.filter((o) => !['COMPLETED', 'CANCELLED', 'REJECTED'].includes(o.status)).length;
 
-  const newOrdersCount = orders.filter((o) => o.status === 'SUBMITTED').length;
+  // Filter orders based on active tab
+  const filteredOrders = orders.filter((o) => {
+    if (queueTab === 'INCOMING') {
+      return o.status === 'SUBMITTED' || o.status === 'RECEIVED';
+    }
+    if (queueTab === 'READY') {
+      return o.status === 'READY_FOR_PICKUP';
+    }
+    if (queueTab === 'ACTIVE') {
+      return !['COMPLETED', 'CANCELLED', 'REJECTED'].includes(o.status);
+    }
+    return true; // 'ALL'
+  });
 
   return (
     <OwnerLayout
@@ -165,7 +281,7 @@ export const OwnerDashboardPage: React.FC = () => {
       onRefreshPrinters={() => loadData(true)}
     >
       <div className="space-y-6">
-        {/* Top Queue Header Bar */}
+        {/* Top Header / Receiving Panel Controls */}
         <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-navy-950 text-white flex items-center justify-center font-black shadow-xs">
@@ -173,44 +289,38 @@ export const OwnerDashboardPage: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black text-navy-950">Live Print Requests</h1>
-                {newOrdersCount > 0 && (
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-500 text-white animate-pulse">
-                    {newOrdersCount} New
+                <h1 className="text-lg font-black text-navy-950">Incoming Order Receiving Panel</h1>
+                {incomingCount > 0 && (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-500 text-white animate-pulse flex items-center gap-1">
+                    <Bell className="w-3 h-3" />
+                    {incomingCount} New
                   </span>
                 )}
               </div>
               <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Live counter queue • Auto-refreshing every 5s
+                Live Receiving Queue • Auto-refreshing every 4s
               </p>
             </div>
           </div>
 
-          {/* Filter toggle & Manual Refresh */}
-          <div className="flex items-center gap-2">
-            <div className="bg-slate-100 p-1 rounded-2xl flex items-center text-xs font-bold">
-              <button
-                onClick={() => setFilterTab('ACTIVE')}
-                className={`px-3 py-1.5 rounded-xl transition ${
-                  filterTab === 'ACTIVE'
-                    ? 'bg-white text-navy-950 shadow-2xs'
-                    : 'text-slate-600 hover:text-navy-950'
-                }`}
-              >
-                Active Queue ({orders.filter((o) => o.status !== 'COMPLETED' && o.status !== 'CANCELLED').length})
-              </button>
-              <button
-                onClick={() => setFilterTab('ALL')}
-                className={`px-3 py-1.5 rounded-xl transition ${
-                  filterTab === 'ALL'
-                    ? 'bg-white text-navy-950 shadow-2xs'
-                    : 'text-slate-600 hover:text-navy-950'
-                }`}
-              >
-                All Orders ({orders.length})
-              </button>
-            </div>
+          {/* Sound Toggle & Refresh */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => {
+                setSoundEnabled(!soundEnabled);
+                if (!soundEnabled) playChime();
+              }}
+              className={`p-2.5 rounded-2xl border transition shadow-2xs flex items-center gap-1.5 text-xs font-bold ${
+                soundEnabled
+                  ? 'bg-brand-50 border-brand-200 text-brand-700'
+                  : 'bg-white border-slate-200 text-slate-400'
+              }`}
+              title={soundEnabled ? 'Chime sound enabled' : 'Chime sound muted'}
+            >
+              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              <span className="hidden sm:inline">{soundEnabled ? 'Sound On' : 'Muted'}</span>
+            </button>
 
             <button
               onClick={() => loadData(false)}
@@ -221,6 +331,63 @@ export const OwnerDashboardPage: React.FC = () => {
               <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-brand-600' : ''}`} />
             </button>
           </div>
+        </div>
+
+        {/* Tabbed Queue Switcher */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-bold">
+          <button
+            onClick={() => setQueueTab('ACTIVE')}
+            className={`px-4 py-2 rounded-2xl border transition whitespace-nowrap ${
+              queueTab === 'ACTIVE'
+                ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            Active Queue ({activeCount})
+          </button>
+
+          <button
+            onClick={() => setQueueTab('INCOMING')}
+            className={`px-4 py-2 rounded-2xl border transition whitespace-nowrap flex items-center gap-1.5 ${
+              queueTab === 'INCOMING'
+                ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <span>New Incoming</span>
+            {incomingCount > 0 && (
+              <span className="w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center">
+                {incomingCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setQueueTab('READY')}
+            className={`px-4 py-2 rounded-2xl border transition whitespace-nowrap flex items-center gap-1.5 ${
+              queueTab === 'READY'
+                ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <span>Ready for Pickup</span>
+            {readyCount > 0 && (
+              <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-black flex items-center justify-center">
+                {readyCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setQueueTab('ALL')}
+            className={`px-4 py-2 rounded-2xl border transition whitespace-nowrap ${
+              queueTab === 'ALL'
+                ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            All Order History ({orders.length})
+          </button>
         </div>
 
         {/* Global Alert Notification */}
@@ -253,28 +420,34 @@ export const OwnerDashboardPage: React.FC = () => {
         {loading ? (
           <div className="bg-white rounded-3xl p-16 border border-slate-200/90 text-center space-y-3 shadow-sm">
             <div className="w-8 h-8 border-3 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-xs font-bold text-slate-500">Checking print requests...</p>
+            <p className="text-xs font-bold text-slate-500">Checking incoming print orders...</p>
           </div>
         ) : filteredOrders.length === 0 ? (
           <div className="bg-white rounded-3xl p-16 border border-slate-200/90 text-center space-y-3 shadow-sm">
             <div className="w-14 h-14 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center mx-auto border border-slate-200">
               <Printer className="w-7 h-7" />
             </div>
-            <h3 className="text-base font-extrabold text-navy-950">No Print Requests</h3>
+            <h3 className="text-base font-extrabold text-navy-950">No Orders in this View</h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              {filterTab === 'ACTIVE'
-                ? 'No active print requests right now. When customers scan your QR code and upload documents, they will appear here instantly.'
-                : 'No orders recorded yet.'}
+              {queueTab === 'INCOMING'
+                ? 'No new incoming orders right now. When customers scan your QR poster, documents arrive here with real-time chime notification.'
+                : queueTab === 'READY'
+                ? 'No orders are currently waiting for customer pickup.'
+                : 'No active orders in the queue. You are all caught up!'}
             </p>
           </div>
         ) : (
           <div className="space-y-4">
             {filteredOrders.map((order) => {
-              const isNew = order.status === 'SUBMITTED';
+              const isNew = order.status === 'SUBMITTED' || order.status === 'RECEIVED';
+              const isAccepted = order.status === 'ACCEPTED';
+              const isQueued = order.status === 'QUEUED';
               const isPrinting = order.status === 'PRINTING';
               const isReady = order.status === 'READY_FOR_PICKUP';
               const isCompleted = order.status === 'COMPLETED';
-              const isPrintFailed = order.status === 'PRINT_FAILED';
+              const isRejected = order.status === 'REJECTED';
+              const isCancelled = order.status === 'CANCELLED';
+              const isFailed = order.status === 'PRINT_FAILED' || order.status === 'FAILED';
 
               const createdTime = order.created_at
                 ? new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -286,15 +459,17 @@ export const OwnerDashboardPage: React.FC = () => {
                   className={`bg-white rounded-3xl p-5 sm:p-6 border transition-all ${
                     isNew
                       ? 'border-brand-400 shadow-md ring-2 ring-brand-500/20'
-                      : isPrintFailed
+                      : isFailed
                       ? 'border-rose-300 shadow-sm'
+                      : isReady
+                      ? 'border-emerald-300 shadow-xs'
                       : 'border-slate-200 shadow-2xs hover:border-slate-300'
                   }`}
                 >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    {/* Left: Order Info & Document */}
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    {/* Left: Order Info & Document Settings */}
                     <div className="space-y-2 min-w-0 flex-1">
-                      {/* Top Row: Ref & Status */}
+                      {/* Top Row: Ref, Time & Lifecycle Status */}
                       <div className="flex items-center gap-2 flex-wrap">
                         <div className="flex items-center gap-1 font-mono font-black text-navy-950 text-sm">
                           <span>{order.order_reference}</span>
@@ -316,15 +491,25 @@ export const OwnerDashboardPage: React.FC = () => {
                           {createdTime}
                         </span>
 
-                        {/* Status Badge */}
+                        {/* Status Badges */}
                         {isNew && (
                           <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
-                            New Request
+                            New Incoming
+                          </span>
+                        )}
+                        {isAccepted && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-900 border border-blue-300">
+                            Accepted
+                          </span>
+                        )}
+                        {isQueued && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-indigo-100 text-indigo-900 border border-indigo-300">
+                            Queued in Spooler
                           </span>
                         )}
                         {isPrinting && (
                           <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-purple-100 text-purple-900 border border-purple-300">
-                            Printing in Spooler...
+                            Printing in Hardware...
                           </span>
                         )}
                         {isReady && (
@@ -334,10 +519,20 @@ export const OwnerDashboardPage: React.FC = () => {
                         )}
                         {isCompleted && (
                           <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">
-                            Completed
+                            Completed &amp; Handed Over
                           </span>
                         )}
-                        {isPrintFailed && (
+                        {isRejected && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">
+                            Declined
+                          </span>
+                        )}
+                        {isCancelled && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600">
+                            Cancelled
+                          </span>
+                        )}
+                        {isFailed && (
                           <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-rose-100 text-rose-900 border border-rose-300">
                             Spooler Error
                           </span>
@@ -370,7 +565,10 @@ export const OwnerDashboardPage: React.FC = () => {
                               ? 'bg-amber-100 text-amber-900 border border-amber-300'
                               : 'bg-slate-100 text-slate-800'
                           }`}>
-                            {order.color_mode === 'COLOR' ? 'Colour' : 'Black & White'}
+                            {order.color_mode === 'COLOR' ? 'Colour' : 'B & W'}
+                          </span>
+                          <span className="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-800">
+                            {order.is_duplex ? 'Double-Sided' : 'Single-Sided'}
                           </span>
                           <span className="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-800">
                             {order.copies || 1} {order.copies === 1 ? 'Copy' : 'Copies'}
@@ -381,24 +579,31 @@ export const OwnerDashboardPage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Error message notice if spooler failed */}
-                      {isPrintFailed && (
-                        <p className="text-xs text-rose-700 font-semibold pt-1 flex items-center gap-1.5">
-                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                          Windows printer spooler reported an error. Please click "Manual Print" below to print via normal Windows dialog.
-                        </p>
+                      {/* Custom instructions / page range notes */}
+                      {order.custom_notes && (
+                        <div className="text-[11px] text-brand-800 bg-brand-50/70 border border-brand-200 px-3 py-1 rounded-xl max-w-lg">
+                          <strong>Note:</strong> {order.custom_notes}
+                        </div>
+                      )}
+
+                      {/* Pickup OTP prompt when ready */}
+                      {order.pickup_otp && isReady && (
+                        <div className="text-xs text-emerald-800 flex items-center gap-2 font-mono">
+                          <span>Expected Pickup OTP:</span>
+                          <span className="bg-emerald-100 px-2 py-0.5 rounded-lg font-black">{order.pickup_otp}</span>
+                        </div>
                       )}
                     </div>
 
-                    {/* Right: High-Contrast Primary Actions */}
-                    <div className="flex items-center gap-2 shrink-0 pt-2 md:pt-0">
-                      {/* Accept & Print (When New, Accepted, or Print Failed) */}
-                      {(isNew || order.status === 'ACCEPTED' || isPrintFailed) && (
+                    {/* Right: Actions */}
+                    <div className="flex items-center gap-2 shrink-0 pt-2 lg:pt-0 flex-wrap">
+                      {/* NEW / SUBMITTED / RECEIVED */}
+                      {isNew && (
                         <>
                           <button
                             onClick={() => handleAcceptAndPrint(order)}
                             disabled={directPrintingId === order.id}
-                            className="px-4 py-2.5 rounded-2xl bg-navy-950 hover:bg-brand-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm hover:shadow transition transform active:scale-98"
+                            className="px-4 py-2.5 rounded-2xl bg-navy-950 hover:bg-brand-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-98"
                             title={defaultPrinter ? `Print directly to ${defaultPrinter.name}` : 'Print to Windows Printer'}
                           >
                             <Printer className="w-4 h-4 text-brand-300" />
@@ -407,44 +612,80 @@ export const OwnerDashboardPage: React.FC = () => {
 
                           <button
                             onClick={() => handleOpenManualPrint(order)}
-                            className="px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs flex items-center gap-1.5 shadow-2xs transition"
+                            className="px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs flex items-center gap-1.5 transition"
                             title="Open browser or Windows print dialog fallback"
                           >
                             <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
                             Manual Print
                           </button>
+
+                          <button
+                            onClick={() => setRejectOrderModal(order)}
+                            className="px-3 py-2.5 rounded-2xl border border-rose-200 hover:bg-rose-50 text-rose-600 font-bold text-xs transition"
+                            title="Decline order"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </button>
                         </>
                       )}
 
-                      {/* When Printing */}
+                      {/* ACCEPTED / QUEUED / FAILED */}
+                      {(isAccepted || isQueued || isFailed) && (
+                        <>
+                          <button
+                            onClick={() => handleAcceptAndPrint(order)}
+                            disabled={directPrintingId === order.id}
+                            className="px-4 py-2.5 rounded-2xl bg-navy-950 hover:bg-brand-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-98"
+                          >
+                            <Printer className="w-4 h-4 text-brand-300" />
+                            {isFailed ? 'Retry Print' : 'Send to Printer'}
+                          </button>
+
+                          <button
+                            onClick={() => handleOpenManualPrint(order)}
+                            className="px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs flex items-center gap-1.5 transition"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+                            Manual Print
+                          </button>
+
+                          <button
+                            onClick={() => handleUpdateStatus(order.id, 'READY_FOR_PICKUP', 'Marked ready manually.')}
+                            className="px-3.5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition"
+                          >
+                            Mark Ready
+                          </button>
+                        </>
+                      )}
+
+                      {/* PRINTING */}
                       {isPrinting && (
                         <>
                           <button
-                            onClick={() => handleUpdateStatus(order.id, 'READY_FOR_PICKUP', 'Printed and verified by shop operator.')}
-                            className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm hover:shadow transition"
+                            onClick={() => handleUpdateStatus(order.id, 'READY_FOR_PICKUP', 'Physical print confirmed.')}
+                            className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition"
                           >
                             <CheckCircle2 className="w-4 h-4" />
-                            Mark Ready
+                            Confirm Printed
                           </button>
 
                           <button
                             onClick={() => handleOpenManualPrint(order)}
                             className="px-3.5 py-2.5 rounded-2xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold"
-                            title="Manual Print Fallback"
                           >
-                            Reprint Manually
+                            Reprint
                           </button>
                         </>
                       )}
 
-                      {/* When Ready for Pickup */}
+                      {/* READY FOR PICKUP */}
                       {isReady && (
                         <button
-                          onClick={() => handleUpdateStatus(order.id, 'COMPLETED', 'Handed over to customer.')}
+                          onClick={() => setCompleteOrderModal(order)}
                           className="px-5 py-2.5 rounded-2xl bg-navy-950 hover:bg-brand-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition"
                         >
-                          <Check className="w-4 h-4 text-emerald-400" />
-                          Hand Over & Complete
+                          <PackageCheck className="w-4 h-4 text-emerald-400" />
+                          Hand Over &amp; Complete
                         </button>
                       )}
                     </div>
@@ -466,6 +707,107 @@ export const OwnerDashboardPage: React.FC = () => {
           originalFilename={previewDoc.original_filename || 'document.pdf'}
           mimeType={previewDoc.mime_type || 'application/pdf'}
         />
+      )}
+
+      {/* Reject Order Confirmation Dialog */}
+      {rejectOrderModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-navy-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl p-6 sm:p-8 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                <XCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-navy-950">Decline Order</h3>
+                <p className="text-xs text-slate-500">Order #{rejectOrderModal.order_reference}</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600">
+              Provide a reason for declining this order so the customer can be notified on their tracking screen.
+            </p>
+
+            <input
+              type="text"
+              placeholder="e.g. Paper size out of stock, unreadable document"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50"
+            />
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                onClick={handleRejectOrder}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition"
+              >
+                Confirm Decline
+              </button>
+              <button
+                onClick={() => setRejectOrderModal(null)}
+                className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Handover & Complete Order Confirmation Dialog */}
+      {completeOrderModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-navy-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl p-6 sm:p-8 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <PackageCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-navy-950">Confirm Counter Handover</h3>
+                <p className="text-xs text-slate-500">Order #{completeOrderModal.order_reference}</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-2">
+              <div className="flex justify-between">
+                <span>Total Amount:</span>
+                <strong className="font-mono text-navy-950 text-sm">
+                  ₹{parseFloat(completeOrderModal.final_amount || completeOrderModal.estimated_amount || '0').toFixed(2)}
+                </strong>
+              </div>
+              {completeOrderModal.pickup_otp && (
+                <div className="flex justify-between items-center pt-1 border-t border-slate-200">
+                  <span>Customer Pickup Code:</span>
+                  <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    {completeOrderModal.pickup_otp}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <input
+              type="text"
+              placeholder="Verify customer 4-digit code (optional)"
+              value={enteredOtp}
+              onChange={(e) => setEnteredOtp(e.target.value)}
+              className="w-full px-3.5 py-2.5 text-xs text-center font-mono border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                onClick={handleCompleteOrder}
+                className="flex-1 py-3 rounded-xl bg-navy-950 hover:bg-brand-600 text-white font-extrabold text-xs transition"
+              >
+                Confirm Handover &amp; Archive
+              </button>
+              <button
+                onClick={() => setCompleteOrderModal(null)}
+                className="py-3 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold"
+              >
+                Back
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Manual Print Confirmation Dialog */}

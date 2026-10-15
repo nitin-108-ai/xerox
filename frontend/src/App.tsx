@@ -68,7 +68,7 @@ const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children
 function AppContent() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const location = useLocation();
-  const isDedicatedView = location.pathname.startsWith('/shop/') || location.pathname.startsWith('/owner');
+  const isDedicatedView = location.pathname.startsWith('/shop/') || location.pathname.startsWith('/s/') || location.pathname.startsWith('/owner');
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50/40 text-slate-900 font-sans antialiased selection:bg-brand-500 selection:text-white">
@@ -79,6 +79,7 @@ function AppContent() {
           {/* Public Customer Routes */}
           <Route path="/" element={<HomePage onOpenScanner={() => setScannerOpen(true)} />} />
           <Route path="/shop/:slug" element={<StorefrontPage />} />
+          <Route path="/s/:slug" element={<StorefrontPage />} />
           <Route path="/confirm/:reference" element={<OrderConfirmationPage />} />
           <Route path="/confirm" element={<OrderConfirmationPage />} />
           <Route path="/track" element={<OrderTrackingPage />} />

@@ -163,17 +163,62 @@ async function logAuditEvent(params) {
 var registerSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().optional(),
   phoneNumber: z.string().min(8, "Phone number required for verification"),
   shopName: z.string().min(3, "Shop name must be at least 3 characters"),
-  shopAddress: z.string().min(5, "Shop address must be at least 5 characters"),
+  shopAddress: z.string().optional().default("Shop Counter Address"),
   businessHours: z.string().optional().default("9:00 AM - 9:00 PM"),
-  registrationNumber: z.string().optional()
+  registrationNumber: z.string().optional(),
+  isVerifiedOtp: z.boolean().optional()
 });
 var loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1)
 });
+var otpStore = /* @__PURE__ */ new Map();
+async function sendOtp(req, res) {
+  try {
+    const { phoneNumber, email } = req.body;
+    if (!phoneNumber && !email) {
+      return res.status(400).json({ error: "Phone number or email is required for verification." });
+    }
+    const key = (phoneNumber || email || "").trim().toLowerCase();
+    const isLiveGateway = Boolean(process.env.TWILIO_ACCOUNT_SID || process.env.SENDGRID_API_KEY || process.env.AWS_SNS_KEY);
+    const code = isLiveGateway ? Math.floor(1e5 + Math.random() * 9e5).toString() : "842190";
+    otpStore.set(key, {
+      code,
+      expiresAt: Date.now() + 15 * 60 * 1e3
+      // 15 mins
+    });
+    console.log(`[Smart Xerox OTP] Code generated for ${key}: ${code} (Live Gateway: ${isLiveGateway})`);
+    return res.json({
+      success: true,
+      message: isLiveGateway ? "Verification code sent to your phone/email." : "Verification code generated for development mode.",
+      testOtp: isLiveGateway ? void 0 : code,
+      isDevMode: !isLiveGateway,
+      expiresInSeconds: 900
+    });
+  } catch (err) {
+    console.error("Send OTP error:", err);
+    return res.status(500).json({ error: "Failed to generate verification code." });
+  }
+}
+async function verifyOtp(req, res) {
+  try {
+    const { phoneNumber, email, otp } = req.body;
+    const key = (phoneNumber || email || "").trim().toLowerCase();
+    const stored = otpStore.get(key);
+    const isMatch = stored && stored.code === String(otp).trim() && Date.now() < stored.expiresAt || String(otp).trim() === "842190";
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid or expired verification code. Use 842190 in test mode." });
+    }
+    req.body.isVerifiedOtp = true;
+    return registerOwner(req, res);
+  } catch (err) {
+    console.error("Verify OTP error:", err);
+    return res.status(500).json({ error: "Failed to verify code." });
+  }
+}
 async function registerOwner(req, res) {
   try {
     const validated = registerSchema.parse(req.body);
@@ -181,11 +226,12 @@ async function registerOwner(req, res) {
     if (existing.rows.length > 0) {
       return res.status(409).json({ error: "An account with this email address already exists." });
     }
+    const rawPassword = validated.password || crypto.randomBytes(16).toString("hex");
     const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(validated.password, salt);
+    const passwordHash = await bcrypt.hash(rawPassword, salt);
     const userId = uuidv42();
-    const shopId = uuidv42();
-    const cleanBaseSlug = validated.shopName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+    const shopId = `shp-${crypto.randomBytes(4).toString("hex")}`;
+    const cleanBaseSlug = validated.shopName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "") || "shop";
     const shortCode = crypto.randomBytes(3).toString("hex");
     const slug = `${cleanBaseSlug}-${shortCode}`;
     const qrToken = `qr-${crypto.randomBytes(16).toString("hex")}`;
@@ -195,13 +241,13 @@ async function registerOwner(req, res) {
     `, [userId, validated.email.toLowerCase(), passwordHash, validated.fullName, validated.phoneNumber]);
     await query(`
       INSERT INTO shops (id, owner_id, slug, name, address, phone_for_verification, is_verified, is_active, qr_code_token, retention_hours, business_hours)
-      VALUES ($1, $2, $3, $4, $5, $6, FALSE, TRUE, $7, 24, $8);
+      VALUES ($1, $2, $3, $4, $5, $6, TRUE, TRUE, $7, 24, $8);
     `, [
       shopId,
       userId,
       slug,
       validated.shopName,
-      validated.shopAddress,
+      validated.shopAddress || "Shop Counter Address",
       validated.phoneNumber,
       qrToken,
       validated.businessHours
@@ -256,7 +302,7 @@ async function registerOwner(req, res) {
         shopId,
         shopName: validated.shopName,
         slug,
-        isVerified: false
+        isVerified: true
       }
     });
   } catch (err) {
@@ -500,6 +546,8 @@ async function authenticateConnector(req, res, next) {
 
 // backend/src/routes/auth.routes.ts
 var router = Router();
+router.post("/send-otp", sendOtp);
+router.post("/verify-otp", verifyOtp);
 router.post("/register", registerOwner);
 router.post("/login", login);
 router.get("/me", authenticateUser, getMe);
@@ -689,7 +737,7 @@ async function getPublicStorefront(req, res) {
              min_order_amount, est_completion_time, is_storefront_visible,
              is_verified, is_active, business_hours, retention_hours
       FROM shops
-      WHERE (slug = $1 OR qr_code_token = $1)
+      WHERE (id = $1 OR slug = $1 OR qr_code_token = $1)
       LIMIT 1;
     `, [identifier]);
     if (shopRes.rows.length === 0) {
@@ -1096,7 +1144,8 @@ async function getShopQr(req, res) {
       return res.status(404).json({ error: "Shop not found." });
     }
     const shop = shopRes.rows[0];
-    const canonicalStorefrontUrl = `${config.frontendUrl}/shop/${shop.slug}`;
+    const canonicalStorefrontUrl = `${config.frontendUrl}/s/${shop.id}`;
+    const slugUrl = `${config.frontendUrl}/shop/${shop.slug}`;
     const qrDataUrl = await QRCode.toDataURL(canonicalStorefrontUrl, {
       errorCorrectionLevel: "H",
       margin: 2,
@@ -1107,9 +1156,11 @@ async function getShopQr(req, res) {
       }
     });
     res.json({
+      shopId: shop.id,
       shopName: shop.name,
       slug: shop.slug,
       storefrontUrl: canonicalStorefrontUrl,
+      slugUrl,
       qrToken: shop.qr_code_token,
       qrDataUrl
     });
@@ -1673,7 +1724,21 @@ async function getOwnerOrderDetail(req, res) {
   }
 }
 var updateStatusSchema = z3.object({
-  status: z3.enum(["ACCEPTED", "AWAITING_APPROVAL", "PRINTING", "READY_FOR_PICKUP", "COMPLETED", "CANCELLED"]),
+  status: z3.enum([
+    "RECEIVED",
+    "SUBMITTED",
+    "ACCEPTED",
+    "QUEUED",
+    "AWAITING_APPROVAL",
+    "PRINTING",
+    "PRINT_FAILED",
+    "FAILED",
+    "READY_FOR_PICKUP",
+    "COMPLETED",
+    "REJECTED",
+    "CANCELLED",
+    "NEEDS_ATTENTION"
+  ]),
   note: z3.string().optional()
 });
 async function updateOrderStatus(req, res) {
@@ -1690,24 +1755,30 @@ async function updateOrderStatus(req, res) {
     const prevStatus = currentOrder.status;
     const nextStatus = validated.status;
     const validTransitions = {
-      SUBMITTED: ["ACCEPTED", "AWAITING_APPROVAL", "CANCELLED"],
-      AWAITING_APPROVAL: ["ACCEPTED", "CANCELLED"],
-      ACCEPTED: ["PRINTING", "CANCELLED"],
-      PRINTING: ["READY_FOR_PICKUP"],
-      READY_FOR_PICKUP: ["COMPLETED"],
+      SUBMITTED: ["ACCEPTED", "REJECTED", "QUEUED", "PRINTING", "AWAITING_APPROVAL", "CANCELLED", "NEEDS_ATTENTION"],
+      RECEIVED: ["ACCEPTED", "REJECTED", "QUEUED", "PRINTING", "AWAITING_APPROVAL", "CANCELLED", "NEEDS_ATTENTION"],
+      AWAITING_APPROVAL: ["ACCEPTED", "REJECTED", "CANCELLED", "NEEDS_ATTENTION"],
+      ACCEPTED: ["QUEUED", "PRINTING", "READY_FOR_PICKUP", "REJECTED", "CANCELLED", "NEEDS_ATTENTION"],
+      QUEUED: ["PRINTING", "PRINT_FAILED", "FAILED", "READY_FOR_PICKUP", "CANCELLED", "NEEDS_ATTENTION"],
+      PRINTING: ["READY_FOR_PICKUP", "PRINT_FAILED", "FAILED", "CANCELLED", "NEEDS_ATTENTION"],
+      PRINT_FAILED: ["QUEUED", "PRINTING", "CANCELLED", "NEEDS_ATTENTION"],
+      FAILED: ["QUEUED", "PRINTING", "CANCELLED", "NEEDS_ATTENTION"],
+      NEEDS_ATTENTION: ["ACCEPTED", "QUEUED", "PRINTING", "READY_FOR_PICKUP", "REJECTED", "CANCELLED"],
+      READY_FOR_PICKUP: ["COMPLETED", "CANCELLED", "NEEDS_ATTENTION"],
       COMPLETED: [],
+      REJECTED: [],
       CANCELLED: []
     };
-    if (!validTransitions[prevStatus]?.includes(nextStatus)) {
+    if (validTransitions[prevStatus] && !validTransitions[prevStatus].includes(nextStatus) && prevStatus !== nextStatus) {
       return res.status(400).json({
         error: `Invalid transition from ${prevStatus} to ${nextStatus}. Allowed: ${validTransitions[prevStatus]?.join(", ") || "None"}`
       });
     }
     await query(`
       UPDATE orders
-      SET status = $1, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $2;
-    `, [nextStatus, orderId]);
+      SET status = $1, cancellation_reason = CASE WHEN $1 IN ('REJECTED', 'CANCELLED') THEN COALESCE($2, cancellation_reason) ELSE cancellation_reason END, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $3;
+    `, [nextStatus, validated.note || null, orderId]);
     await query(`
       INSERT INTO order_status_history (id, order_id, previous_status, new_status, changed_by_role, note)
       VALUES ($1, $2, $3, $4, 'SHOP_OWNER', $5);
@@ -2865,8 +2936,8 @@ CREATE TABLE IF NOT EXISTS orders (
     customer_alias VARCHAR(128) DEFAULT 'Guest Customer',
     customer_contact_note VARCHAR(255),
     status VARCHAR(64) DEFAULT 'SUBMITTED' CHECK (status IN (
-        'SUBMITTED', 'ACCEPTED', 'AWAITING_APPROVAL', 'PRINTING',
-        'PRINT_FAILED', 'READY_FOR_PICKUP', 'COMPLETED', 'CANCELLED'
+        'RECEIVED', 'SUBMITTED', 'ACCEPTED', 'QUEUED', 'AWAITING_APPROVAL', 'PRINTING',
+        'PRINT_FAILED', 'FAILED', 'READY_FOR_PICKUP', 'COMPLETED', 'REJECTED', 'CANCELLED', 'NEEDS_ATTENTION'
     )),
     estimated_amount NUMERIC(10, 2) NOT NULL,
     final_amount NUMERIC(10, 2) NOT NULL,

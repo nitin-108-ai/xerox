@@ -501,7 +501,21 @@ export async function getOwnerOrderDetail(req: Request, res: Response) {
 }
 
 const updateStatusSchema = z.object({
-  status: z.enum(['ACCEPTED', 'AWAITING_APPROVAL', 'PRINTING', 'READY_FOR_PICKUP', 'COMPLETED', 'CANCELLED']),
+  status: z.enum([
+    'RECEIVED',
+    'SUBMITTED',
+    'ACCEPTED',
+    'QUEUED',
+    'AWAITING_APPROVAL',
+    'PRINTING',
+    'PRINT_FAILED',
+    'FAILED',
+    'READY_FOR_PICKUP',
+    'COMPLETED',
+    'REJECTED',
+    'CANCELLED',
+    'NEEDS_ATTENTION'
+  ]),
   note: z.string().optional(),
 });
 
@@ -525,16 +539,22 @@ export async function updateOrderStatus(req: Request, res: Response) {
 
     // Validate state transitions
     const validTransitions: Record<string, string[]> = {
-      SUBMITTED: ['ACCEPTED', 'AWAITING_APPROVAL', 'CANCELLED'],
-      AWAITING_APPROVAL: ['ACCEPTED', 'CANCELLED'],
-      ACCEPTED: ['PRINTING', 'CANCELLED'],
-      PRINTING: ['READY_FOR_PICKUP'],
-      READY_FOR_PICKUP: ['COMPLETED'],
+      SUBMITTED: ['ACCEPTED', 'REJECTED', 'QUEUED', 'PRINTING', 'AWAITING_APPROVAL', 'CANCELLED', 'NEEDS_ATTENTION'],
+      RECEIVED: ['ACCEPTED', 'REJECTED', 'QUEUED', 'PRINTING', 'AWAITING_APPROVAL', 'CANCELLED', 'NEEDS_ATTENTION'],
+      AWAITING_APPROVAL: ['ACCEPTED', 'REJECTED', 'CANCELLED', 'NEEDS_ATTENTION'],
+      ACCEPTED: ['QUEUED', 'PRINTING', 'READY_FOR_PICKUP', 'REJECTED', 'CANCELLED', 'NEEDS_ATTENTION'],
+      QUEUED: ['PRINTING', 'PRINT_FAILED', 'FAILED', 'READY_FOR_PICKUP', 'CANCELLED', 'NEEDS_ATTENTION'],
+      PRINTING: ['READY_FOR_PICKUP', 'PRINT_FAILED', 'FAILED', 'CANCELLED', 'NEEDS_ATTENTION'],
+      PRINT_FAILED: ['QUEUED', 'PRINTING', 'CANCELLED', 'NEEDS_ATTENTION'],
+      FAILED: ['QUEUED', 'PRINTING', 'CANCELLED', 'NEEDS_ATTENTION'],
+      NEEDS_ATTENTION: ['ACCEPTED', 'QUEUED', 'PRINTING', 'READY_FOR_PICKUP', 'REJECTED', 'CANCELLED'],
+      READY_FOR_PICKUP: ['COMPLETED', 'CANCELLED', 'NEEDS_ATTENTION'],
       COMPLETED: [],
+      REJECTED: [],
       CANCELLED: [],
     };
 
-    if (!validTransitions[prevStatus]?.includes(nextStatus)) {
+    if (validTransitions[prevStatus] && !validTransitions[prevStatus].includes(nextStatus) && prevStatus !== nextStatus) {
       return res.status(400).json({
         error: `Invalid transition from ${prevStatus} to ${nextStatus}. Allowed: ${validTransitions[prevStatus]?.join(', ') || 'None'}`
       });
@@ -542,9 +562,9 @@ export async function updateOrderStatus(req: Request, res: Response) {
 
     await query(`
       UPDATE orders
-      SET status = $1, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $2;
-    `, [nextStatus, orderId]);
+      SET status = $1, cancellation_reason = CASE WHEN $1 IN ('REJECTED', 'CANCELLED') THEN COALESCE($2, cancellation_reason) ELSE cancellation_reason END, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $3;
+    `, [nextStatus, validated.note || null, orderId]);
 
     await query(`
       INSERT INTO order_status_history (id, order_id, previous_status, new_status, changed_by_role, note)

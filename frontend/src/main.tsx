@@ -4,21 +4,13 @@ import App from './App';
 import './index.css';
 
 
-// Aggressively clean up any stale or corrupted Service Worker caches
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then((registrations) => {
-    for (const registration of registrations) {
-      registration.unregister().catch(() => {});
-    }
-  }).catch(() => {});
-}
-
-if ('caches' in window) {
-  caches.keys().then((names) => {
-    for (const name of names) {
-      caches.delete(name).catch(() => {});
-    }
-  }).catch(() => {});
+// Register PWA service worker
+if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+      console.log('PWA Service Worker registration:', err);
+    });
+  });
 }
 
 const rootEl = document.getElementById('root');
