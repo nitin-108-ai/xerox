@@ -3448,7 +3448,7 @@ if (process.argv[1] && process.argv[1].endsWith("seed.ts")) {
   });
 }
 
-// api/index.ts
+// api_src/index.ts
 var isInitialized = false;
 var initPromise = null;
 async function ensureDb() {
