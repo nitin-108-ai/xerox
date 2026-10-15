@@ -52,8 +52,11 @@ export async function createOrder(req: Request, res: Response) {
       uploadedFiles = req.files;
     } else {
       const filesObj = req.files as Record<string, Express.Multer.File[]>;
-      if (filesObj.documents) uploadedFiles.push(...filesObj.documents);
-      if (filesObj.document) uploadedFiles.push(...filesObj.document);
+      if (filesObj.documents && filesObj.documents.length > 0) {
+        uploadedFiles.push(...filesObj.documents);
+      } else if (filesObj.document && filesObj.document.length > 0) {
+        uploadedFiles.push(...filesObj.document);
+      }
     }
   } else if (req.file) {
     uploadedFiles = [req.file];

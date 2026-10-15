@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Store,
   Upload,
@@ -21,7 +22,14 @@ import {
   ExternalLink,
   ChevronRight,
   Info,
-  Sparkles
+  Sparkles,
+  ArrowLeft,
+  Copy,
+  Navigation,
+  Compass,
+  Settings,
+  QrCode,
+  Laptop
 } from 'lucide-react';
 import { OwnerLayout } from '../components/OwnerLayout';
 import { api } from '../services/api';
@@ -61,11 +69,14 @@ export const OwnerProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(true);
+  const [copiedShopId, setCopiedShopId] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
 
   // Original snapshot to compare unsaved changes
   const [initialData, setInitialData] = useState<any>(null);
@@ -82,6 +93,9 @@ export const OwnerProfilePage: React.FC = () => {
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
+  const [coverPhotoUrl, setCoverPhotoUrl] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
   const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
   const [isStorefrontVisible, setIsStorefrontVisible] = useState(true);
   const [minOrderAmount, setMinOrderAmount] = useState<number>(5.00);
@@ -114,6 +128,7 @@ export const OwnerProfilePage: React.FC = () => {
   const [shopRecord, setShopRecord] = useState<any>(null);
 
   const logoFileInputRef = useRef<HTMLInputElement>(null);
+  const coverFileInputRef = useRef<HTMLInputElement>(null);
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
 
   // Load Shop Profile
@@ -135,6 +150,9 @@ export const OwnerProfilePage: React.FC = () => {
       setContactEmail(shop.contact_email || user?.email || '');
       setContactPhone(shop.contact_phone || shop.phone_for_verification || '');
       setLogoUrl(shop.logo_url || '');
+      setCoverPhotoUrl(shop.cover_photo_url || '');
+      setLatitude(shop.latitude != null ? String(shop.latitude) : '');
+      setLongitude(shop.longitude != null ? String(shop.longitude) : '');
       setGalleryUrls(Array.isArray(shop.gallery_urls) ? shop.gallery_urls : []);
       setIsStorefrontVisible(shop.is_storefront_visible !== false);
       setMinOrderAmount(parseFloat(shop.min_order_amount || '5.00'));
@@ -190,6 +208,9 @@ export const OwnerProfilePage: React.FC = () => {
         contactEmail: shop.contact_email || user?.email || '',
         contactPhone: shop.contact_phone || shop.phone_for_verification || '',
         logoUrl: shop.logo_url || '',
+        coverPhotoUrl: shop.cover_photo_url || '',
+        latitude: shop.latitude != null ? String(shop.latitude) : '',
+        longitude: shop.longitude != null ? String(shop.longitude) : '',
         galleryUrls: Array.isArray(shop.gallery_urls) ? shop.gallery_urls : [],
         isStorefrontVisible: shop.is_storefront_visible !== false,
         minOrderAmount: parseFloat(shop.min_order_amount || '5.00'),
@@ -222,6 +243,9 @@ export const OwnerProfilePage: React.FC = () => {
         contactEmail !== initialData.contactEmail ||
         contactPhone !== initialData.contactPhone ||
         logoUrl !== initialData.logoUrl ||
+        coverPhotoUrl !== initialData.coverPhotoUrl ||
+        latitude !== initialData.latitude ||
+        longitude !== initialData.longitude ||
         JSON.stringify(galleryUrls) !== JSON.stringify(initialData.galleryUrls) ||
         isStorefrontVisible !== initialData.isStorefrontVisible ||
         minOrderAmount !== initialData.minOrderAmount ||
@@ -242,12 +266,36 @@ export const OwnerProfilePage: React.FC = () => {
     setContactEmail(initialData.contactEmail);
     setContactPhone(initialData.contactPhone);
     setLogoUrl(initialData.logoUrl);
+    setCoverPhotoUrl(initialData.coverPhotoUrl);
+    setLatitude(initialData.latitude);
+    setLongitude(initialData.longitude);
     setGalleryUrls(initialData.galleryUrls);
     setIsStorefrontVisible(initialData.isStorefrontVisible);
     setMinOrderAmount(initialData.minOrderAmount);
     setEstCompletionTime(initialData.estCompletionTime);
     setRetentionHours(initialData.retentionHours);
     setErrorMessage(null);
+  };
+
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLatitude(pos.coords.latitude.toFixed(6));
+        setLongitude(pos.coords.longitude.toFixed(6));
+        setIsLocating(false);
+        setSuccessMessage('Map coordinates auto-detected from device GPS! Click "Save Changes" to save.');
+      },
+      (err) => {
+        alert(`Location detection failed: ${err.message}. You can manually type your latitude & longitude.`);
+        setIsLocating(false);
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
   };
 
   const handleDayScheduleChange = (dayIndex: number, field: keyof DailySchedule, value: any) => {
@@ -311,6 +359,28 @@ export const OwnerProfilePage: React.FC = () => {
     }
   };
 
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 8 * 1024 * 1024) {
+      alert('Cover photo must be smaller than 8MB.');
+      return;
+    }
+
+    try {
+      setUploadingCover(true);
+      const res = await api.uploadOwnerImage(file);
+      setCoverPhotoUrl(res.url);
+      setSuccessMessage('Shop cover photo uploaded! Click "Save Changes" to apply.');
+    } catch (err: any) {
+      alert(err.message || 'Failed to upload cover photo.');
+    } finally {
+      setUploadingCover(false);
+      if (coverFileInputRef.current) coverFileInputRef.current.value = '';
+    }
+  };
+
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -368,6 +438,9 @@ export const OwnerProfilePage: React.FC = () => {
         contactEmail: contactEmail.trim(),
         contactPhone: contactPhone.trim(),
         logoUrl: logoUrl.trim() || null,
+        coverPhotoUrl: coverPhotoUrl.trim() || null,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
         galleryUrls,
         weeklySchedule,
         weeklyHolidays,
@@ -475,6 +548,94 @@ export const OwnerProfilePage: React.FC = () => {
             </button>
           </div>
         )}
+
+        {/* Back to Receiving Panel Navigation */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link
+            to="/owner/dashboard"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-2xs transition"
+          >
+            <ArrowLeft className="w-4 h-4 text-brand-600" />
+            <span>Back to Receiving Panel</span>
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <Link
+              to="/owner/settings"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
+            >
+              <Settings className="w-3.5 h-3.5 text-slate-500" />
+              <span>Settings</span>
+            </Link>
+            <Link
+              to="/owner/qr"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
+            >
+              <QrCode className="w-3.5 h-3.5 text-slate-500" />
+              <span>Shop QR</span>
+            </Link>
+            <Link
+              to="/owner/printers"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
+            >
+              <Laptop className="w-3.5 h-3.5 text-slate-500" />
+              <span>Devices</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Permanent Shop ID & Verification Card */}
+        <div className="bg-gradient-to-r from-navy-950 via-navy-900 to-slate-900 text-white rounded-3xl p-6 sm:p-7 shadow-lg border border-navy-800">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-black uppercase tracking-wider bg-brand-500/20 text-brand-300 border border-brand-500/30 px-2.5 py-0.5 rounded-full">
+                  Permanent Shop ID
+                </span>
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-0.5 rounded-full">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  Verified Counter Ownership
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5 pt-1">
+                <p className="text-xl sm:text-2xl font-mono font-black tracking-tight text-white">
+                  {shopRecord?.id || user?.shopId || 'shp-quickcopy-001'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const sid = shopRecord?.id || user?.shopId || 'shp-quickcopy-001';
+                    navigator.clipboard.writeText(sid);
+                    setCopiedShopId(true);
+                    setTimeout(() => setCopiedShopId(false), 2000);
+                  }}
+                  className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition flex items-center gap-1 text-xs font-semibold border border-white/15"
+                  title="Copy Permanent Shop ID"
+                >
+                  {copiedShopId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedShopId ? 'Copied!' : 'Copy ID'}</span>
+                </button>
+              </div>
+              <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
+                This Shop ID is permanent and securely anchors your customer QR code and public storefront URL.
+                Updating your shop name, logo, phone, or address will <span className="font-bold text-white underline decoration-brand-400">never change this ID</span> or invalidate your counter posters.
+              </p>
+            </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-xs space-y-2 shrink-0 md:min-w-[240px]">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Verified Recovery Status</p>
+              <div className="flex items-center gap-2 text-white font-medium">
+                <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="font-mono">{shopRecord?.phone_for_verification || (user as any)?.phoneNumber || '+91 98111 22334'}</span>
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded font-bold">Verified</span>
+              </div>
+              <div className="flex items-center gap-2 text-slate-300 text-[11px]">
+                <Mail className="w-3.5 h-3.5 text-brand-300 shrink-0" />
+                <span className="truncate max-w-[180px]">{user?.email || 'owner@smartxerox.io'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Top Header Card & Quick Actions */}
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-glass flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -662,12 +823,15 @@ export const OwnerProfilePage: React.FC = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Shop Logo Card */}
               <div className="border border-slate-200 rounded-2xl p-5 bg-slate-50/40 space-y-4">
-                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                  Store Logo / Icon
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    Store Logo / Icon (1:1)
+                  </h3>
+                  <span className="text-[10px] text-slate-400">Square</span>
+                </div>
 
                 <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-white text-center">
                   {logoUrl ? (
@@ -725,6 +889,74 @@ export const OwnerProfilePage: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {/* Shop Cover / Area Photo Card */}
+              <div className="border border-slate-200 rounded-2xl p-5 bg-slate-50/40 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    Shop Cover / Area Photo (16:9)
+                  </h3>
+                  <span className="text-[10px] text-slate-400">Storefront Banner</span>
+                </div>
+
+                <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-white text-center">
+                  {coverPhotoUrl ? (
+                    <div className="relative group w-full h-24 rounded-2xl overflow-hidden border border-slate-200 shadow-sm mb-3">
+                      <img src={coverPhotoUrl} alt="Cover" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setCoverPhotoUrl('')}
+                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"
+                        title="Remove Cover Photo"
+                      >
+                        <Trash2 className="w-5 h-5 text-rose-300" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-full h-24 rounded-2xl bg-slate-100 flex flex-col items-center justify-center text-slate-400 mb-3">
+                      <ImageIcon className="w-8 h-8 text-slate-300 mb-1" />
+                      <span className="text-[10px] text-slate-400 font-semibold">Storefront / Counter Overview</span>
+                    </div>
+                  )}
+
+                  <input
+                    ref={coverFileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={handleCoverUpload}
+                    className="hidden"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => coverFileInputRef.current?.click()}
+                    disabled={uploadingCover}
+                    className="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50"
+                  >
+                    {uploadingCover ? (
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Upload className="w-3.5 h-3.5" />
+                    )}
+                    {coverPhotoUrl ? 'Change Cover Photo' : 'Upload Cover / Area Photo'}
+                  </button>
+                  <p className="text-[10px] text-slate-400 mt-2">Max 8MB • Wide Storefront Photo</p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Or Enter Cover URL:
+                  </label>
+                  <input
+                    type="url"
+                    value={coverPhotoUrl}
+                    onChange={(e) => setCoverPhotoUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-mono"
+                  />
+                </div>
+              </div>
+            </div>
 
               {/* Gallery Photos Card */}
               <div className="md:col-span-2 border border-slate-200 rounded-2xl p-5 bg-slate-50/40 space-y-4">
@@ -787,7 +1019,6 @@ export const OwnerProfilePage: React.FC = () => {
                   </div>
                 )}
               </div>
-            </div>
           </div>
 
           {/* Section 3: Complete Address & Business Contact */}
@@ -893,6 +1124,82 @@ export const OwnerProfilePage: React.FC = () => {
                   placeholder="e.g. 15-30 mins or Same Day"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-hidden font-medium text-slate-900 shadow-2xs"
                 />
+              </div>
+
+              {/* Map Location & GPS Coordinates */}
+              <div className="md:col-span-3 pt-3 border-t border-slate-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                  <div>
+                    <h4 className="text-xs font-bold text-navy-950 flex items-center gap-1.5">
+                      <Navigation className="w-3.5 h-3.5 text-brand-600" />
+                      Shop Map Location &amp; GPS Coordinates
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      Pinpoint your Xerox counter so customers can navigate directly using Google Maps.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleGetCurrentLocation}
+                    disabled={isLocating}
+                    className="px-3 py-1.5 rounded-xl border border-brand-200 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-semibold flex items-center gap-1.5 transition disabled:opacity-50 self-start sm:self-auto"
+                  >
+                    {isLocating ? (
+                      <div className="w-3.5 h-3.5 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Compass className="w-3.5 h-3.5" />
+                    )}
+                    <span>{isLocating ? 'Detecting Location...' : 'Use Current Device GPS'}</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      Latitude
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={latitude}
+                      onChange={(e) => setLatitude(e.target.value)}
+                      placeholder="e.g. 28.613939"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      Longitude
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={longitude}
+                      onChange={(e) => setLongitude(e.target.value)}
+                      placeholder="e.g. 77.209021"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono"
+                    />
+                  </div>
+
+                  <div className="flex items-end">
+                    {latitude && longitude ? (
+                      <a
+                        href={`https://www.google.com/maps?q=${latitude},${longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full px-3 py-2 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>View on Google Maps</span>
+                      </a>
+                    ) : (
+                      <div className="w-full px-3 py-2 rounded-xl border border-dashed border-slate-200 text-slate-400 text-xs flex items-center justify-center text-center">
+                        Coordinates not set
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

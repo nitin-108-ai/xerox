@@ -300,6 +300,10 @@ export async function getMe(req: Request, res: Response) {
         email: req.user.email,
         fullName: req.user.fullName,
         role: req.user.role,
+        shopId: shopData?.id,
+        shopName: shopData?.name,
+        slug: shopData?.slug,
+        isVerified: shopData?.is_verified ?? false,
         shop: shopData,
       }
     });

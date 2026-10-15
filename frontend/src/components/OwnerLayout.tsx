@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Printer,
   QrCode,
@@ -12,7 +12,12 @@ import {
   Check,
   Laptop,
   Clock,
-  Sparkles
+  User,
+  ChevronDown,
+  Menu,
+  ChevronRight,
+  Sparkles,
+  Smartphone
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
@@ -40,13 +45,27 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
 }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Settings & QR Modal state
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  // Navigation Dropdown & Mobile Menu state
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pairingModalOpen, setPairingModalOpen] = useState(false);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [pairingLoading, setPairingLoading] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -59,6 +78,7 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
       const res = await api.generatePairingCode();
       setPairingCode(res.pairingCode);
       setPairingModalOpen(true);
+      setDropdownOpen(false);
     } catch (err: any) {
       alert(err.message || 'Failed to generate pairing code.');
     } finally {
@@ -76,16 +96,19 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
 
   const shopSlug = shop?.slug || user?.slug || 'quickcopy-express';
   const shopName = shop?.name || user?.shopName || 'Smart Xerox Shop';
+  const shopId = shop?.id || user?.shopId || 'shp-quickcopy-001';
   const storefrontUrl = `${window.location.origin}/shop/${shopSlug}`;
+
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <div className="min-h-screen bg-slate-50/70 text-slate-900 font-sans flex flex-col">
       {/* Top Header Navigation */}
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200/90 shadow-2xs">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           {/* Brand & Shop Info */}
           <div className="flex items-center gap-3 min-w-0">
-            <Link to="/owner/dashboard" className="flex items-center gap-2.5 shrink-0">
+            <Link to="/owner/dashboard" className="flex items-center gap-2.5 shrink-0" title="Back to Receiving Panel">
               <div className="w-9 h-9 rounded-xl bg-navy-950 text-white flex items-center justify-center font-black shadow-xs">
                 <Printer className="w-5 h-5 text-brand-300" />
               </div>
@@ -103,45 +126,190 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
 
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-navy-950 truncate max-w-[140px] sm:max-w-xs" title={shopName}>
+                <span className="text-xs font-bold text-navy-950 truncate max-w-[130px] sm:max-w-xs" title={shopName}>
                   {shopName}
                 </span>
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span title="Verified Shop" className="inline-flex items-center">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Right Actions: Printer Status, Settings & QR, Logout */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Desktop Navigation Items: Profile, Settings, QR Code, Connected Devices, Logout */}
+          <div className="hidden md:flex items-center gap-2 shrink-0">
             {/* Live Printer Connection Pill */}
-            <button
-              onClick={() => setSettingsOpen(true)}
+            <Link
+              to="/owner/printers"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
                 connector?.isOnline
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
                   : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
               }`}
-              title="Click to view printer details and settings"
+              title="Click to manage connected printers & PC spoolers"
             >
               <Printer className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden md:inline truncate max-w-[130px]">
+              <span className="truncate max-w-[120px]">
                 {defaultPrinter?.name || 'Default Printer'}
               </span>
               <span className={`w-2 h-2 rounded-full shrink-0 ${connector?.isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
               <span className="text-[10px] font-semibold">
                 {connector?.isOnline ? 'Online' : 'Manual'}
               </span>
-            </button>
+            </Link>
 
-            {/* Shop QR & Settings Button */}
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-navy-950 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition"
-              title="Shop QR & Settings"
+            {/* Profile Button */}
+            <Link
+              to="/owner/profile"
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+                isActive('/owner/profile')
+                  ? 'bg-navy-950 text-white shadow-2xs'
+                  : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-navy-950'
+              }`}
+              title="Shop Profile"
             >
-              <QrCode className="w-3.5 h-3.5 text-navy-900" />
-              <span className="hidden sm:inline">QR & Settings</span>
-            </button>
+              <User className="w-3.5 h-3.5" />
+              <span>Profile</span>
+            </Link>
+
+            {/* Settings Button */}
+            <Link
+              to="/owner/settings"
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+                isActive('/owner/settings')
+                  ? 'bg-navy-950 text-white shadow-2xs'
+                  : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-navy-950'
+              }`}
+              title="Settings"
+            >
+              <Settings className="w-3.5 h-3.5" />
+              <span>Settings</span>
+            </Link>
+
+            {/* QR Code Button */}
+            <Link
+              to="/owner/qr"
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+                isActive('/owner/qr')
+                  ? 'bg-navy-950 text-white shadow-2xs'
+                  : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-navy-950'
+              }`}
+              title="Counter QR Code"
+            >
+              <QrCode className="w-3.5 h-3.5" />
+              <span>QR Code</span>
+            </Link>
+
+            {/* Connected Devices Button */}
+            <Link
+              to="/owner/printers"
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+                isActive('/owner/printers')
+                  ? 'bg-navy-950 text-white shadow-2xs'
+                  : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-navy-950'
+              }`}
+              title="Connected Devices & Printers"
+            >
+              <Laptop className="w-3.5 h-3.5" />
+              <span>Devices</span>
+            </Link>
+
+            {/* QR & Settings Dropdown Menu Button */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-navy-950 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition"
+                title="Quick Menu"
+              >
+                <QrCode className="w-3.5 h-3.5 text-navy-900" />
+                <span>QR &amp; Settings</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown Menu Popup */}
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl border border-slate-200 shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="px-3 py-2 border-b border-slate-100">
+                    <p className="text-xs font-extrabold text-navy-950 truncate">{shopName}</p>
+                    <p className="text-[10px] text-slate-400 font-mono mt-0.5">ID: {shopId}</p>
+                  </div>
+
+                  <div className="py-1">
+                    <Link
+                      to="/owner/qr"
+                      onClick={() => setDropdownOpen(false)}
+                      className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
+                    >
+                      <QrCode className="w-4 h-4 text-brand-600" />
+                      <span>View / Download Shop QR</span>
+                    </Link>
+
+                    <Link
+                      to="/owner/profile"
+                      onClick={() => setDropdownOpen(false)}
+                      className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
+                    >
+                      <User className="w-4 h-4 text-brand-600" />
+                      <span>Shop Profile</span>
+                    </Link>
+
+                    <Link
+                      to="/owner/settings"
+                      onClick={() => setDropdownOpen(false)}
+                      className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
+                    >
+                      <Settings className="w-4 h-4 text-brand-600" />
+                      <span>Settings</span>
+                    </Link>
+
+                    <Link
+                      to="/owner/printers"
+                      onClick={() => setDropdownOpen(false)}
+                      className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
+                    >
+                      <Laptop className="w-4 h-4 text-brand-600" />
+                      <span>Connected Devices</span>
+                    </Link>
+
+                    <Link
+                      to="/owner/reports"
+                      onClick={() => setDropdownOpen(false)}
+                      className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      <span>Sales &amp; Volume Reports</span>
+                    </Link>
+                  </div>
+
+                  <div className="pt-1 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        handleGeneratePairingCode();
+                      }}
+                      className="w-full px-3.5 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50 flex items-center gap-2.5 transition text-left"
+                    >
+                      <Smartphone className="w-4 h-4" />
+                      <span>Pair Windows PC (Code)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        handleLogout();
+                      }}
+                      className="w-full px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition text-left"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Logout Button */}
             <button
@@ -152,129 +320,140 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
               <LogOut className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Mobile Right Controls: Mobile Menu Toggle */}
+          <div className="flex md:hidden items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold flex items-center gap-1 text-slate-700"
+            >
+              <QrCode className="w-3.5 h-3.5 text-navy-950" />
+              <span>QR &amp; Settings</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-xl border border-slate-200 bg-white text-slate-700"
+              aria-label="Open navigation menu"
+            >
+              {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Dropdown Menu when toggled */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="px-2 py-1 pb-2 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-navy-950">{shopName}</p>
+                <p className="text-[10px] text-slate-400 font-mono">ID: {shopId}</p>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                Verified
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-1 text-xs font-bold">
+              <Link
+                to="/owner/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`p-2.5 rounded-xl border flex items-center gap-2 ${
+                  isActive('/owner/dashboard') ? 'bg-navy-950 text-white border-navy-950' : 'bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+              >
+                <Printer className="w-4 h-4" />
+                <span>Receiving Panel</span>
+              </Link>
+
+              <Link
+                to="/owner/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`p-2.5 rounded-xl border flex items-center gap-2 ${
+                  isActive('/owner/profile') ? 'bg-navy-950 text-white border-navy-950' : 'bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+              >
+                <User className="w-4 h-4" />
+                <span>Profile</span>
+              </Link>
+
+              <Link
+                to="/owner/settings"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`p-2.5 rounded-xl border flex items-center gap-2 ${
+                  isActive('/owner/settings') ? 'bg-navy-950 text-white border-navy-950' : 'bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+              >
+                <Settings className="w-4 h-4" />
+                <span>Settings</span>
+              </Link>
+
+              <Link
+                to="/owner/qr"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`p-2.5 rounded-xl border flex items-center gap-2 ${
+                  isActive('/owner/qr') ? 'bg-navy-950 text-white border-navy-950' : 'bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+              >
+                <QrCode className="w-4 h-4" />
+                <span>QR Code</span>
+              </Link>
+
+              <Link
+                to="/owner/printers"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`p-2.5 rounded-xl border flex items-center gap-2 ${
+                  isActive('/owner/printers') ? 'bg-navy-950 text-white border-navy-950' : 'bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+              >
+                <Laptop className="w-4 h-4" />
+                <span>Connected Devices</span>
+              </Link>
+
+              <Link
+                to="/owner/reports"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`p-2.5 rounded-xl border flex items-center gap-2 ${
+                  isActive('/owner/reports') ? 'bg-navy-950 text-white border-navy-950' : 'bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+              >
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                <span>Reports</span>
+              </Link>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleGeneratePairingCode();
+                }}
+                className="text-xs font-bold text-brand-700 flex items-center gap-1.5"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>Pair Windows PC</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="text-xs font-bold text-rose-600 flex items-center gap-1"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {children}
       </main>
-
-      {/* Shop QR & Settings Modal */}
-      {settingsOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-navy-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full border border-slate-200 shadow-2xl p-6 sm:p-8 space-y-6 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="text-base font-extrabold text-navy-950">Shop QR & Settings</h3>
-                <p className="text-xs text-slate-500">Counter QR code & Windows printer setup</p>
-              </div>
-              <button
-                onClick={() => setSettingsOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* QR Code Section */}
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-3">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Customer Counter QR Code
-              </span>
-
-              <div className="p-3 bg-white rounded-2xl border border-slate-200 shadow-2xs inline-block">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(storefrontUrl)}`}
-                  alt="Shop QR Code"
-                  className="w-40 h-40 mx-auto"
-                />
-              </div>
-
-              <div>
-                <p className="text-xs font-extrabold text-navy-950">{shopName}</p>
-                <p className="text-[11px] text-slate-500 font-mono mt-0.5 truncate">{storefrontUrl}</p>
-              </div>
-
-              <div className="flex items-center justify-center gap-2 pt-1">
-                <Link
-                  to={`/shop/${shopSlug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1 shadow-2xs transition"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Test Customer Page
-                </Link>
-
-                <Link
-                  to="/owner/qr"
-                  className="px-4 py-1.5 rounded-xl bg-navy-950 hover:bg-brand-600 text-white text-xs font-bold flex items-center gap-1 shadow-2xs transition"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  Print A4 Poster
-                </Link>
-              </div>
-            </div>
-
-            {/* Windows Printer Connection Section */}
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-navy-950 flex items-center gap-1.5">
-                  <Printer className="w-4 h-4 text-brand-600" />
-                  Windows Direct Print Connector
-                </span>
-                {connector?.isOnline ? (
-                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                    Online & Active
-                  </span>
-                ) : (
-                  <span className="text-[11px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
-                    Manual Mode
-                  </span>
-                )}
-              </div>
-
-              <div className="text-xs text-slate-600 space-y-1">
-                <p>
-                  <strong>Current Printer:</strong> {defaultPrinter?.name || 'Default Windows Printer'}
-                </p>
-                <p>
-                  <strong>PC Station:</strong> {connector?.deviceName || 'Not paired'}
-                </p>
-              </div>
-
-              <div className="pt-2 flex items-center gap-2">
-                <button
-                  onClick={handleGeneratePairingCode}
-                  disabled={pairingLoading}
-                  className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition"
-                >
-                  <Laptop className="w-4 h-4" />
-                  Pair Windows PC (Get 6-Digit Code)
-                </button>
-              </div>
-            </div>
-
-            <div className="pt-2 flex items-center justify-between border-t border-slate-100">
-              <button
-                onClick={handleLogout}
-                className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                Sign Out
-              </button>
-
-              <button
-                onClick={() => setSettingsOpen(false)}
-                className="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 6-Digit Pairing Code Modal */}
       {pairingModalOpen && pairingCode && (

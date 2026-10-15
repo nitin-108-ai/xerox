@@ -19,6 +19,7 @@ import {
   Sliders,
   Sparkles,
   ArrowRight,
+  ArrowLeft,
   Clock,
   KeyRound
 } from 'lucide-react';
@@ -228,7 +229,39 @@ export const OwnerPrintersPage: React.FC = () => {
       subtitle="Connect, manage, and test printers for direct and manual document printing."
       onRefresh={() => loadPrinterData(true)}
     >
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Top Back Navigation Breadcrumb */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link
+            to="/owner/dashboard"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-2xs transition"
+          >
+            <ArrowLeft className="w-4 h-4 text-brand-600" />
+            <span>Back to Receiving Panel</span>
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <Link
+              to="/owner/profile"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
+            >
+              <span>Profile</span>
+            </Link>
+            <Link
+              to="/owner/settings"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
+            >
+              <span>Settings</span>
+            </Link>
+            <Link
+              to="/owner/qr"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
+            >
+              <span>Shop QR</span>
+            </Link>
+          </div>
+        </div>
+
         {/* Top Header Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
           <div>

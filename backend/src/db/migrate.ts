@@ -320,6 +320,7 @@ export async function runMigrations() {
     `ALTER TABLE shops ADD COLUMN IF NOT EXISTS auto_accept_max_pages INTEGER DEFAULT 50;`,
     `ALTER TABLE shops ADD COLUMN IF NOT EXISTS auto_accept_max_copies INTEGER DEFAULT 5;`,
     `ALTER TABLE shops ADD COLUMN IF NOT EXISTS payment_policy VARCHAR(32) DEFAULT 'COUNTER_ONLY';`,
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS settings_json TEXT DEFAULT '{}';`,
 
     // Paired devices table
     `CREATE TABLE IF NOT EXISTS paired_devices (

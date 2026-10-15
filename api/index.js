@@ -401,6 +401,10 @@ async function getMe(req, res) {
         email: req.user.email,
         fullName: req.user.fullName,
         role: req.user.role,
+        shopId: shopData?.id,
+        shopName: shopData?.name,
+        slug: shopData?.slug,
+        isVerified: shopData?.is_verified ?? false,
         shop: shopData
       }
     });
@@ -839,6 +843,7 @@ async function getOwnerShop(req, res) {
       weekly_schedule: safeParseJson(rawShop.weekly_schedule, []),
       weekly_holidays: safeParseJson(rawShop.weekly_holidays, []),
       gallery_urls: safeParseJson(rawShop.gallery_urls, []),
+      settings_json: safeParseJson(rawShop.settings_json, {}),
       min_order_amount: parseFloat(rawShop.min_order_amount || "5.00")
     };
     res.json({
@@ -865,11 +870,11 @@ async function getOwnerShop(req, res) {
   }
 }
 var updateProfileSchema = z2.object({
-  name: z2.string().min(3, "Shop name must be at least 3 characters"),
+  name: z2.string().min(3, "Shop name must be at least 3 characters").optional(),
   ownerDisplayName: z2.string().optional().nullable(),
   description: z2.string().optional().nullable(),
   category: z2.string().optional().nullable(),
-  address: z2.string().min(5, "Shop address must be at least 5 characters"),
+  address: z2.string().min(5, "Shop address must be at least 5 characters").optional(),
   city: z2.string().optional().nullable(),
   state: z2.string().optional().nullable(),
   pincode: z2.string().optional().nullable(),
@@ -878,18 +883,19 @@ var updateProfileSchema = z2.object({
   businessHours: z2.string().optional().nullable(),
   weeklySchedule: z2.union([z2.string(), z2.array(z2.any())]).optional().nullable(),
   weeklyHolidays: z2.union([z2.string(), z2.array(z2.string())]).optional().nullable(),
-  retentionHours: z2.number().int().min(1).max(168).optional().default(24),
-  minOrderAmount: z2.number().min(0).optional().default(5),
+  retentionHours: z2.number().int().min(1).max(168).optional(),
+  minOrderAmount: z2.number().min(0).optional(),
   estCompletionTime: z2.string().optional().nullable(),
-  isStorefrontVisible: z2.boolean().optional().default(true),
+  isStorefrontVisible: z2.boolean().optional(),
   logoUrl: z2.string().optional().nullable(),
   coverPhotoUrl: z2.string().optional().nullable(),
   latitude: z2.number().optional().nullable(),
   longitude: z2.number().optional().nullable(),
-  approvalMode: z2.enum(["MANUAL", "AUTO_ACCEPT", "AUTO_PRINT"]).optional().default("MANUAL"),
-  autoAcceptMaxPages: z2.number().int().min(1).max(500).optional().default(50),
-  autoAcceptMaxCopies: z2.number().int().min(1).max(50).optional().default(5),
-  paymentPolicy: z2.enum(["PAY_AT_COUNTER", "ONLINE_ONLY", "HYBRID"]).optional().default("PAY_AT_COUNTER"),
+  approvalMode: z2.enum(["MANUAL", "AUTO_ACCEPT", "AUTO_PRINT"]).optional(),
+  autoAcceptMaxPages: z2.number().int().min(1).max(500).optional(),
+  autoAcceptMaxCopies: z2.number().int().min(1).max(50).optional(),
+  paymentPolicy: z2.enum(["PAY_AT_COUNTER", "ONLINE_ONLY", "HYBRID", "COUNTER_ONLY"]).optional(),
+  settingsJson: z2.union([z2.string(), z2.record(z2.any())]).optional().nullable(),
   galleryUrls: z2.union([z2.string(), z2.array(z2.string())]).optional().nullable(),
   services: z2.array(z2.object({
     serviceType: z2.string(),
@@ -908,6 +914,7 @@ async function updateShopProfile(req, res) {
     const weeklyScheduleStr = typeof validated.weeklySchedule === "string" ? validated.weeklySchedule : JSON.stringify(validated.weeklySchedule || []);
     const weeklyHolidaysStr = typeof validated.weeklyHolidays === "string" ? validated.weeklyHolidays : JSON.stringify(validated.weeklyHolidays || []);
     const galleryUrlsStr = typeof validated.galleryUrls === "string" ? validated.galleryUrls : JSON.stringify(validated.galleryUrls || []);
+    const settingsJsonStr = validated.settingsJson !== void 0 && validated.settingsJson !== null ? typeof validated.settingsJson === "string" ? validated.settingsJson : JSON.stringify(validated.settingsJson) : null;
     let busHours = validated.businessHours;
     if (!busHours && Array.isArray(validated.weeklySchedule) && validated.weeklySchedule.length > 0) {
       const mon = validated.weeklySchedule[0];
@@ -916,25 +923,25 @@ async function updateShopProfile(req, res) {
     await query(`
       UPDATE shops
       SET 
-        name = $1,
-        owner_display_name = $2,
-        description = $3,
-        category = $4,
-        address = $5,
-        city = $6,
-        state = $7,
-        pincode = $8,
-        contact_email = $9,
-        contact_phone = $10,
+        name = COALESCE($1, name),
+        owner_display_name = COALESCE($2, owner_display_name),
+        description = COALESCE($3, description),
+        category = COALESCE($4, category),
+        address = COALESCE($5, address),
+        city = COALESCE($6, city),
+        state = COALESCE($7, state),
+        pincode = COALESCE($8, pincode),
+        contact_email = COALESCE($9, contact_email),
+        contact_phone = COALESCE($10, contact_phone),
         business_hours = COALESCE($11, business_hours),
-        weekly_schedule = $12,
-        weekly_holidays = $13,
-        retention_hours = $14,
-        min_order_amount = $15,
-        est_completion_time = $16,
-        is_storefront_visible = $17,
-        logo_url = $18,
-        gallery_urls = $19,
+        weekly_schedule = COALESCE($12, weekly_schedule),
+        weekly_holidays = COALESCE($13, weekly_holidays),
+        retention_hours = COALESCE($14, retention_hours),
+        min_order_amount = COALESCE($15, min_order_amount),
+        est_completion_time = COALESCE($16, est_completion_time),
+        is_storefront_visible = COALESCE($17, is_storefront_visible),
+        logo_url = COALESCE($18, logo_url),
+        gallery_urls = COALESCE($19, gallery_urls),
         cover_photo_url = COALESCE($20, cover_photo_url),
         latitude = COALESCE($21, latitude),
         longitude = COALESCE($22, longitude),
@@ -942,35 +949,37 @@ async function updateShopProfile(req, res) {
         auto_accept_max_pages = COALESCE($24, auto_accept_max_pages),
         auto_accept_max_copies = COALESCE($25, auto_accept_max_copies),
         payment_policy = COALESCE($26, payment_policy),
+        settings_json = COALESCE($27, settings_json),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $27;
+      WHERE id = $28;
     `, [
-      validated.name,
+      validated.name || null,
       validated.ownerDisplayName || null,
       validated.description || null,
-      validated.category || "Xerox & Digital Printing",
-      validated.address,
-      validated.city || "New Delhi",
-      validated.state || "Delhi",
-      validated.pincode || "110001",
+      validated.category || null,
+      validated.address || null,
+      validated.city || null,
+      validated.state || null,
+      validated.pincode || null,
       validated.contactEmail || null,
       validated.contactPhone || null,
-      busHours || "8:30 AM - 9:30 PM",
-      weeklyScheduleStr,
-      weeklyHolidaysStr,
-      validated.retentionHours || 24,
-      validated.minOrderAmount || 5,
-      validated.estCompletionTime || "15-30 mins",
-      validated.isStorefrontVisible !== false,
-      validated.logoUrl || null,
-      galleryUrlsStr,
-      validated.coverPhotoUrl || null,
-      validated.latitude || null,
-      validated.longitude || null,
-      validated.approvalMode || "MANUAL",
-      validated.autoAcceptMaxPages || 50,
-      validated.autoAcceptMaxCopies || 5,
-      validated.paymentPolicy || "PAY_AT_COUNTER",
+      busHours || null,
+      validated.weeklySchedule !== void 0 ? weeklyScheduleStr : null,
+      validated.weeklyHolidays !== void 0 ? weeklyHolidaysStr : null,
+      validated.retentionHours || null,
+      validated.minOrderAmount || null,
+      validated.estCompletionTime || null,
+      validated.isStorefrontVisible !== void 0 ? validated.isStorefrontVisible : null,
+      validated.logoUrl !== void 0 ? validated.logoUrl : null,
+      validated.galleryUrls !== void 0 ? galleryUrlsStr : null,
+      validated.coverPhotoUrl !== void 0 ? validated.coverPhotoUrl : null,
+      validated.latitude !== void 0 ? validated.latitude : null,
+      validated.longitude !== void 0 ? validated.longitude : null,
+      validated.approvalMode || null,
+      validated.autoAcceptMaxPages || null,
+      validated.autoAcceptMaxCopies || null,
+      validated.paymentPolicy || null,
+      settingsJsonStr,
       req.user.shopId
     ]);
     if (validated.services && Array.isArray(validated.services)) {
@@ -1393,8 +1402,11 @@ async function createOrder(req, res) {
       uploadedFiles = req.files;
     } else {
       const filesObj = req.files;
-      if (filesObj.documents) uploadedFiles.push(...filesObj.documents);
-      if (filesObj.document) uploadedFiles.push(...filesObj.document);
+      if (filesObj.documents && filesObj.documents.length > 0) {
+        uploadedFiles.push(...filesObj.documents);
+      } else if (filesObj.document && filesObj.document.length > 0) {
+        uploadedFiles.push(...filesObj.document);
+      }
     }
   } else if (req.file) {
     uploadedFiles = [req.file];
