@@ -19,6 +19,28 @@ function getAuthHeader(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+function isServerUnavailableError(err: any): boolean {
+  if (!err) return true;
+  const msg = (err.message || String(err)).toLowerCase();
+  const status = (err as any).status || 0;
+  return (
+    msg.includes('failed to fetch') ||
+    msg.includes('networkerror') ||
+    msg.includes('network request failed') ||
+    msg.includes('status 405') ||
+    msg.includes('status 404') ||
+    msg.includes('status 500') ||
+    msg.includes('status 502') ||
+    msg.includes('status 503') ||
+    msg.includes('status 504') ||
+    msg.includes('method not allowed') ||
+    msg.includes('not found') ||
+    status === 404 ||
+    status === 405 ||
+    status >= 500
+  );
+}
+
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let errMsg = `Request failed with status ${res.status}`;
@@ -28,9 +50,13 @@ async function handleResponse<T>(res: Response): Promise<T> {
     } catch {
       if (res.status === 404) {
         errMsg = `Backend endpoint not found (404).`;
+      } else if (res.status === 405) {
+        errMsg = `Request failed with status 405`;
       }
     }
-    throw new Error(errMsg);
+    const err: any = new Error(errMsg);
+    err.status = res.status;
+    throw err;
   }
   return res.json() as Promise<T>;
 }
@@ -65,9 +91,10 @@ export const api = {
       return await handleResponse<{ token: string; user: any; message: string }>(res);
     } catch (err: any) {
       // If server responded with a deliberate invalid password error (HTTP 401/400), honor it
-      if (err.message && !err.message.includes('Failed to fetch') && !err.message.includes('404') && !err.message.includes('502')) {
+      if (err.message && !isServerUnavailableError(err)) {
         throw err;
       }
+
 
       const normEmail = email.trim().toLowerCase();
 
@@ -132,9 +159,10 @@ export const api = {
       });
       return await handleResponse<{ token: string; user: any; message: string }>(res);
     } catch (err: any) {
-      if (err.message && !err.message.includes('Failed to fetch') && !err.message.includes('404') && !err.message.includes('502')) {
+      if (err.message && !isServerUnavailableError(err)) {
         throw err;
       }
+
 
       const shopId = `shp-${Date.now()}`;
       const cleanSlug = (data.shopName || 'shop')
@@ -279,9 +307,10 @@ export const api = {
       });
       return await handleResponse<any>(res);
     } catch (err: any) {
-      if (err.message && !err.message.includes('Failed to fetch') && !err.message.includes('404') && !err.message.includes('502')) {
+      if (err.message && !isServerUnavailableError(err)) {
         throw err;
       }
+
       const ref = 'XER-' + Math.floor(100000 + Math.random() * 900000);
       const trackingToken = 'trk_' + Math.random().toString(36).substring(2, 18);
       const file = formData.get('document') as File | null;

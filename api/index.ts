@@ -28,5 +28,24 @@ async function ensureDb() {
 
 export default async function handler(req: Request, res: Response) {
   await ensureDb();
+
+  // If invoked via catch-all [...path], reconstruct original URL
+  if ((req as any).query?.path) {
+    const rawPath = (req as any).query.path;
+    const subpath = Array.isArray(rawPath) ? rawPath.join('/') : rawPath;
+    req.url = `/api/${subpath}`;
+  } else if ((req as any).headers?.['x-matched-path']) {
+    req.url = (req as any).headers['x-matched-path'];
+  }
+
+  // Handle CORS preflight explicitly
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-order-token');
+    return res.status(204).end();
+  }
+
   return app(req, res);
 }
+
