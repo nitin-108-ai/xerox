@@ -757,6 +757,17 @@ async function getPublicStorefront(req, res) {
         isActive: false
       });
     }
+    query(`
+      INSERT INTO shop_visits (id, shop_id, visitor_ip, user_agent, referrer)
+      VALUES ($1, $2, $3, $4, $5);
+    `, [
+      crypto4.randomUUID(),
+      rawShop.id,
+      req.ip || null,
+      req.headers["user-agent"] || null,
+      req.headers["referer"] || null
+    ]).catch(() => {
+    });
     const servicesRes = await query(`
       SELECT service_type, is_enabled, description, rate, unit
       FROM shop_services
@@ -872,6 +883,13 @@ var updateProfileSchema = z2.object({
   estCompletionTime: z2.string().optional().nullable(),
   isStorefrontVisible: z2.boolean().optional().default(true),
   logoUrl: z2.string().optional().nullable(),
+  coverPhotoUrl: z2.string().optional().nullable(),
+  latitude: z2.number().optional().nullable(),
+  longitude: z2.number().optional().nullable(),
+  approvalMode: z2.enum(["MANUAL", "AUTO_ACCEPT", "AUTO_PRINT"]).optional().default("MANUAL"),
+  autoAcceptMaxPages: z2.number().int().min(1).max(500).optional().default(50),
+  autoAcceptMaxCopies: z2.number().int().min(1).max(50).optional().default(5),
+  paymentPolicy: z2.enum(["PAY_AT_COUNTER", "ONLINE_ONLY", "HYBRID"]).optional().default("PAY_AT_COUNTER"),
   galleryUrls: z2.union([z2.string(), z2.array(z2.string())]).optional().nullable(),
   services: z2.array(z2.object({
     serviceType: z2.string(),
@@ -917,8 +935,15 @@ async function updateShopProfile(req, res) {
         is_storefront_visible = $17,
         logo_url = $18,
         gallery_urls = $19,
+        cover_photo_url = COALESCE($20, cover_photo_url),
+        latitude = COALESCE($21, latitude),
+        longitude = COALESCE($22, longitude),
+        approval_mode = COALESCE($23, approval_mode),
+        auto_accept_max_pages = COALESCE($24, auto_accept_max_pages),
+        auto_accept_max_copies = COALESCE($25, auto_accept_max_copies),
+        payment_policy = COALESCE($26, payment_policy),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $20;
+      WHERE id = $27;
     `, [
       validated.name,
       validated.ownerDisplayName || null,
@@ -939,6 +964,13 @@ async function updateShopProfile(req, res) {
       validated.isStorefrontVisible !== false,
       validated.logoUrl || null,
       galleryUrlsStr,
+      validated.coverPhotoUrl || null,
+      validated.latitude || null,
+      validated.longitude || null,
+      validated.approvalMode || "MANUAL",
+      validated.autoAcceptMaxPages || 50,
+      validated.autoAcceptMaxCopies || 5,
+      validated.paymentPolicy || "PAY_AT_COUNTER",
       req.user.shopId
     ]);
     if (validated.services && Array.isArray(validated.services)) {
@@ -1355,9 +1387,20 @@ async function calculateEstimate(req, res) {
   }
 }
 async function createOrder(req, res) {
-  const file = req.file;
-  if (!file) {
-    return res.status(400).json({ error: "Please upload a valid document (PDF, PNG, or JPG)." });
+  let uploadedFiles = [];
+  if (req.files) {
+    if (Array.isArray(req.files)) {
+      uploadedFiles = req.files;
+    } else {
+      const filesObj = req.files;
+      if (filesObj.documents) uploadedFiles.push(...filesObj.documents);
+      if (filesObj.document) uploadedFiles.push(...filesObj.document);
+    }
+  } else if (req.file) {
+    uploadedFiles = [req.file];
+  }
+  if (uploadedFiles.length === 0) {
+    return res.status(400).json({ error: "Please upload at least one valid document (PDF, PNG, or JPG)." });
   }
   const {
     shopId,
@@ -1367,14 +1410,16 @@ async function createOrder(req, res) {
     copies = "1",
     customNotes = "",
     customerAlias = "Guest Customer",
-    customerContactNote = ""
+    customerContactNote = "",
+    idempotencyKey = ""
   } = req.body;
+  const headerIdempotency = req.headers["idempotency-key"] || idempotencyKey;
   if (!shopId) {
     return res.status(400).json({ error: "Target Shop ID is required." });
   }
   try {
     const shopRes = await query(`
-      SELECT id, name, is_verified, is_active, retention_hours
+      SELECT id, name, is_verified, is_active, retention_hours, approval_mode, auto_accept_max_pages, auto_accept_max_copies
       FROM shops
       WHERE id = $1
       LIMIT 1;
@@ -1389,21 +1434,60 @@ async function createOrder(req, res) {
     if (!shop.is_active) {
       return res.status(403).json({ error: "This shop is currently inactive." });
     }
-    const validation = await storageService.inspectAndValidate(file.buffer, file.mimetype);
-    if (!validation.isValid) {
-      return res.status(400).json({ error: validation.error || "Invalid file format or security inspection failure." });
+    if (headerIdempotency && headerIdempotency.trim()) {
+      const existingOrder = await query(`
+        SELECT id, order_reference, status, estimated_amount, pickup_otp, created_at
+        FROM orders
+        WHERE idempotency_key = $1 AND shop_id = $2
+        LIMIT 1;
+      `, [headerIdempotency.trim(), shopId]);
+      if (existingOrder.rows.length > 0) {
+        const exist = existingOrder.rows[0];
+        return res.status(200).json({
+          message: "Order already received (idempotent duplicate request).",
+          orderReference: exist.order_reference,
+          status: exist.status,
+          estimatedAmount: exist.estimated_amount,
+          pickupOtp: exist.pickup_otp,
+          isDuplicate: true
+        });
+      }
     }
-    const saved = await storageService.saveFile(file.buffer, file.originalname, validation.detectedMime);
+    const validatedFiles = [];
+    let totalPagesAllFiles = 0;
     const numCopies = Math.max(1, parseInt(copies, 10) || 1);
     const duplexBool = isDuplex === "true" || isDuplex === true;
+    for (const file of uploadedFiles) {
+      const validation = await storageService.inspectAndValidate(file.buffer, file.mimetype);
+      if (!validation.isValid) {
+        return res.status(400).json({
+          error: `File "${file.originalname}" failed security validation: ${validation.error || "Invalid file format"}`
+        });
+      }
+      const saved = await storageService.saveFile(file.buffer, file.originalname, validation.detectedMime);
+      const pageCount = validation.pageCount || 1;
+      totalPagesAllFiles += pageCount;
+      validatedFiles.push({
+        file,
+        validation,
+        saved,
+        pageCount
+      });
+    }
     const pricing = await pricingService.calculatePrice({
       shopId,
       paperSize,
       colorMode,
       isDuplex: duplexBool,
       copies: numCopies,
-      pageCount: validation.pageCount
+      pageCount: totalPagesAllFiles
     });
+    let initialStatus = "SUBMITTED";
+    const autoAccept = shop.approval_mode === "AUTO_ACCEPT" || shop.approval_mode === "AUTO_PRINT";
+    const withinLimits = totalPagesAllFiles <= (shop.auto_accept_max_pages || 50) && numCopies <= (shop.auto_accept_max_copies || 5);
+    if (autoAccept && withinLimits) {
+      initialStatus = "ACCEPTED";
+    }
     const orderId = uuidv43();
     const orderReference = generateOrderReference();
     const orderAccessToken = crypto5.randomBytes(32).toString("hex");
@@ -1415,31 +1499,76 @@ async function createOrder(req, res) {
     const tokenExpiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1e3);
     await transaction(async ({ query: txQuery }) => {
       await txQuery(`
-        INSERT INTO orders (id, order_reference, shop_id, customer_alias, customer_contact_note, status, estimated_amount, final_amount, pickup_otp)
-        VALUES ($1, $2, $3, $4, $5, 'SUBMITTED', $6, $6, $7);
-      `, [orderId, orderReference, shopId, customerAlias || "Guest Customer", customerContactNote || null, pricing.total, pickupOtp]);
-      const itemId = uuidv43();
-      await txQuery(`
-        INSERT INTO order_items (id, order_id, paper_size, color_mode, is_duplex, copies, page_count, custom_notes, item_price)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
-      `, [itemId, orderId, paperSize, colorMode, duplexBool, numCopies, validation.pageCount, customNotes || null, pricing.total]);
-      const docId = uuidv43();
-      await txQuery(`
-        INSERT INTO document_metadata (id, order_id, order_item_id, original_filename, stored_filename, file_size, mime_type, page_count, storage_key, sha256_hash, malware_status, auto_delete_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'CLEAN', $11);
-      `, [docId, orderId, itemId, file.originalname, saved.storedFilename, saved.fileSize, validation.detectedMime, validation.pageCount, saved.storageKey, saved.sha256Hash, autoDeleteDate]);
+        INSERT INTO orders (id, order_reference, shop_id, customer_alias, customer_contact_note, status, estimated_amount, final_amount, pickup_otp, idempotency_key, order_mode)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $7, $8, $9, $10);
+      `, [
+        orderId,
+        orderReference,
+        shopId,
+        customerAlias || "Guest Customer",
+        customerContactNote || null,
+        initialStatus,
+        pricing.total,
+        pickupOtp,
+        headerIdempotency?.trim() || null,
+        shop.approval_mode || "MANUAL"
+      ]);
+      for (const item of validatedFiles) {
+        const itemId = uuidv43();
+        await txQuery(`
+          INSERT INTO order_items (id, order_id, paper_size, color_mode, is_duplex, copies, page_count, custom_notes, item_price)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+        `, [
+          itemId,
+          orderId,
+          paperSize,
+          colorMode,
+          duplexBool,
+          numCopies,
+          item.pageCount,
+          customNotes || null,
+          (pricing.total / validatedFiles.length).toFixed(2)
+        ]);
+        const docId = uuidv43();
+        await txQuery(`
+          INSERT INTO document_metadata (id, order_id, order_item_id, original_filename, stored_filename, file_size, mime_type, page_count, storage_key, sha256_hash, malware_status, auto_delete_at)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'CLEAN', $11);
+        `, [
+          docId,
+          orderId,
+          itemId,
+          item.file.originalname,
+          item.saved.storedFilename,
+          item.saved.fileSize,
+          item.validation.detectedMime,
+          item.pageCount,
+          item.saved.storageKey,
+          item.saved.sha256Hash,
+          autoDeleteDate
+        ]);
+      }
       await txQuery(`
         INSERT INTO order_access_tokens (id, order_id, token_hash, token_hint, expires_at)
         VALUES ($1, $2, $3, $4, $5);
       `, [uuidv43(), orderId, tokenHash, tokenHint, tokenExpiryDate]);
       await txQuery(`
         INSERT INTO order_status_history (id, order_id, previous_status, new_status, changed_by_role, note)
-        VALUES ($1, $2, NULL, 'SUBMITTED', 'CUSTOMER', 'Order submitted by guest customer.');
-      `, [uuidv43(), orderId]);
+        VALUES ($1, $2, NULL, $3, 'CUSTOMER', $4);
+      `, [
+        uuidv43(),
+        orderId,
+        initialStatus,
+        initialStatus === "ACCEPTED" ? "Order automatically accepted per shop policy." : "Order submitted by customer."
+      ]);
       await txQuery(`
         INSERT INTO notifications (id, shop_id, order_id, title, message)
         VALUES ($1, $2, $3, 'New Print Job Received', $4);
-      `, [uuidv43(), shopId, orderId, `New order ${orderReference} for ${numCopies} copies (${validation.pageCount} pages).`]);
+      `, [
+        uuidv43(),
+        shopId,
+        orderId,
+        `New order ${orderReference} with ${validatedFiles.length} file(s) (${totalPagesAllFiles} pages total, ${numCopies} copies).`
+      ]);
     });
     await logAuditEvent({
       actorRole: "CUSTOMER",
@@ -1450,7 +1579,8 @@ async function createOrder(req, res) {
       details: {
         orderReference,
         shopId,
-        pageCount: validation.pageCount,
+        fileCount: validatedFiles.length,
+        totalPages: totalPagesAllFiles,
         copies: numCopies,
         totalAmount: pricing.total
       }
@@ -1460,13 +1590,19 @@ async function createOrder(req, res) {
       orderReference,
       orderAccessToken,
       trackingUrl: `/track/${orderReference}?token=${orderAccessToken}`,
-      status: "SUBMITTED",
+      status: initialStatus,
       estimatedAmount: pricing.total,
       pickupOtp,
-      pageCount: validation.pageCount,
+      fileCount: validatedFiles.length,
+      pageCount: totalPagesAllFiles,
       copies: numCopies,
-      retentionNotice: `Your document is scheduled to be automatically deleted in ${retentionHours} hours.`,
-      retentionDate: autoDeleteDate.toISOString()
+      retentionNotice: `Your files are scheduled to be automatically deleted in ${retentionHours} hours.`,
+      retentionDate: autoDeleteDate.toISOString(),
+      files: validatedFiles.map((v) => ({
+        filename: v.file.originalname,
+        size: v.saved.fileSize,
+        pageCount: v.pageCount
+      }))
     });
   } catch (err) {
     console.error("Order creation failed:", err);
@@ -1660,14 +1796,35 @@ async function listOwnerOrders(req, res) {
   const { status, search } = req.query;
   try {
     let sql = `
-      SELECT o.id, o.order_reference, o.customer_alias, o.status,
+      SELECT o.id, o.order_reference, o.customer_alias, o.customer_contact_note, o.status,
              o.estimated_amount, o.final_amount, o.quotation_note, o.pickup_otp,
+             o.idempotency_key, o.order_mode, o.payment_method, o.payment_status,
              o.created_at, o.updated_at,
-             oi.paper_size, oi.color_mode, oi.is_duplex, oi.copies, oi.page_count, oi.custom_notes,
-             dm.original_filename, dm.is_deleted, dm.auto_delete_at
+             COALESCE(
+               (SELECT json_agg(json_build_object(
+                 'id', dm.id,
+                 'original_filename', dm.original_filename,
+                 'file_size', dm.file_size,
+                 'mime_type', dm.mime_type,
+                 'page_count', dm.page_count,
+                 'is_deleted', dm.is_deleted,
+                 'auto_delete_at', dm.auto_delete_at
+               )) FROM document_metadata dm WHERE dm.order_id = o.id),
+               '[]'::json
+             ) AS documents,
+             COALESCE(
+               (SELECT json_agg(json_build_object(
+                 'paper_size', oi.paper_size,
+                 'color_mode', oi.color_mode,
+                 'is_duplex', oi.is_duplex,
+                 'copies', oi.copies,
+                 'page_count', oi.page_count,
+                 'custom_notes', oi.custom_notes,
+                 'item_price', oi.item_price
+               )) FROM order_items oi WHERE oi.order_id = o.id),
+               '[]'::json
+             ) AS items
       FROM orders o
-      LEFT JOIN order_items oi ON o.id = oi.order_id
-      LEFT JOIN document_metadata dm ON o.id = dm.order_id
       WHERE o.shop_id = $1
     `;
     const params = [req.user.shopId];
@@ -1681,8 +1838,32 @@ async function listOwnerOrders(req, res) {
     }
     sql += ` ORDER BY o.created_at DESC;`;
     const resOrders = await query(sql, params);
-    res.json({ orders: resOrders.rows });
+    const formattedOrders = resOrders.rows.map((row) => {
+      const docs = Array.isArray(row.documents) ? row.documents : typeof row.documents === "string" ? JSON.parse(row.documents || "[]") : [];
+      const items = Array.isArray(row.items) ? row.items : typeof row.items === "string" ? JSON.parse(row.items || "[]") : [];
+      const firstDoc = docs[0];
+      const firstItem = items[0];
+      return {
+        ...row,
+        documents: docs,
+        items,
+        file_count: docs.length || 1,
+        document_id: firstDoc ? firstDoc.id : null,
+        original_filename: firstDoc ? docs.length > 1 ? `${firstDoc.original_filename} (+${docs.length - 1} more)` : firstDoc.original_filename : "document.pdf",
+        file_size: firstDoc ? firstDoc.file_size : 0,
+        paper_size: firstItem ? firstItem.paper_size : "A4",
+        color_mode: firstItem ? firstItem.color_mode : "BW",
+        is_duplex: firstItem ? firstItem.is_duplex : false,
+        copies: firstItem ? firstItem.copies : 1,
+        page_count: docs.reduce((acc, d) => acc + (d.page_count || 1), 0) || (firstItem ? firstItem.page_count : 1),
+        custom_notes: firstItem ? firstItem.custom_notes : null,
+        is_deleted: firstDoc ? firstDoc.is_deleted : false,
+        auto_delete_at: firstDoc ? firstDoc.auto_delete_at : null
+      };
+    });
+    res.json({ orders: formattedOrders });
   } catch (err) {
+    console.error("List owner orders failed:", err);
     res.status(500).json({ error: "Failed to load shop orders." });
   }
 }
@@ -1691,17 +1872,61 @@ async function getOwnerOrderDetail(req, res) {
   try {
     const orderRes = await query(`
       SELECT o.*, 
-             oi.paper_size, oi.color_mode, oi.is_duplex, oi.copies, oi.page_count, oi.custom_notes,
-             dm.id as document_id, dm.original_filename, dm.file_size, dm.mime_type, dm.is_deleted, dm.auto_delete_at, dm.sha256_hash
+             COALESCE(
+               (SELECT json_agg(json_build_object(
+                 'id', dm.id,
+                 'original_filename', dm.original_filename,
+                 'file_size', dm.file_size,
+                 'mime_type', dm.mime_type,
+                 'page_count', dm.page_count,
+                 'is_deleted', dm.is_deleted,
+                 'auto_delete_at', dm.auto_delete_at,
+                 'sha256_hash', dm.sha256_hash
+               )) FROM document_metadata dm WHERE dm.order_id = o.id),
+               '[]'::json
+             ) AS documents,
+             COALESCE(
+               (SELECT json_agg(json_build_object(
+                 'id', oi.id,
+                 'paper_size', oi.paper_size,
+                 'color_mode', oi.color_mode,
+                 'is_duplex', oi.is_duplex,
+                 'copies', oi.copies,
+                 'page_count', oi.page_count,
+                 'custom_notes', oi.custom_notes,
+                 'item_price', oi.item_price
+               )) FROM order_items oi WHERE oi.order_id = o.id),
+               '[]'::json
+             ) AS items
       FROM orders o
-      LEFT JOIN order_items oi ON o.id = oi.order_id
-      LEFT JOIN document_metadata dm ON o.id = dm.order_id
       WHERE o.id = $1 AND o.shop_id = $2
       LIMIT 1;
     `, [orderId, req.user?.shopId]);
     if (orderRes.rows.length === 0) {
       return res.status(404).json({ error: "Order not found." });
     }
+    const rawOrder = orderRes.rows[0];
+    const docs = Array.isArray(rawOrder.documents) ? rawOrder.documents : typeof rawOrder.documents === "string" ? JSON.parse(rawOrder.documents || "[]") : [];
+    const items = Array.isArray(rawOrder.items) ? rawOrder.items : typeof rawOrder.items === "string" ? JSON.parse(rawOrder.items || "[]") : [];
+    const firstDoc = docs[0];
+    const firstItem = items[0];
+    const order = {
+      ...rawOrder,
+      documents: docs,
+      items,
+      file_count: docs.length || 1,
+      document_id: firstDoc ? firstDoc.id : null,
+      original_filename: firstDoc ? firstDoc.original_filename : "document.pdf",
+      file_size: firstDoc ? firstDoc.file_size : 0,
+      mime_type: firstDoc ? firstDoc.mime_type : "application/pdf",
+      sha256_hash: firstDoc ? firstDoc.sha256_hash : null,
+      paper_size: firstItem ? firstItem.paper_size : "A4",
+      color_mode: firstItem ? firstItem.color_mode : "BW",
+      is_duplex: firstItem ? firstItem.is_duplex : false,
+      copies: firstItem ? firstItem.copies : 1,
+      page_count: docs.reduce((acc, d) => acc + (d.page_count || 1), 0) || (firstItem ? firstItem.page_count : 1),
+      custom_notes: firstItem ? firstItem.custom_notes : null
+    };
     const historyRes = await query(`
       SELECT previous_status, new_status, changed_by_role, note, created_at
       FROM order_status_history
@@ -1715,11 +1940,12 @@ async function getOwnerOrderDetail(req, res) {
       ORDER BY created_at ASC;
     `, [orderId]);
     res.json({
-      order: orderRes.rows[0],
+      order,
       history: historyRes.rows,
       messages: messagesRes.rows
     });
   } catch (err) {
+    console.error("Get order detail failed:", err);
     res.status(500).json({ error: "Failed to load order details." });
   }
 }
@@ -1852,15 +2078,28 @@ async function reviseOrderQuote(req, res) {
   }
 }
 async function previewDocument(req, res) {
-  const { id: orderId, docId } = req.params;
+  const orderId = req.params.id;
+  const docId = req.params.docId;
   try {
-    const docRes = await query(`
-      SELECT dm.storage_key, dm.mime_type, dm.original_filename, dm.is_deleted
-      FROM document_metadata dm
-      JOIN orders o ON dm.order_id = o.id
-      WHERE dm.id = $1 AND o.id = $2 AND o.shop_id = $3
-      LIMIT 1;
-    `, [docId, orderId, req.user?.shopId]);
+    let docRes;
+    if (docId) {
+      docRes = await query(`
+        SELECT dm.storage_key, dm.mime_type, dm.original_filename, dm.is_deleted
+        FROM document_metadata dm
+        JOIN orders o ON dm.order_id = o.id
+        WHERE dm.id = $1 AND o.id = $2 AND o.shop_id = $3
+        LIMIT 1;
+      `, [docId, orderId, req.user?.shopId]);
+    } else {
+      docRes = await query(`
+        SELECT dm.storage_key, dm.mime_type, dm.original_filename, dm.is_deleted
+        FROM document_metadata dm
+        JOIN orders o ON dm.order_id = o.id
+        WHERE o.id = $1 AND o.shop_id = $2
+        ORDER BY dm.created_at ASC
+        LIMIT 1;
+      `, [orderId, req.user?.shopId]);
+    }
     if (docRes.rows.length === 0) {
       return res.status(404).json({ error: "Document not found or unauthorized." });
     }
@@ -1877,7 +2116,7 @@ async function previewDocument(req, res) {
       actorRole: "SHOP_OWNER",
       action: "DOCUMENT_PREVIEWED",
       targetType: "DOCUMENT",
-      targetId: docId,
+      targetId: docId || orderId,
       ipAddress: req.ip,
       details: { orderId, filename: doc.original_filename }
     });
@@ -1893,15 +2132,28 @@ async function previewDocument(req, res) {
   }
 }
 async function downloadDocument(req, res) {
-  const { id: orderId, docId } = req.params;
+  const orderId = req.params.id;
+  const docId = req.params.docId;
   try {
-    const docRes = await query(`
-      SELECT dm.storage_key, dm.mime_type, dm.original_filename, dm.is_deleted
-      FROM document_metadata dm
-      JOIN orders o ON dm.order_id = o.id
-      WHERE dm.id = $1 AND o.id = $2 AND o.shop_id = $3
-      LIMIT 1;
-    `, [docId, orderId, req.user?.shopId]);
+    let docRes;
+    if (docId) {
+      docRes = await query(`
+        SELECT dm.storage_key, dm.mime_type, dm.original_filename, dm.is_deleted
+        FROM document_metadata dm
+        JOIN orders o ON dm.order_id = o.id
+        WHERE dm.id = $1 AND o.id = $2 AND o.shop_id = $3
+        LIMIT 1;
+      `, [docId, orderId, req.user?.shopId]);
+    } else {
+      docRes = await query(`
+        SELECT dm.storage_key, dm.mime_type, dm.original_filename, dm.is_deleted
+        FROM document_metadata dm
+        JOIN orders o ON dm.order_id = o.id
+        WHERE o.id = $1 AND o.shop_id = $2
+        ORDER BY dm.created_at ASC
+        LIMIT 1;
+      `, [orderId, req.user?.shopId]);
+    }
     if (docRes.rows.length === 0) {
       return res.status(404).json({ error: "Document not found or unauthorized." });
     }
@@ -1918,7 +2170,7 @@ async function downloadDocument(req, res) {
       actorRole: "SHOP_OWNER",
       action: "DOCUMENT_DOWNLOADED_FOR_PRINTING",
       targetType: "DOCUMENT",
-      targetId: docId,
+      targetId: docId || orderId,
       ipAddress: req.ip,
       details: { orderId, filename: doc.original_filename }
     });
@@ -1958,8 +2210,18 @@ async function getOwnerReports(req, res) {
       WHERE o.shop_id = $1
       GROUP BY oi.paper_size, oi.color_mode;
     `, [req.user.shopId]);
+    const visitsRes = await query(`
+      SELECT COUNT(*) as total_visits,
+             COALESCE(SUM(CASE WHEN visited_at >= CURRENT_DATE THEN 1 ELSE 0 END), 0) as today_visits
+      FROM shop_visits
+      WHERE shop_id = $1;
+    `, [req.user.shopId]).catch(() => ({ rows: [{ total_visits: 0, today_visits: 0 }] }));
     res.json({
-      summary: totalOrdersRes.rows[0],
+      summary: {
+        ...totalOrdersRes.rows[0],
+        total_visits: visitsRes.rows[0]?.total_visits || 0,
+        today_visits: visitsRes.rows[0]?.today_visits || 0
+      },
       statusBreakdown: statusBreakdown.rows,
       paperSizeBreakdown: paperSizeBreakdown.rows
     });
@@ -1971,7 +2233,7 @@ async function getOwnerReports(req, res) {
 // backend/src/routes/order.routes.ts
 var router3 = Router3();
 router3.post("/estimate", calculateEstimate);
-router3.post("/", upload.single("document"), createOrder);
+router3.post("/", upload.fields([{ name: "documents", maxCount: 20 }, { name: "document", maxCount: 1 }]), createOrder);
 router3.get("/track/:reference", authenticateOrderToken, trackOrder);
 router3.post("/track/:reference/approve-quote", authenticateOrderToken, approveRevisedQuote);
 router3.post("/track/:reference/cancel", authenticateOrderToken, cancelCustomerOrder);
@@ -1982,7 +2244,11 @@ router3.get("/owner/:id", authenticateUser, requireRole("SHOP_OWNER"), requireSh
 router3.patch("/owner/:id/status", authenticateUser, requireRole("SHOP_OWNER"), requireShopTenancy, updateOrderStatus);
 router3.patch("/owner/:id/quote", authenticateUser, requireRole("SHOP_OWNER"), requireShopTenancy, reviseOrderQuote);
 router3.get("/owner/:id/documents/:docId/preview", authenticateUser, requireRole("SHOP_OWNER"), requireShopTenancy, previewDocument);
+router3.get("/owner/:id/preview", authenticateUser, requireRole("SHOP_OWNER"), requireShopTenancy, previewDocument);
+router3.get("/owner/documents/:id/preview", authenticateUser, requireRole("SHOP_OWNER"), requireShopTenancy, previewDocument);
 router3.get("/owner/:id/documents/:docId/download", authenticateUser, requireRole("SHOP_OWNER"), requireShopTenancy, downloadDocument);
+router3.get("/owner/:id/download", authenticateUser, requireRole("SHOP_OWNER"), requireShopTenancy, downloadDocument);
+router3.get("/owner/documents/:id/download", authenticateUser, requireRole("SHOP_OWNER"), requireShopTenancy, downloadDocument);
 router3.post("/owner/:id/messages", authenticateUser, requireRole("SHOP_OWNER"), requireShopTenancy, sendOrderMessage);
 var order_routes_default = router3;
 
@@ -2790,7 +3056,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "x-order-token"]
+  allowedHeaders: ["Content-Type", "Authorization", "x-order-token", "idempotency-key"]
 }));
 app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "15mb" }));
@@ -3132,10 +3398,50 @@ async function runMigrations() {
         submitted_at TIMESTAMP WITH TIME ZONE,
         completed_at TIMESTAMP WITH TIME ZONE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );`,
     `CREATE INDEX IF NOT EXISTS idx_print_jobs_shop ON print_jobs(shop_id);`,
-    `CREATE INDEX IF NOT EXISTS idx_print_jobs_order ON print_jobs(order_id);`
+    `CREATE INDEX IF NOT EXISTS idx_print_jobs_order ON print_jobs(order_id);`,
+    // Order idempotency & settings
+    `ALTER TABLE orders ADD COLUMN IF NOT EXISTS idempotency_key VARCHAR(128);`,
+    `ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_mode VARCHAR(32) DEFAULT 'MANUAL';`,
+    `ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR(32) DEFAULT 'COUNTER_CASH';`,
+    `ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status VARCHAR(32) DEFAULT 'PENDING';`,
+    `CREATE INDEX IF NOT EXISTS idx_orders_idempotency ON orders(idempotency_key);`,
+    // Multi-file photo editing
+    `ALTER TABLE document_metadata ADD COLUMN IF NOT EXISTS edited_version_key VARCHAR(255);`,
+    `ALTER TABLE document_metadata ADD COLUMN IF NOT EXISTS is_image_edited BOOLEAN DEFAULT FALSE;`,
+    // Shop profile & approval settings
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS cover_photo_url TEXT;`,
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS latitude NUMERIC(10, 7);`,
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS longitude NUMERIC(10, 7);`,
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS approval_mode VARCHAR(32) DEFAULT 'MANUAL';`,
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS auto_accept_max_pages INTEGER DEFAULT 50;`,
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS auto_accept_max_copies INTEGER DEFAULT 5;`,
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS payment_policy VARCHAR(32) DEFAULT 'COUNTER_ONLY';`,
+    // Paired devices table
+    `CREATE TABLE IF NOT EXISTS paired_devices (
+        id VARCHAR(64) PRIMARY KEY,
+        shop_id VARCHAR(64) NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+        device_name VARCHAR(128) NOT NULL,
+        device_type VARCHAR(64) DEFAULT 'WINDOWS_PC',
+        pairing_token_hash VARCHAR(128),
+        assigned_printer_name VARCHAR(128),
+        permissions TEXT DEFAULT '["PRINT", "VIEW_ORDERS"]',
+        is_revoked BOOLEAN DEFAULT FALSE,
+        last_seen_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );`,
+    `CREATE INDEX IF NOT EXISTS idx_paired_devices_shop ON paired_devices(shop_id);`,
+    // Shop visits analytics table
+    `CREATE TABLE IF NOT EXISTS shop_visits (
+        id VARCHAR(64) PRIMARY KEY,
+        shop_id VARCHAR(64) NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+        visit_type VARCHAR(32) DEFAULT 'QR_SCAN',
+        visitor_hash VARCHAR(64),
+        user_agent TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );`,
+    `CREATE INDEX IF NOT EXISTS idx_shop_visits_shop ON shop_visits(shop_id);`
   ];
   for (const stmt of alterationStatements) {
     try {
@@ -3484,7 +3790,7 @@ async function handler(req, res) {
   if (req.method === "OPTIONS") {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-order-token");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-order-token, idempotency-key");
     return res.status(204).end();
   }
   return app(req, res);

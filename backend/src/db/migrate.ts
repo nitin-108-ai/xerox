@@ -297,10 +297,55 @@ export async function runMigrations() {
         submitted_at TIMESTAMP WITH TIME ZONE,
         completed_at TIMESTAMP WITH TIME ZONE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );`,
     `CREATE INDEX IF NOT EXISTS idx_print_jobs_shop ON print_jobs(shop_id);`,
     `CREATE INDEX IF NOT EXISTS idx_print_jobs_order ON print_jobs(order_id);`,
+
+    // Order idempotency & settings
+    `ALTER TABLE orders ADD COLUMN IF NOT EXISTS idempotency_key VARCHAR(128);`,
+    `ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_mode VARCHAR(32) DEFAULT 'MANUAL';`,
+    `ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR(32) DEFAULT 'COUNTER_CASH';`,
+    `ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status VARCHAR(32) DEFAULT 'PENDING';`,
+    `CREATE INDEX IF NOT EXISTS idx_orders_idempotency ON orders(idempotency_key);`,
+
+    // Multi-file photo editing
+    `ALTER TABLE document_metadata ADD COLUMN IF NOT EXISTS edited_version_key VARCHAR(255);`,
+    `ALTER TABLE document_metadata ADD COLUMN IF NOT EXISTS is_image_edited BOOLEAN DEFAULT FALSE;`,
+
+    // Shop profile & approval settings
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS cover_photo_url TEXT;`,
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS latitude NUMERIC(10, 7);`,
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS longitude NUMERIC(10, 7);`,
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS approval_mode VARCHAR(32) DEFAULT 'MANUAL';`,
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS auto_accept_max_pages INTEGER DEFAULT 50;`,
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS auto_accept_max_copies INTEGER DEFAULT 5;`,
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS payment_policy VARCHAR(32) DEFAULT 'COUNTER_ONLY';`,
+
+    // Paired devices table
+    `CREATE TABLE IF NOT EXISTS paired_devices (
+        id VARCHAR(64) PRIMARY KEY,
+        shop_id VARCHAR(64) NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+        device_name VARCHAR(128) NOT NULL,
+        device_type VARCHAR(64) DEFAULT 'WINDOWS_PC',
+        pairing_token_hash VARCHAR(128),
+        assigned_printer_name VARCHAR(128),
+        permissions TEXT DEFAULT '["PRINT", "VIEW_ORDERS"]',
+        is_revoked BOOLEAN DEFAULT FALSE,
+        last_seen_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );`,
+    `CREATE INDEX IF NOT EXISTS idx_paired_devices_shop ON paired_devices(shop_id);`,
+
+    // Shop visits analytics table
+    `CREATE TABLE IF NOT EXISTS shop_visits (
+        id VARCHAR(64) PRIMARY KEY,
+        shop_id VARCHAR(64) NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+        visit_type VARCHAR(32) DEFAULT 'QR_SCAN',
+        visitor_hash VARCHAR(64),
+        user_agent TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );`,
+    `CREATE INDEX IF NOT EXISTS idx_shop_visits_shop ON shop_visits(shop_id);`
   ];
 
   for (const stmt of alterationStatements) {

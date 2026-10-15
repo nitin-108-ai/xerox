@@ -49,7 +49,7 @@ export const OwnerReportsPage: React.FC = () => {
       </div>
 
       {/* Summary KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-glass">
           <div className="flex items-center justify-between text-slate-400 mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">Gross Counter Revenue</span>
@@ -63,7 +63,7 @@ export const OwnerReportsPage: React.FC = () => {
 
         <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-glass">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-700">Completed Print Jobs</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-brand-700">Completed Jobs</span>
             <CheckCircle2 className="w-5 h-5 text-brand-600" />
           </div>
           <div className="text-3xl font-extrabold text-navy-950">
@@ -81,6 +81,17 @@ export const OwnerReportsPage: React.FC = () => {
             {summary.active_orders || 0}
           </div>
           <div className="text-xs text-slate-500 mt-1">Orders currently processing</div>
+        </div>
+
+        <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-glass">
+          <div className="flex items-center justify-between text-slate-400 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-700">QR Storefront Visits</span>
+            <TrendingUp className="w-5 h-5 text-amber-600" />
+          </div>
+          <div className="text-3xl font-extrabold text-navy-950 font-mono">
+            {summary.total_visits || 0}
+          </div>
+          <div className="text-xs text-slate-500 mt-1">{summary.today_visits || 0} visits recorded today</div>
         </div>
       </div>
 

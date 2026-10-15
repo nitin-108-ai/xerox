@@ -26,7 +26,7 @@ const router = Router();
 
 // Customer public & token-authorized endpoints
 router.post('/estimate', calculateEstimate);
-router.post('/', upload.single('document'), createOrder);
+router.post('/', upload.fields([{ name: 'documents', maxCount: 20 }, { name: 'document', maxCount: 1 }]), createOrder);
 router.get('/track/:reference', authenticateOrderToken, trackOrder);
 router.post('/track/:reference/approve-quote', authenticateOrderToken, approveRevisedQuote);
 router.post('/track/:reference/cancel', authenticateOrderToken, cancelCustomerOrder);
@@ -39,7 +39,11 @@ router.get('/owner/:id', authenticateUser, requireRole('SHOP_OWNER'), requireSho
 router.patch('/owner/:id/status', authenticateUser, requireRole('SHOP_OWNER'), requireShopTenancy, updateOrderStatus);
 router.patch('/owner/:id/quote', authenticateUser, requireRole('SHOP_OWNER'), requireShopTenancy, reviseOrderQuote);
 router.get('/owner/:id/documents/:docId/preview', authenticateUser, requireRole('SHOP_OWNER'), requireShopTenancy, previewDocument);
+router.get('/owner/:id/preview', authenticateUser, requireRole('SHOP_OWNER'), requireShopTenancy, previewDocument);
+router.get('/owner/documents/:id/preview', authenticateUser, requireRole('SHOP_OWNER'), requireShopTenancy, previewDocument);
 router.get('/owner/:id/documents/:docId/download', authenticateUser, requireRole('SHOP_OWNER'), requireShopTenancy, downloadDocument);
+router.get('/owner/:id/download', authenticateUser, requireRole('SHOP_OWNER'), requireShopTenancy, downloadDocument);
+router.get('/owner/documents/:id/download', authenticateUser, requireRole('SHOP_OWNER'), requireShopTenancy, downloadDocument);
 router.post('/owner/:id/messages', authenticateUser, requireRole('SHOP_OWNER'), requireShopTenancy, sendOrderMessage);
 
 export default router;

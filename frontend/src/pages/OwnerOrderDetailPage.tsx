@@ -28,6 +28,7 @@ export const OwnerOrderDetailPage: React.FC = () => {
 
   const [messageText, setMessageText] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [selectedPreviewDoc, setSelectedPreviewDoc] = useState<any>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const loadDetail = async () => {
@@ -137,46 +138,73 @@ export const OwnerOrderDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Document Box */}
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-brand-100 text-brand-600 flex items-center justify-center shrink-0">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="text-xs font-bold text-navy-900 truncate">
-                      {order.original_filename || 'Customer Document'}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 font-mono">
-                      {order.file_size ? `${(order.file_size / (1024 * 1024)).toFixed(2)} MB` : ''} • {order.page_count} Pages
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewOpen(true)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 hover:bg-slate-50 text-navy-900 flex items-center gap-1.5 transition-colors"
-                  >
-                    <Eye className="w-3.5 h-3.5 text-brand-600" />
-                    Preview
-                  </button>
-                  <a
-                    href={`/api/orders/owner/${order.id}/documents/${order.document_id}/download`}
-                    download={order.original_filename}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-navy-900 hover:bg-brand-600 text-white flex items-center gap-1.5 transition-colors"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    Download
-                  </a>
-                </div>
+            {/* Multi-Document Attached List */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+                <span>Attached Documents ({(order.documents && order.documents.length) || 1})</span>
+                <span className="text-[11px] text-slate-400 font-mono">Total {order.page_count} Pages</span>
               </div>
 
-              <div className="text-[11px] text-slate-500 font-mono bg-white p-2 rounded-lg border border-slate-200 truncate">
-                SHA-256: {order.sha256_hash || 'Verified'}
-              </div>
+              {((order.documents && order.documents.length > 0) ? order.documents : [{
+                id: order.document_id,
+                original_filename: order.original_filename,
+                file_size: order.file_size,
+                mime_type: order.mime_type,
+                page_count: order.page_count,
+                sha256_hash: order.sha256_hash,
+              }]).map((doc: any, index: number) => (
+                <div key={doc.id || index} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-brand-100 text-brand-600 flex items-center justify-center shrink-0">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-bold text-navy-900 truncate" title={doc.original_filename}>
+                          {index + 1}. {doc.original_filename || 'Customer Document'}
+                        </h4>
+                        <p className="text-[11px] text-slate-500 font-mono">
+                          {doc.file_size ? `${(doc.file_size / (1024 * 1024)).toFixed(2)} MB` : ''} • {doc.page_count || 1} Pages
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPreviewDoc({
+                            orderId: order.id,
+                            docId: doc.id || order.document_id,
+                            originalFilename: doc.original_filename,
+                            mimeType: doc.mime_type || 'application/pdf',
+                            sha256Hash: doc.sha256_hash,
+                          });
+                          setPreviewOpen(true);
+                        }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 hover:bg-slate-50 text-navy-900 flex items-center gap-1.5 transition-colors"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-brand-600" />
+                        Preview
+                      </button>
+                      <a
+                        href={`/api/orders/owner/${order.id}/documents/${doc.id || order.document_id}/download`}
+                        download={doc.original_filename}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-navy-900 hover:bg-brand-600 text-white flex items-center gap-1.5 transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Download
+                      </a>
+                    </div>
+                  </div>
+
+                  {doc.sha256_hash && (
+                    <div className="text-[10px] text-slate-500 font-mono bg-white px-2.5 py-1 rounded-lg border border-slate-200 truncate">
+                      SHA-256: {doc.sha256_hash}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
 
             {/* Print Parameters */}
@@ -318,12 +346,15 @@ export const OwnerOrderDetailPage: React.FC = () => {
       {previewOpen && (
         <DocumentPreviewModal
           isOpen={previewOpen}
-          onClose={() => setPreviewOpen(false)}
-          orderId={order.id}
-          docId={order.document_id}
-          originalFilename={order.original_filename || 'Customer_Document.pdf'}
-          mimeType={order.mime_type || 'application/pdf'}
-          sha256Hash={order.sha256_hash}
+          onClose={() => {
+            setPreviewOpen(false);
+            setSelectedPreviewDoc(null);
+          }}
+          orderId={selectedPreviewDoc?.orderId || order.id}
+          docId={selectedPreviewDoc?.docId || order.document_id}
+          originalFilename={selectedPreviewDoc?.originalFilename || order.original_filename || 'Customer_Document.pdf'}
+          mimeType={selectedPreviewDoc?.mimeType || order.mime_type || 'application/pdf'}
+          sha256Hash={selectedPreviewDoc?.sha256Hash || order.sha256_hash}
         />
       )}
     </div>

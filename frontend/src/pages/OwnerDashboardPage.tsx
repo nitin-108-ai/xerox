@@ -546,6 +546,11 @@ export const OwnerDashboardPage: React.FC = () => {
                           <span className="text-xs font-bold text-navy-950 truncate max-w-xs">
                             {order.original_filename || 'document.pdf'}
                           </span>
+                          {(order.file_count > 1 || (order.documents && order.documents.length > 1)) && (
+                            <span className="px-2 py-0.5 rounded-md bg-brand-100 text-brand-800 text-[10px] font-black shrink-0">
+                              {order.file_count || order.documents.length} Files ({order.page_count} pgs)
+                            </span>
+                          )}
                           <button
                             onClick={() => setPreviewDoc(order)}
                             className="p-1 rounded text-slate-400 hover:text-brand-600 transition"
@@ -553,6 +558,13 @@ export const OwnerDashboardPage: React.FC = () => {
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
+                          <a
+                            href={`/owner/orders/${order.id}`}
+                            className="text-[11px] font-bold text-brand-600 hover:text-brand-800 pl-1 hover:underline shrink-0"
+                            title="View all attached documents and order history"
+                          >
+                            Details &rarr;
+                          </a>
                         </div>
 
                         {/* Setting Tags */}

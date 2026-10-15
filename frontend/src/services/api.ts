@@ -347,48 +347,27 @@ export const api = {
   },
 
   async createOrder(formData: FormData) {
+    // Generate high-entropy idempotency key if not already provided
+    let idempotencyKey = formData.get('idempotencyKey') as string;
+    if (!idempotencyKey) {
+      idempotencyKey = 'sx_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
+      formData.append('idempotencyKey', idempotencyKey);
+    }
+
+    const headers: Record<string, string> = {
+      'idempotency-key': idempotencyKey,
+    };
+
     try {
       const res = await fetch(`${API_BASE}/orders`, {
         method: 'POST',
+        headers,
         body: formData,
       });
       return await handleResponse<any>(res);
     } catch (err: any) {
-      if (err.message && !isServerUnavailableError(err)) {
-        throw err;
-      }
-
-      const ref = 'XER-' + Math.floor(100000 + Math.random() * 900000);
-      const trackingToken = 'trk_' + Math.random().toString(36).substring(2, 18);
-      const file = formData.get('document') as File | null;
-      const order = {
-        id: `ord-${Date.now()}`,
-        shop_id: formData.get('shopId') || 'shp-quickcopy-001',
-        order_reference: ref,
-        tracking_token: trackingToken,
-        status: 'PENDING_APPROVAL',
-        paper_size: formData.get('paperSize') || 'A4',
-        color_mode: formData.get('colorMode') || 'BW',
-        copies: parseInt(formData.get('copies') as string || '1', 10),
-        page_count: 1,
-        total_amount: '10.00',
-        original_filename: file ? file.name : 'uploaded_document.pdf',
-        mime_type: file ? file.type : 'application/pdf',
-        file_size_bytes: file ? file.size : 1024,
-        created_at: new Date().toISOString()
-      };
-
-      try {
-        const storedOrders = JSON.parse(localStorage.getItem('smart_xerox_offline_orders') || '[]');
-        storedOrders.unshift(order);
-        localStorage.setItem('smart_xerox_offline_orders', JSON.stringify(storedOrders));
-      } catch {}
-
-      return {
-        message: 'Print job submitted successfully.',
-        order,
-        trackingToken
-      };
+      console.error('Order submission error:', err);
+      throw new Error(err.message || 'Unable to submit print order to shop. Please check your connection and retry.');
     }
   },
 

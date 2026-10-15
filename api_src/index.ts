@@ -44,7 +44,7 @@ export default async function handler(req: Request, res: Response) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-order-token');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-order-token, idempotency-key');
     return res.status(204).end();
   }
 

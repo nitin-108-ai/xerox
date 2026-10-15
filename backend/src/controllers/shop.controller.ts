@@ -54,6 +54,18 @@ export async function getPublicStorefront(req: Request, res: Response) {
       });
     }
 
+    // Record storefront visitor scan asynchronously
+    query(`
+      INSERT INTO shop_visits (id, shop_id, visitor_ip, user_agent, referrer)
+      VALUES ($1, $2, $3, $4, $5);
+    `, [
+      crypto.randomUUID(),
+      rawShop.id,
+      req.ip || null,
+      (req.headers['user-agent'] as string) || null,
+      (req.headers['referer'] as string) || null
+    ]).catch(() => {});
+
     // Fetch enabled services
     const servicesRes = await query(`
       SELECT service_type, is_enabled, description, rate, unit
@@ -183,6 +195,13 @@ const updateProfileSchema = z.object({
   estCompletionTime: z.string().optional().nullable(),
   isStorefrontVisible: z.boolean().optional().default(true),
   logoUrl: z.string().optional().nullable(),
+  coverPhotoUrl: z.string().optional().nullable(),
+  latitude: z.number().optional().nullable(),
+  longitude: z.number().optional().nullable(),
+  approvalMode: z.enum(['MANUAL', 'AUTO_ACCEPT', 'AUTO_PRINT']).optional().default('MANUAL'),
+  autoAcceptMaxPages: z.number().int().min(1).max(500).optional().default(50),
+  autoAcceptMaxCopies: z.number().int().min(1).max(50).optional().default(5),
+  paymentPolicy: z.enum(['PAY_AT_COUNTER', 'ONLINE_ONLY', 'HYBRID']).optional().default('PAY_AT_COUNTER'),
   galleryUrls: z.union([z.string(), z.array(z.string())]).optional().nullable(),
   services: z.array(z.object({
     serviceType: z.string(),
@@ -242,8 +261,15 @@ export async function updateShopProfile(req: Request, res: Response) {
         is_storefront_visible = $17,
         logo_url = $18,
         gallery_urls = $19,
+        cover_photo_url = COALESCE($20, cover_photo_url),
+        latitude = COALESCE($21, latitude),
+        longitude = COALESCE($22, longitude),
+        approval_mode = COALESCE($23, approval_mode),
+        auto_accept_max_pages = COALESCE($24, auto_accept_max_pages),
+        auto_accept_max_copies = COALESCE($25, auto_accept_max_copies),
+        payment_policy = COALESCE($26, payment_policy),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $20;
+      WHERE id = $27;
     `, [
       validated.name,
       validated.ownerDisplayName || null,
@@ -264,6 +290,13 @@ export async function updateShopProfile(req: Request, res: Response) {
       validated.isStorefrontVisible !== false,
       validated.logoUrl || null,
       galleryUrlsStr,
+      validated.coverPhotoUrl || null,
+      validated.latitude || null,
+      validated.longitude || null,
+      validated.approvalMode || 'MANUAL',
+      validated.autoAcceptMaxPages || 50,
+      validated.autoAcceptMaxCopies || 5,
+      validated.paymentPolicy || 'PAY_AT_COUNTER',
       req.user.shopId
     ]);
 
