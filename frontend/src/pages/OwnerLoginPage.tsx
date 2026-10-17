@@ -66,17 +66,33 @@ export const OwnerLoginPage: React.FC = () => {
             <button
               type="button"
               onClick={() => fillDemoAccount('owner1@smartxerox.io', 'Owner@12345')}
-              className="py-1.5 px-2.5 rounded-lg text-left text-xs bg-white hover:bg-brand-50 border border-slate-200 hover:border-brand-300 transition-colors"
+              className="py-1.5 px-2.5 rounded-xl text-left text-xs bg-white hover:bg-brand-50 border border-slate-200 hover:border-brand-300 transition-colors shadow-2xs"
             >
-              <div className="font-bold text-navy-900 text-[11px]">QuickCopy Owner</div>
+              <div className="font-bold text-navy-900 text-[11px] truncate">1. QuickCopy Express</div>
               <div className="text-[10px] text-slate-500 font-mono">owner1@...</div>
             </button>
             <button
               type="button"
-              onClick={() => fillDemoAccount('admin@smartxerox.io', 'Admin@12345')}
-              className="py-1.5 px-2.5 rounded-lg text-left text-xs bg-white hover:bg-brand-50 border border-slate-200 hover:border-brand-300 transition-colors"
+              onClick={() => fillDemoAccount('owner2@smartxerox.io', 'Owner@12345')}
+              className="py-1.5 px-2.5 rounded-xl text-left text-xs bg-white hover:bg-brand-50 border border-slate-200 hover:border-brand-300 transition-colors shadow-2xs"
             >
-              <div className="font-bold text-navy-900 text-[11px]">Platform Admin</div>
+              <div className="font-bold text-navy-900 text-[11px] truncate">2. Metro Hub Xerox</div>
+              <div className="text-[10px] text-slate-500 font-mono">owner2@...</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => fillDemoAccount('owner3@smartxerox.io', 'Owner@12345')}
+              className="py-1.5 px-2.5 rounded-xl text-left text-xs bg-white hover:bg-brand-50 border border-slate-200 hover:border-brand-300 transition-colors shadow-2xs"
+            >
+              <div className="font-bold text-navy-900 text-[11px] truncate">3. Campus Print Point</div>
+              <div className="text-[10px] text-slate-500 font-mono">owner3@...</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => fillDemoAccount('admin@smartxerox.io', 'Admin@12345')}
+              className="py-1.5 px-2.5 rounded-xl text-left text-xs bg-white hover:bg-brand-50 border border-slate-200 hover:border-brand-300 transition-colors shadow-2xs"
+            >
+              <div className="font-bold text-navy-900 text-[11px] truncate">Platform Admin</div>
               <div className="text-[10px] text-slate-500 font-mono">admin@...</div>
             </button>
           </div>

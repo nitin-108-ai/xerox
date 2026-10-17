@@ -61,23 +61,64 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-const DEFAULT_SHOP = {
-  id: 'shp-quickcopy-001',
-  name: 'QuickCopy Express Xerox & Digital Print (Verified)',
-  slug: 'quickcopy-express',
-  address: '124 Commercial Plaza, Near City Metro Gate 2, Sector 18',
-  phone: '+91 98111 22334',
-  is_verified: true,
-  is_active: true,
-  qr_code_token: 'qr-token-qc-express-2026',
-  owner_display_name: 'Rajesh Sharma',
-  category: 'Xerox & Digital Printing',
-  city: 'New Delhi',
-  min_order_amount: '5.00',
-  est_completion_time: '15-30 mins',
-  business_hours: '8:00 AM - 10:00 PM',
-  description: 'Professional digital photocopy, high-speed document printing, spiral & thermal book binding, color scanning, and thesis presentation services.'
+const DEFAULT_SHOPS: Record<string, any> = {
+  'owner1@smartxerox.io': {
+    id: 'shp-quickcopy-001',
+    name: 'QuickCopy Express Xerox & Digital Print (Verified)',
+    slug: 'quickcopy-express',
+    address: '124 Commercial Plaza, Near City Metro Gate 2, Sector 18',
+    phone: '+91 98111 22334',
+    contact_email: 'owner1@smartxerox.io',
+    is_verified: true,
+    is_active: true,
+    qr_code_token: 'qr-token-qc-express-2026',
+    owner_display_name: 'Rajesh Sharma',
+    category: 'Xerox & Digital Printing',
+    city: 'New Delhi',
+    min_order_amount: '5.00',
+    est_completion_time: '15-30 mins',
+    business_hours: '8:00 AM - 10:00 PM',
+    description: 'Professional digital photocopy, high-speed document printing, spiral & thermal book binding, color scanning, and thesis presentation services.'
+  },
+  'owner2@smartxerox.io': {
+    id: 'shp-metro-002',
+    name: 'Metro Document Hub & Xerox',
+    slug: 'metro-doc-hub',
+    address: 'Shop 12, Metro Commercial Arcade, Station Road',
+    phone: '+91 98222 33445',
+    contact_email: 'owner2@smartxerox.io',
+    is_verified: true,
+    is_active: true,
+    qr_code_token: 'qr-token-metro-002',
+    owner_display_name: 'Amit Verma',
+    category: 'Xerox & Digital Printing',
+    city: 'Mumbai',
+    min_order_amount: '5.00',
+    est_completion_time: '10-20 mins',
+    business_hours: '8:30 AM - 10:00 PM',
+    description: 'High-speed xerox, digital photo printing, laminated identity card printing, and thesis book binding.'
+  },
+  'owner3@smartxerox.io': {
+    id: 'shp-campus-003',
+    name: 'Campus Print Point & Photocopy',
+    slug: 'campus-print-point',
+    address: 'Opposite University Main Gate, North Campus',
+    phone: '+91 98333 44556',
+    contact_email: 'owner3@smartxerox.io',
+    is_verified: true,
+    is_active: true,
+    qr_code_token: 'qr-token-campus-003',
+    owner_display_name: 'Priya Singh',
+    category: 'Xerox & Digital Printing',
+    city: 'Delhi',
+    min_order_amount: '5.00',
+    est_completion_time: '15-30 mins',
+    business_hours: '8:00 AM - 9:00 PM',
+    description: 'Student project printing, study notes photocopy, dissertation hard-binding, and urgent assignment printing.'
+  }
 };
+
+const DEFAULT_SHOP = DEFAULT_SHOPS['owner1@smartxerox.io'];
 
 export const api = {
   // Auth
@@ -94,7 +135,6 @@ export const api = {
       if (err.message && !isServerUnavailableError(err)) {
         throw err;
       }
-
 
       const normEmail = email.trim().toLowerCase();
 
@@ -113,40 +153,111 @@ export const api = {
         }
       } catch {}
 
-      // Demo quick-fill accounts
-      if (normEmail === 'owner1@smartxerox.io') {
+      // Pre-configured multi-shop owner accounts
+      if (DEFAULT_SHOPS[normEmail]) {
+        const demoShop = DEFAULT_SHOPS[normEmail];
         const defaultUser = {
-          id: 'usr-owner-001',
-          email: 'owner1@smartxerox.io',
-          fullName: 'Rajesh Sharma',
+          id: `usr-${demoShop.slug}`,
+          email: normEmail,
+          fullName: demoShop.owner_display_name,
           role: 'SHOP_OWNER',
-          shopId: 'shp-quickcopy-001',
-          shopName: DEFAULT_SHOP.name,
-          slug: DEFAULT_SHOP.slug,
+          shopId: demoShop.id,
+          shopName: demoShop.name,
+          slug: demoShop.slug,
           isVerified: true
         };
+        try {
+          localStorage.setItem('smart_xerox_offline_user', JSON.stringify(defaultUser));
+          localStorage.setItem('smart_xerox_offline_shop', JSON.stringify(demoShop));
+          const allShops = JSON.parse(localStorage.getItem('smart_xerox_offline_all_shops') || '[]');
+          if (!allShops.some((s: any) => s.id === demoShop.id)) {
+            allShops.push(demoShop);
+            localStorage.setItem('smart_xerox_offline_all_shops', JSON.stringify(allShops));
+          }
+        } catch {}
         return {
-          token: 'offline_token_owner1',
+          token: `offline_token_${demoShop.slug}`,
           user: defaultUser,
           message: 'Login successful.'
         };
       }
 
       if (normEmail === 'admin@smartxerox.io') {
+        const adminUser = {
+          id: 'usr-admin-001',
+          email: 'admin@smartxerox.io',
+          fullName: 'System Administrator',
+          role: 'ADMIN',
+          isVerified: true
+        };
+        try {
+          localStorage.setItem('smart_xerox_offline_user', JSON.stringify(adminUser));
+        } catch {}
         return {
           token: 'offline_token_admin',
-          user: {
-            id: 'usr-admin-001',
-            email: 'admin@smartxerox.io',
-            fullName: 'System Administrator',
-            role: 'ADMIN',
-            isVerified: true
-          },
+          user: adminUser,
           message: 'Login successful.'
         };
       }
 
-      throw new Error('Invalid email or password.');
+      // Any custom email provided by user -> Automatically provision dedicated shop profile
+      const emailPrefix = normEmail.split('@')[0];
+      const cleanSlug = emailPrefix.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') || 'shop';
+      const formattedName = emailPrefix
+        .split(/[._-]/)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+      const customShopName = `${formattedName} Xerox & Digital Print`;
+      const customShopId = `shp-${cleanSlug}`;
+      const customSlug = `${cleanSlug}-xerox`;
+      const customQrToken = `qr-${cleanSlug}-${Date.now().toString(36)}`;
+
+      const customUser = {
+        id: `usr-${cleanSlug}`,
+        email: normEmail,
+        fullName: formattedName,
+        role: 'SHOP_OWNER',
+        shopId: customShopId,
+        shopName: customShopName,
+        slug: customSlug,
+        isVerified: true
+      };
+
+      const customShop = {
+        id: customShopId,
+        name: customShopName,
+        slug: customSlug,
+        address: 'Counter Pickup Point',
+        phone: '+91 99999 88888',
+        contact_email: normEmail,
+        owner_display_name: formattedName,
+        is_verified: true,
+        is_active: true,
+        qr_code_token: customQrToken,
+        category: 'Xerox & Digital Printing',
+        city: 'Digital City',
+        min_order_amount: '5.00',
+        est_completion_time: '15-30 mins',
+        business_hours: '8:30 AM - 9:30 PM',
+        description: 'Instant photocopy, laser printing, and document services.'
+      };
+
+      try {
+        localStorage.setItem('smart_xerox_offline_user', JSON.stringify(customUser));
+        localStorage.setItem('smart_xerox_offline_shop', JSON.stringify(customShop));
+
+        const allShops = JSON.parse(localStorage.getItem('smart_xerox_offline_all_shops') || '[]');
+        if (!allShops.some((s: any) => s.id === customShopId || s.slug === customSlug)) {
+          allShops.push(customShop);
+          localStorage.setItem('smart_xerox_offline_all_shops', JSON.stringify(allShops));
+        }
+      } catch {}
+
+      return {
+        token: `offline_token_${cleanSlug}`,
+        user: customUser,
+        message: 'Login successful.'
+      };
     }
   },
 
@@ -295,18 +406,30 @@ export const api = {
       const res = await fetch(`${API_BASE}/shops/public/${encodeURIComponent(slugOrToken)}`);
       return await handleResponse<{ shop: any; services: any[]; pricingRules: any[] }>(res);
     } catch {
-      try {
-        const allShops = JSON.parse(localStorage.getItem('smart_xerox_offline_all_shops') || '[]');
-        const found = allShops.find((s: any) => s.slug === slugOrToken || s.qr_code_token === slugOrToken);
-        if (found) return { shop: found, services: [], pricingRules: [] };
+      // 1. Check in predefined demo shops
+      for (const email of Object.keys(DEFAULT_SHOPS)) {
+        const ds = DEFAULT_SHOPS[email];
+        if (ds.slug === slugOrToken || ds.qr_code_token === slugOrToken || ds.id === slugOrToken) {
+          return { shop: ds, services: [], pricingRules: [] };
+        }
+      }
 
+      // 2. Check active offline shop
+      try {
         const storedShop = localStorage.getItem('smart_xerox_offline_shop');
         if (storedShop) {
           const s = JSON.parse(storedShop);
-          if (s.slug === slugOrToken || s.qr_code_token === slugOrToken) {
+          if (s.slug === slugOrToken || s.qr_code_token === slugOrToken || s.id === slugOrToken) {
             return { shop: s, services: [], pricingRules: [] };
           }
         }
+      } catch {}
+
+      // 3. Check offline all shops registry
+      try {
+        const allShops = JSON.parse(localStorage.getItem('smart_xerox_offline_all_shops') || '[]');
+        const found = allShops.find((s: any) => s.slug === slugOrToken || s.qr_code_token === slugOrToken || s.id === slugOrToken);
+        if (found) return { shop: found, services: [], pricingRules: [] };
       } catch {}
 
       return {
@@ -426,6 +549,20 @@ export const api = {
         const stored = JSON.parse(localStorage.getItem('smart_xerox_offline_orders') || '[]');
         stored.unshift(rec);
         localStorage.setItem('smart_xerox_offline_orders', JSON.stringify(stored));
+      } catch {}
+
+      // Real-time inter-tab & intra-window notification
+      try {
+        if (typeof BroadcastChannel !== 'undefined') {
+          const bc = new BroadcastChannel('smart_xerox_orders_channel');
+          bc.postMessage({ type: 'NEW_ORDER', order: rec });
+          bc.close();
+        }
+      } catch {}
+      try {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('smart_xerox_new_order', { detail: rec }));
+        }
       } catch {}
     };
 
@@ -710,31 +847,69 @@ export const api = {
   },
 
   async getOwnerQr() {
+    let currentShopId = 'shp-quickcopy-001';
+    let currentEmail = 'owner1@smartxerox.io';
+    let slug = 'quickcopy-express';
+    let shopName = 'QuickCopy Express Xerox & Digital Print (Verified)';
+    let qrToken = 'qr-live-verified';
+    let address = '124 Commercial Plaza, Near City Metro Gate 2, Sector 18';
+
+    try {
+      const storedUser = localStorage.getItem('smart_xerox_offline_user');
+      if (storedUser) {
+        const u = JSON.parse(storedUser);
+        if (u.email) currentEmail = u.email;
+        if (u.slug) slug = u.slug;
+        if (u.shopName) shopName = u.shopName;
+        if (u.shopId) currentShopId = u.shopId;
+      }
+      const storedShop = localStorage.getItem('smart_xerox_offline_shop');
+      if (storedShop) {
+        const s = JSON.parse(storedShop);
+        if (s.slug) slug = s.slug;
+        if (s.name) shopName = s.name;
+        if (s.id) currentShopId = s.id;
+        if (s.qr_code_token) qrToken = s.qr_code_token;
+        if (s.address) address = s.address;
+        if (s.contact_email) currentEmail = s.contact_email;
+      }
+    } catch {}
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://xerox-iota.vercel.app';
+    const storefrontUrl = `${origin}/shop/${slug}`;
+
     try {
       const res = await fetch(`${API_BASE}/shops/owner/qr`, {
         headers: { ...getAuthHeader() },
       });
-      return await handleResponse<any>(res);
-    } catch {
-      let slug = 'quickcopy-express';
-      let shopName = 'QuickCopy Express';
-      try {
-        const storedShop = localStorage.getItem('smart_xerox_offline_shop');
-        if (storedShop) {
-          const s = JSON.parse(storedShop);
-          slug = s.slug || slug;
-          shopName = s.name || shopName;
-        }
-      } catch {}
-      const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      const storefrontUrl = `${origin}/shop/${slug}`;
-      return {
-        slug,
-        shopName,
-        storefrontUrl,
-        qrCodeDataUrl: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(storefrontUrl)}`
-      };
-    }
+      const data = await handleResponse<any>(res);
+      if (data && (data.qrDataUrl || data.qrCodeDataUrl)) {
+        return {
+          ...data,
+          shopId: data.shopId || currentShopId,
+          shopName: data.shopName || shopName,
+          slug: data.slug || slug,
+          email: currentEmail,
+          address: data.address || address,
+          qrToken: data.qrToken || qrToken,
+          storefrontUrl: data.storefrontUrl || storefrontUrl,
+          qrDataUrl: data.qrDataUrl || data.qrCodeDataUrl,
+          qrCodeDataUrl: data.qrCodeDataUrl || data.qrDataUrl
+        };
+      }
+    } catch {}
+
+    return {
+      shopId: currentShopId,
+      shopName,
+      slug,
+      email: currentEmail,
+      address,
+      qrToken,
+      storefrontUrl,
+      qrDataUrl: '',
+      qrCodeDataUrl: ''
+    };
   },
 
   async regenerateOwnerQr() {
@@ -743,10 +918,22 @@ export const api = {
         method: 'POST',
         headers: { ...getAuthHeader() },
       });
-      return await handleResponse<any>(res);
-    } catch {
-      return this.getOwnerQr();
-    }
+      const data = await handleResponse<any>(res);
+      if (data) return data;
+    } catch {}
+
+    // Offline / fallback regeneration
+    try {
+      const newToken = `qr-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`;
+      const storedShop = localStorage.getItem('smart_xerox_offline_shop');
+      if (storedShop) {
+        const s = JSON.parse(storedShop);
+        s.qr_code_token = newToken;
+        localStorage.setItem('smart_xerox_offline_shop', JSON.stringify(s));
+      }
+    } catch {}
+
+    return this.getOwnerQr();
   },
 
   async getOwnerOrders(status?: string, search?: string) {

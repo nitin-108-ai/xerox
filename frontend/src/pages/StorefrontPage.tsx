@@ -21,10 +21,12 @@ import {
   ChevronUp,
   ChevronDown,
   Layers,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Eye
 } from 'lucide-react';
 import { api } from '../services/api';
 import { ImageEditorModal } from '../components/ImageEditorModal';
+import { CustomerDocumentPreviewModal } from '../components/CustomerDocumentPreviewModal';
 
 interface QueuedFile {
   id: string;
@@ -68,6 +70,15 @@ export const StorefrontPage: React.FC = () => {
   // Submitted order state
   const [submittedOrder, setSubmittedOrder] = useState<any | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  // Document preview state
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewInitialIndex, setPreviewInitialIndex] = useState(0);
+
+  const handleOpenPreview = (index: number) => {
+    setPreviewInitialIndex(index);
+    setPreviewModalOpen(true);
+  };
 
   useEffect(() => {
     async function loadShop() {
@@ -554,14 +565,21 @@ export const StorefrontPage: React.FC = () => {
                       key={item.id}
                       className="p-3 rounded-2xl bg-slate-50 border border-slate-200/90 flex items-center justify-between gap-3 shadow-2xs hover:bg-white transition"
                     >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div
+                        onClick={() => handleOpenPreview(index)}
+                        className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer hover:opacity-90 transition"
+                        title="Click to preview this document"
+                      >
                         {item.isImage && item.previewUrl ? (
-                          <div className="w-11 h-11 rounded-xl overflow-hidden bg-slate-200 shrink-0 border border-slate-300">
+                          <div className="w-11 h-11 rounded-xl overflow-hidden bg-slate-200 shrink-0 border border-slate-300 relative group">
                             <img
                               src={item.previewUrl}
                               alt={item.file.name}
                               className="w-full h-full object-cover"
                             />
+                            <div className="absolute inset-0 bg-navy-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                              <Eye className="w-4 h-4 text-white" />
+                            </div>
                           </div>
                         ) : (
                           <div className="w-11 h-11 rounded-xl bg-brand-500 text-white flex items-center justify-center shrink-0">
@@ -570,7 +588,7 @@ export const StorefrontPage: React.FC = () => {
                         )}
 
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-bold text-navy-950 truncate" title={item.file.name}>
+                          <p className="text-xs font-bold text-navy-950 truncate hover:text-brand-600 transition" title={item.file.name}>
                             {index + 1}. {item.file.name}
                           </p>
                           <p className="text-[10px] text-slate-500 font-mono mt-0.5">
@@ -580,13 +598,24 @@ export const StorefrontPage: React.FC = () => {
                       </div>
 
                       {/* Item Actions */}
-                      <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {/* Preview button for ALL files (PDF & Images) */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenPreview(index)}
+                          className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-brand-50 text-slate-700 hover:text-brand-700 text-[11px] font-bold flex items-center gap-1 border border-slate-200 hover:border-brand-300 transition shadow-2xs"
+                          title="Preview document before printing"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-brand-600" />
+                          <span>Preview</span>
+                        </button>
+
                         {/* Edit button for images */}
                         {item.isImage && (
                           <button
                             type="button"
                             onClick={() => setEditingFileIndex(index)}
-                            className="px-2 py-1 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 text-[11px] font-bold flex items-center gap-1 transition"
+                            className="px-2 py-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 text-[11px] font-bold flex items-center gap-1 transition"
                             title="Crop, rotate, adjust photo"
                           >
                             <Sliders className="w-3 h-3" />
@@ -656,9 +685,20 @@ export const StorefrontPage: React.FC = () => {
               >
                 <ArrowLeft className="w-4 h-4" /> Back to Files
               </button>
-              <span className="text-[11px] font-extrabold text-brand-600 uppercase tracking-wider">
-                Step 2 of 3
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleOpenPreview(0)}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 px-2.5 py-1 rounded-xl border border-brand-200 transition"
+                  title="Preview uploaded documents"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Preview Files ({queuedFiles.length})</span>
+                </button>
+                <span className="text-[11px] font-extrabold text-brand-600 uppercase tracking-wider">
+                  Step 2 of 3
+                </span>
+              </div>
             </div>
 
             {/* 1. Paper Size */}
@@ -935,6 +975,34 @@ export const StorefrontPage: React.FC = () => {
                   <strong>Notes:</strong> {customNotes}
                 </div>
               )}
+
+              {/* Document Preview Quick Bar in Step 3 */}
+              <div className="space-y-1.5 pt-2 border-t border-slate-200">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                  Verify Documents to Print
+                </span>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                  {queuedFiles.map((item, idx) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200 text-xs"
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        {item.isImage ? <ImageIcon className="w-3.5 h-3.5 text-brand-500 shrink-0" /> : <FileText className="w-3.5 h-3.5 text-brand-600 shrink-0" />}
+                        <span className="truncate font-semibold text-navy-950 text-[11px]">{item.file.name}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenPreview(idx)}
+                        className="px-2 py-1 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-700 text-[10px] font-bold flex items-center gap-1 shrink-0 ml-2 transition"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>Preview</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Dynamic Estimated Price Card */}
@@ -1003,6 +1071,22 @@ export const StorefrontPage: React.FC = () => {
             onSave={handleSaveEditedImage}
           />
         )}
+
+        {/* Customer Document Preview Modal */}
+        <CustomerDocumentPreviewModal
+          isOpen={previewModalOpen}
+          onClose={() => setPreviewModalOpen(false)}
+          files={queuedFiles}
+          initialIndex={previewInitialIndex}
+          printSettings={{
+            paperSize,
+            colorMode,
+            isDuplex,
+            copies,
+            estimatedPrice
+          }}
+          onColorModeChange={(mode) => setColorMode(mode)}
+        />
       </div>
     </div>
   );

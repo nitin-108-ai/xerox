@@ -137,7 +137,32 @@ export const OwnerDashboardPage: React.FC = () => {
       loadData(true);
     }, 4000);
 
-    return () => clearInterval(interval);
+    // Instant real-time notification listener via BroadcastChannel
+    let bc: BroadcastChannel | null = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        bc = new BroadcastChannel('smart_xerox_orders_channel');
+        bc.onmessage = () => {
+          loadData(true);
+        };
+      }
+    } catch {}
+
+    // Instant real-time notification listener via CustomEvent & storage
+    const handleNewOrderEvent = () => {
+      loadData(true);
+    };
+    window.addEventListener('smart_xerox_new_order', handleNewOrderEvent);
+    window.addEventListener('storage', handleNewOrderEvent);
+
+    return () => {
+      clearInterval(interval);
+      if (bc) {
+        try { bc.close(); } catch {}
+      }
+      window.removeEventListener('smart_xerox_new_order', handleNewOrderEvent);
+      window.removeEventListener('storage', handleNewOrderEvent);
+    };
   }, [soundEnabled]);
 
   const defaultPrinter = printers.find((p) => p.isDefault) || printers[0];

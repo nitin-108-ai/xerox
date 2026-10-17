@@ -1185,7 +1185,7 @@ async function getShopQr(req, res) {
       return res.status(404).json({ error: "Shop not found." });
     }
     const shop = shopRes.rows[0];
-    const canonicalStorefrontUrl = `${config.frontendUrl}/s/${shop.id}`;
+    const canonicalStorefrontUrl = `${config.frontendUrl}/shop/${shop.slug}`;
     const slugUrl = `${config.frontendUrl}/shop/${shop.slug}`;
     const qrDataUrl = await QRCode.toDataURL(canonicalStorefrontUrl, {
       errorCorrectionLevel: "H",
@@ -1203,7 +1203,9 @@ async function getShopQr(req, res) {
       storefrontUrl: canonicalStorefrontUrl,
       slugUrl,
       qrToken: shop.qr_code_token,
-      qrDataUrl
+      qrDataUrl,
+      qrCodeDataUrl: qrDataUrl,
+      email: req.user.email
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to generate shop QR code." });
@@ -3430,6 +3432,7 @@ async function runMigrations() {
     `ALTER TABLE shops ADD COLUMN IF NOT EXISTS auto_accept_max_pages INTEGER DEFAULT 50;`,
     `ALTER TABLE shops ADD COLUMN IF NOT EXISTS auto_accept_max_copies INTEGER DEFAULT 5;`,
     `ALTER TABLE shops ADD COLUMN IF NOT EXISTS payment_policy VARCHAR(32) DEFAULT 'COUNTER_ONLY';`,
+    `ALTER TABLE shops ADD COLUMN IF NOT EXISTS settings_json TEXT DEFAULT '{}';`,
     // Paired devices table
     `CREATE TABLE IF NOT EXISTS paired_devices (
         id VARCHAR(64) PRIMARY KEY,

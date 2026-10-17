@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import QRCode from 'qrcode';
 import {
   QrCode,
   Download,
@@ -14,7 +15,9 @@ import {
   Sparkles,
   ArrowLeft,
   Settings,
-  Laptop
+  Laptop,
+  Mail,
+  CheckCircle2
 } from 'lucide-react';
 import { OwnerLayout } from '../components/OwnerLayout';
 import { api } from '../services/api';
@@ -31,7 +34,34 @@ export const OwnerQrPage: React.FC = () => {
     try {
       setLoading(true);
       const res = await api.getOwnerQr();
-      setQrData(res);
+
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://xerox-iota.vercel.app';
+      const storefrontUrl = res.storefrontUrl || `${origin}/shop/${res.slug || 'quickcopy-express'}`;
+
+      // Generate sharp 600x600 high-res QR code PNG data URL locally (0ms latency, 100% offline-ready)
+      let qrDataUrl = res.qrDataUrl || res.qrCodeDataUrl;
+      if (!qrDataUrl || qrDataUrl.startsWith('http')) {
+        try {
+          qrDataUrl = await QRCode.toDataURL(storefrontUrl, {
+            errorCorrectionLevel: 'H',
+            margin: 2,
+            width: 600,
+            color: {
+              dark: '#0B192C',
+              light: '#FFFFFF'
+            }
+          });
+        } catch {
+          qrDataUrl = await QRCode.toDataURL(storefrontUrl);
+        }
+      }
+
+      setQrData({
+        ...res,
+        storefrontUrl,
+        qrDataUrl,
+        qrCodeDataUrl: qrDataUrl
+      });
     } catch (err: any) {
       alert(err.message || 'Failed to load shop QR code.');
     } finally {
@@ -133,12 +163,21 @@ export const OwnerQrPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           {/* Left Column: QR Card Display */}
           <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-glass text-center space-y-6">
-            <div className="space-y-1">
+            <div className="space-y-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-brand-600 bg-brand-50 border border-brand-200 px-2.5 py-0.5 rounded-full">
                 Permanent Counter Anchor
               </span>
               <h3 className="text-xl font-black text-navy-950 mt-1">{qrData?.shopName || 'Smart Xerox Shop'}</h3>
-              <p className="text-xs text-slate-400 font-mono">Token: {qrData?.qrToken || 'qr-live-verified'}</p>
+              
+              <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-800 border border-brand-200">
+                  <Mail className="w-3.5 h-3.5 text-brand-600" />
+                  <span>Anchored to: <strong>{qrData?.email || 'owner1@smartxerox.io'}</strong></span>
+                </span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono text-slate-500 bg-slate-100 border border-slate-200">
+                  Token: {qrData?.qrToken || 'qr-live-verified'}
+                </span>
+              </div>
             </div>
 
             <div className="p-4 bg-white rounded-2xl border-2 border-slate-100 shadow-inner inline-block">
@@ -146,11 +185,12 @@ export const OwnerQrPage: React.FC = () => {
                 <img
                   src={qrData.qrDataUrl}
                   alt="Shop Counter QR Code"
-                  className="w-64 h-64 mx-auto object-contain"
+                  className="w-64 h-64 mx-auto object-contain rounded-xl shadow-xs"
                 />
               ) : (
-                <div className="w-64 h-64 flex items-center justify-center text-slate-400">
-                  Generating QR...
+                <div className="w-64 h-64 flex flex-col items-center justify-center text-slate-400 gap-2">
+                  <div className="w-7 h-7 rounded-full border-2 border-brand-600 border-t-transparent animate-spin" />
+                  <span className="text-xs font-medium">Generating QR...</span>
                 </div>
               )}
             </div>

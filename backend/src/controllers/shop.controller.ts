@@ -551,10 +551,10 @@ export async function getShopQr(req: Request, res: Response) {
     }
 
     const shop = shopRes.rows[0];
-    const canonicalStorefrontUrl = `${config.frontendUrl}/s/${shop.id}`;
+    const canonicalStorefrontUrl = `${config.frontendUrl}/shop/${shop.slug}`;
     const slugUrl = `${config.frontendUrl}/shop/${shop.slug}`;
 
-    // Generate high resolution QR code PNG Data URL pointing to permanent /s/:shopId link
+    // Generate high resolution QR code PNG Data URL pointing to permanent /shop/:slug link
     const qrDataUrl = await QRCode.toDataURL(canonicalStorefrontUrl, {
       errorCorrectionLevel: 'H',
       margin: 2,
@@ -572,7 +572,9 @@ export async function getShopQr(req: Request, res: Response) {
       storefrontUrl: canonicalStorefrontUrl,
       slugUrl,
       qrToken: shop.qr_code_token,
-      qrDataUrl
+      qrDataUrl,
+      qrCodeDataUrl: qrDataUrl,
+      email: req.user.email
     });
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to generate shop QR code.' });
