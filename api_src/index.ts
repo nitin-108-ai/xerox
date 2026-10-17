@@ -30,12 +30,17 @@ export default async function handler(req: Request, res: Response) {
   await ensureDb();
 
   // Normalize req.url for Express router
-  if ((req as any).headers?.['x-matched-path']) {
+  const queryPath = (req as any).query?.path;
+  if (queryPath) {
+    const subpath = Array.isArray(queryPath) ? queryPath.join('/') : queryPath;
+    const cleanSubpath = subpath.replace(/^\/+/, '');
+    const qIndex = req.url.indexOf('?');
+    const existingParams = new URLSearchParams(qIndex !== -1 ? req.url.slice(qIndex) : '');
+    existingParams.delete('path');
+    const qs = existingParams.toString();
+    req.url = `/api/${cleanSubpath}${qs ? '?' + qs : ''}`;
+  } else if ((req as any).headers?.['x-matched-path'] && (req as any).headers['x-matched-path'] !== '/api' && (req as any).headers['x-matched-path'] !== '/api/') {
     req.url = (req as any).headers['x-matched-path'];
-  } else if ((req as any).query?.path) {
-    const rawPath = (req as any).query.path;
-    const subpath = Array.isArray(rawPath) ? rawPath.join('/') : rawPath;
-    req.url = `/api/${subpath}`;
   } else if (!req.url.startsWith('/api')) {
     req.url = `/api${req.url.startsWith('/') ? req.url : '/' + req.url}`;
   }

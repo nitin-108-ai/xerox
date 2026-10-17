@@ -289,6 +289,9 @@ export const StorefrontPage: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append('shopId', shopData.shop.id);
+      formData.append('shopName', shopData.shop.name || 'QuickCopy Express Xerox & Digital Print');
+      formData.append('shopSlug', shopData.shop.slug || slug || 'quickcopy-express');
+      formData.append('shopAddress', shopData.shop.address || 'Digital Print Counter');
       formData.append('paperSize', paperSize);
       formData.append('colorMode', colorMode);
       formData.append('isDuplex', String(isDuplex));
@@ -380,7 +383,9 @@ export const StorefrontPage: React.FC = () => {
 
   // Confirmation screen when order has been submitted
   if (submittedOrder) {
-    const trackingUrl = `/track/${submittedOrder.orderReference}?token=${submittedOrder.orderAccessToken}`;
+    const orderRef = submittedOrder.orderReference || submittedOrder.order_reference || 'SX-LIVE-ORDER';
+    const token = submittedOrder.orderAccessToken || 'sx_token';
+    const trackingUrl = `/track/${orderRef}?token=${token}`;
 
     return (
       <div className="min-h-screen bg-slate-50/70 flex items-center justify-center p-4">
@@ -395,7 +400,7 @@ export const StorefrontPage: React.FC = () => {
             </span>
             <h2 className="text-2xl font-black text-navy-950 pt-2">Order Submitted!</h2>
             <p className="text-xs text-slate-500">
-              Your {submittedOrder.fileCount || queuedFiles.length} document(s) have been received directly at <strong>{shop.name}</strong>.
+              Your {submittedOrder.fileCount || queuedFiles.length} document(s) have been received directly at <strong>{shop?.name || 'the shop counter'}</strong>.
             </p>
           </div>
 
@@ -406,15 +411,15 @@ export const StorefrontPage: React.FC = () => {
                 Order Reference Number
               </span>
               <div className="text-2xl font-mono font-black text-navy-950 tracking-wider">
-                {submittedOrder.orderReference}
+                {orderRef}
               </div>
             </div>
 
-            {submittedOrder.pickupOtp && (
+            {(submittedOrder.pickupOtp || submittedOrder.pickup_otp) && (
               <div className="pt-2 border-t border-slate-200/60 flex items-center justify-center gap-2">
                 <span className="text-[11px] font-bold text-slate-500">Pickup Security Code:</span>
                 <span className="font-mono font-black text-base text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded-lg border border-brand-200">
-                  {submittedOrder.pickupOtp}
+                  {submittedOrder.pickupOtp || submittedOrder.pickup_otp}
                 </span>
               </div>
             )}

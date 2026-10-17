@@ -3793,12 +3793,17 @@ async function ensureDb() {
 }
 async function handler(req, res) {
   await ensureDb();
-  if (req.headers?.["x-matched-path"]) {
+  const queryPath = req.query?.path;
+  if (queryPath) {
+    const subpath = Array.isArray(queryPath) ? queryPath.join("/") : queryPath;
+    const cleanSubpath = subpath.replace(/^\/+/, "");
+    const qIndex = req.url.indexOf("?");
+    const existingParams = new URLSearchParams(qIndex !== -1 ? req.url.slice(qIndex) : "");
+    existingParams.delete("path");
+    const qs = existingParams.toString();
+    req.url = `/api/${cleanSubpath}${qs ? "?" + qs : ""}`;
+  } else if (req.headers?.["x-matched-path"] && req.headers["x-matched-path"] !== "/api" && req.headers["x-matched-path"] !== "/api/") {
     req.url = req.headers["x-matched-path"];
-  } else if (req.query?.path) {
-    const rawPath = req.query.path;
-    const subpath = Array.isArray(rawPath) ? rawPath.join("/") : rawPath;
-    req.url = `/api/${subpath}`;
   } else if (!req.url.startsWith("/api")) {
     req.url = `/api${req.url.startsWith("/") ? req.url : "/" + req.url}`;
   }

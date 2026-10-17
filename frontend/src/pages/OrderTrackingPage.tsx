@@ -355,9 +355,18 @@ export const OrderTrackingPage: React.FC = () => {
     );
   }
 
-  const { order, shop, items, document: docMeta, history, messages } = orderData;
-  const isCancellable = ['SUBMITTED', 'ACCEPTED', 'AWAITING_APPROVAL'].includes(order.status);
-  const isAwaitingApproval = order.status === 'AWAITING_APPROVAL';
+  const order = orderData?.order || {};
+  const shop = orderData?.shop || {
+    name: order?.shop_name || 'QuickCopy Express Xerox & Digital Print',
+    address: order?.shop_address || '124 Commercial Plaza, Near City Metro Gate 2, Sector 18'
+  };
+  const items = Array.isArray(orderData?.items) ? orderData.items : [];
+  const docMeta = orderData?.document || null;
+  const history = Array.isArray(orderData?.history) ? orderData.history : [];
+  const messages = Array.isArray(orderData?.messages) ? orderData.messages : [];
+
+  const isCancellable = ['SUBMITTED', 'ACCEPTED', 'AWAITING_APPROVAL'].includes(order?.status);
+  const isAwaitingApproval = order?.status === 'AWAITING_APPROVAL';
 
   // Status Stepper Steps
   const steps: Array<{ status: OrderStatus; label: string; icon: any }> = [
@@ -376,11 +385,11 @@ export const OrderTrackingPage: React.FC = () => {
       case 'PRINTING': return 2;
       case 'READY_FOR_PICKUP': return 3;
       case 'COMPLETED': return 4;
-      default: return -1;
+      default: return 0;
     }
   };
 
-  const currentIndex = getStepIndex(order.status);
+  const currentIndex = getStepIndex(order?.status || 'SUBMITTED');
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -389,16 +398,16 @@ export const OrderTrackingPage: React.FC = () => {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <span className="text-xs font-bold font-mono text-slate-500 uppercase tracking-wider">
-              REF: {order.orderReference}
+              REF: {order?.orderReference || order?.order_reference || activeRef}
             </span>
-            <StatusBadge status={order.status} size="lg" />
+            <StatusBadge status={order?.status || 'SUBMITTED'} size="lg" />
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-extrabold text-navy-950 tracking-tight">
             Order Status Tracking
           </h1>
           <p className="text-xs text-slate-500">
-            Dispatch Center: <strong className="text-navy-900">{shop.name}</strong> • {shop.address}
+            Dispatch Center: <strong className="text-navy-900">{shop?.name || 'QuickCopy Express Xerox & Digital Print'}</strong> • {shop?.address || 'Digital Print Counter'}
           </p>
         </div>
 
@@ -408,7 +417,7 @@ export const OrderTrackingPage: React.FC = () => {
             Counter Pickup OTP
           </div>
           <div className="text-2xl font-mono font-extrabold text-brand-600 tracking-wider mt-0.5">
-            {order.pickupOtp}
+            {order?.pickupOtp || order?.pickup_otp || '----'}
           </div>
           <div className="text-[10px] text-slate-500 mt-0.5">
             Provide to counter staff
@@ -472,7 +481,7 @@ export const OrderTrackingPage: React.FC = () => {
                 </h3>
               </div>
               <p className="text-xs text-amber-800 mt-0.5">
-                Your print job has arrived at <strong>{shop.name}</strong>. Counter staff is reviewing the documents. This page updates live automatically without refresh.
+                Your print job has arrived at <strong>{shop?.name || 'the shop counter'}</strong>. Counter staff is reviewing the documents. This page updates live automatically without refresh.
               </p>
             </div>
           </div>
@@ -544,13 +553,13 @@ export const OrderTrackingPage: React.FC = () => {
                 </h3>
               </div>
               <p className="text-xs text-emerald-800 mt-0.5">
-                Collect your prints from counter staff. Show Security OTP: <strong className="font-mono text-emerald-950 bg-emerald-200 px-2 py-0.5 rounded-md">{order.pickupOtp}</strong>
+                Collect your prints from counter staff. Show Security OTP: <strong className="font-mono text-emerald-950 bg-emerald-200 px-2 py-0.5 rounded-md">{order?.pickupOtp || order?.pickup_otp || '----'}</strong>
               </p>
             </div>
           </div>
           <div className="text-right shrink-0">
             <span className="text-[10px] text-emerald-700 font-bold block uppercase">Counter OTP</span>
-            <span className="font-mono font-black text-xl text-emerald-900">{order.pickupOtp}</span>
+            <span className="font-mono font-black text-xl text-emerald-900">{order?.pickupOtp || order?.pickup_otp || '----'}</span>
           </div>
         </div>
       )}
@@ -729,7 +738,7 @@ export const OrderTrackingPage: React.FC = () => {
                     className={`flex flex-col ${isCustomer ? 'items-end' : 'items-start'}`}
                   >
                     <span className="text-[10px] text-slate-400 font-medium mb-1">
-                      {isCustomer ? 'You' : shop.name} • {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {isCustomer ? 'You' : (shop?.name || 'Shop Counter')} • {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     <div
                       className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-xs leading-relaxed ${

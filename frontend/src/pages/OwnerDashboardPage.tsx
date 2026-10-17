@@ -175,6 +175,9 @@ export const OwnerDashboardPage: React.FC = () => {
           });
           setTimeout(() => setQrScanNotice(null), 8000);
         } catch {}
+      } else if (e.key === 'smart_xerox_last_order_received' || e.key === 'smart_xerox_offline_orders') {
+        if (soundEnabled) playChime();
+        loadData(true);
       } else {
         loadData(true);
       }
@@ -185,7 +188,12 @@ export const OwnerDashboardPage: React.FC = () => {
       loadData(true);
     };
 
+    const handleOrderUpdate = () => {
+      loadData(true);
+    };
+
     window.addEventListener('smart_xerox_new_order', handleNewOrder);
+    window.addEventListener('smart_xerox_order_updated', handleOrderUpdate);
     window.addEventListener('storage', handleStorageEvent);
 
     return () => {
@@ -194,6 +202,7 @@ export const OwnerDashboardPage: React.FC = () => {
         try { bc.close(); } catch {}
       }
       window.removeEventListener('smart_xerox_new_order', handleNewOrder);
+      window.removeEventListener('smart_xerox_order_updated', handleOrderUpdate);
       window.removeEventListener('storage', handleStorageEvent);
     };
   }, [soundEnabled]);

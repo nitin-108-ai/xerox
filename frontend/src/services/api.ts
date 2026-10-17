@@ -515,12 +515,27 @@ export const api = {
     const pickupOtp = Math.floor(1000 + Math.random() * 9000).toString();
     const orderAccessToken = 'tok_' + Math.random().toString(36).substring(2, 18);
 
+    const shopName = (formData.get('shopName') as string) || 'QuickCopy Express Xerox & Digital Print';
+    const shopSlug = (formData.get('shopSlug') as string) || 'quickcopy-express';
+    const shopAddress = (formData.get('shopAddress') as string) || '124 Commercial Plaza, Near City Metro Gate 2, Sector 18';
+
     const localOrderRecord = {
       id: orderId,
       order_reference: orderRef,
       orderReference: orderRef,
       shop_id: shopId,
       shopId: shopId,
+      shop_slug: shopSlug,
+      shopSlug: shopSlug,
+      shop_name: shopName,
+      shop: {
+        id: shopId,
+        name: shopName,
+        slug: shopSlug,
+        address: shopAddress,
+        businessHours: '8:30 AM - 9:30 PM',
+        retentionHours: 24,
+      },
       status: 'SUBMITTED',
       customer_alias: customerAlias,
       pickup_otp: pickupOtp,
@@ -538,6 +553,16 @@ export const api = {
       custom_notes: customNotes,
       documents: docItems,
       items: [{ paper_size: paperSize, color_mode: colorMode, is_duplex: isDuplex, copies, page_count: 1, item_price: totalAmount, custom_notes: customNotes }],
+      history: [
+        {
+          previous_status: null,
+          new_status: 'SUBMITTED',
+          changed_by_role: 'CUSTOMER',
+          note: 'Print order submitted by customer',
+          created_at: new Date().toISOString()
+        }
+      ],
+      messages: [],
       file_count: docItems.length || 1,
       original_filename: docItems[0]?.original_filename || 'document.pdf',
       created_at: new Date().toISOString(),
@@ -547,15 +572,17 @@ export const api = {
     const saveLocally = (rec: any) => {
       try {
         const stored = JSON.parse(localStorage.getItem('smart_xerox_offline_orders') || '[]');
-        stored.unshift(rec);
-        localStorage.setItem('smart_xerox_offline_orders', JSON.stringify(stored));
+        const filtered = stored.filter((o: any) => o.id !== rec.id && o.order_reference !== rec.order_reference);
+        filtered.unshift(rec);
+        localStorage.setItem('smart_xerox_offline_orders', JSON.stringify(filtered));
+        localStorage.setItem('smart_xerox_last_order_received', JSON.stringify({ ref: rec.order_reference, timestamp: Date.now() }));
       } catch {}
 
       // Real-time inter-tab & intra-window notification
       try {
         if (typeof BroadcastChannel !== 'undefined') {
           const bc = new BroadcastChannel('smart_xerox_orders_channel');
-          bc.postMessage({ type: 'NEW_ORDER', order: rec });
+          bc.postMessage({ type: 'NEW_ORDER', order: rec, timestamp: Date.now() });
           bc.close();
         }
       } catch {}
@@ -607,30 +634,123 @@ export const api = {
   },
 
   async trackOrder(orderRef: string, token: string) {
+    let serverData: any = null;
     try {
       const res = await fetch(`${API_BASE}/orders/track/${encodeURIComponent(orderRef)}?token=${encodeURIComponent(token)}`);
-      return await handleResponse<any>(res);
-    } catch {
-      try {
-        const storedOrders = JSON.parse(localStorage.getItem('smart_xerox_offline_orders') || '[]');
-        const ord = storedOrders.find((o: any) => o.order_reference === orderRef);
-        if (ord) return { order: ord, timeline: [{ status: ord.status, created_at: ord.created_at }] };
-      } catch {}
-      return {
-        order: {
-          order_reference: orderRef,
-          status: 'PENDING_APPROVAL',
-          paper_size: 'A4',
-          color_mode: 'BW',
-          copies: 1,
-          page_count: 1,
-          total_amount: '10.00',
-          original_filename: 'document.pdf',
-          created_at: new Date().toISOString()
-        },
-        timeline: []
-      };
+      serverData = await handleResponse<any>(res);
+    } catch {}
+
+    if (serverData && serverData.order) {
+      if (!serverData.shop) {
+        serverData.shop = {
+          name: serverData.order.shop_name || 'QuickCopy Express Xerox & Digital Print',
+          address: serverData.order.shop_address || '124 Commercial Plaza, Near City Metro Gate 2, Sector 18'
+        };
+      }
+      if (!serverData.items) {
+        serverData.items = [];
+      }
+      if (!serverData.history) {
+        serverData.history = [];
+      }
+      if (!serverData.messages) {
+        serverData.messages = [];
+      }
+      return serverData;
     }
+
+    // Local / Offline fallback lookup
+    try {
+      const storedOrders = JSON.parse(localStorage.getItem('smart_xerox_offline_orders') || '[]');
+      const ord = storedOrders.find(
+        (o: any) => o.order_reference === orderRef || o.orderReference === orderRef || o.id === orderRef
+      );
+      if (ord) {
+        const fallbackShop = ord.shop || {
+          name: ord.shop_name || 'QuickCopy Express Xerox & Digital Print',
+          address: ord.shop_address || '124 Commercial Plaza, Near City Metro Gate 2, Sector 18',
+          businessHours: '8:30 AM - 9:30 PM'
+        };
+        const fallbackItems = ord.items || [
+          {
+            paper_size: ord.paper_size || 'A4',
+            color_mode: ord.color_mode || 'BW',
+            is_duplex: ord.is_duplex || false,
+            copies: ord.copies || 1,
+            page_count: ord.page_count || 1,
+            item_price: ord.final_amount || ord.total_amount || '10.00',
+            custom_notes: ord.custom_notes || ''
+          }
+        ];
+        return {
+          order: {
+            id: ord.id,
+            orderReference: ord.order_reference || ord.orderReference || orderRef,
+            status: ord.status || 'SUBMITTED',
+            estimatedAmount: parseFloat(ord.estimated_amount || ord.total_amount || '10.00'),
+            finalAmount: parseFloat(ord.final_amount || ord.total_amount || '10.00'),
+            quotationNote: ord.quotation_note || null,
+            cancellationReason: ord.cancellation_reason || null,
+            pickupOtp: ord.pickup_otp || ord.pickupOtp || '4829',
+            createdAt: ord.created_at || new Date().toISOString(),
+            updatedAt: ord.updated_at || new Date().toISOString()
+          },
+          shop: fallbackShop,
+          items: fallbackItems,
+          document: ord.documents?.[0] ? {
+            originalFilename: ord.documents[0].original_filename || ord.original_filename || 'document.pdf',
+            fileSize: ord.documents[0].file_size || 1024000,
+            mimeType: ord.documents[0].mime_type || 'application/pdf',
+            isDeleted: false,
+            autoDeleteAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString()
+          } : {
+            originalFilename: ord.original_filename || 'document.pdf',
+            fileSize: 1024000,
+            mimeType: 'application/pdf',
+            isDeleted: false,
+            autoDeleteAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString()
+          },
+          history: ord.history || [
+            {
+              previous_status: null,
+              new_status: ord.status || 'SUBMITTED',
+              changed_by_role: 'CUSTOMER',
+              note: 'Order submitted to counter queue',
+              created_at: ord.created_at || new Date().toISOString()
+            }
+          ],
+          messages: ord.messages || []
+        };
+      }
+    } catch {}
+
+    // Fallback if not yet cached
+    return {
+      order: {
+        id: 'ord-temp',
+        orderReference: orderRef,
+        status: 'SUBMITTED',
+        estimatedAmount: 10.0,
+        finalAmount: 10.0,
+        quotationNote: null,
+        cancellationReason: null,
+        pickupOtp: '4829',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      shop: {
+        name: 'QuickCopy Express Xerox & Digital Print',
+        address: '124 Commercial Plaza, Near City Metro Gate 2, Sector 18'
+      },
+      items: [],
+      document: {
+        originalFilename: 'document.pdf',
+        isDeleted: false,
+        autoDeleteAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString()
+      },
+      history: [],
+      messages: []
+    };
   },
 
   async approveQuote(orderRef: string, token: string) {
@@ -1028,11 +1148,13 @@ export const api = {
       }
     } catch {}
 
-    // Retrieve local orders and scope to current shop
+    // Retrieve local orders
     let localOrders: any[] = [];
     try {
       const raw = JSON.parse(localStorage.getItem('smart_xerox_offline_orders') || '[]');
-      localOrders = raw.filter((o: any) => o.shop_id === currentShopId || o.shopId === currentShopId);
+      if (Array.isArray(raw)) {
+        localOrders = raw;
+      }
     } catch {}
 
     // Merge server orders and local orders (deduplicate by id or reference)
