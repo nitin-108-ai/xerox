@@ -21,7 +21,10 @@ import {
   ArrowRight,
   ArrowLeft,
   Clock,
-  KeyRound
+  KeyRound,
+  Building2,
+  Settings,
+  QrCode
 } from 'lucide-react';
 import { OwnerLayout } from '../components/OwnerLayout';
 import { api } from '../services/api';
@@ -245,18 +248,21 @@ export const OwnerPrintersPage: React.FC = () => {
               to="/owner/profile"
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
             >
+              <Building2 className="w-3.5 h-3.5 text-slate-500" />
               <span>Profile</span>
             </Link>
             <Link
               to="/owner/settings"
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
             >
+              <Settings className="w-3.5 h-3.5 text-slate-500" />
               <span>Settings</span>
             </Link>
             <Link
               to="/owner/qr"
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
             >
+              <QrCode className="w-3.5 h-3.5 text-slate-500" />
               <span>Shop QR</span>
             </Link>
           </div>

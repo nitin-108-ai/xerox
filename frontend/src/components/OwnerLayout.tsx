@@ -55,11 +55,15 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
   const [pairingLoading, setPairingLoading] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const mobileDropdownRef = useRef<HTMLDivElement | null>(null);
 
   // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const insideDesktop = dropdownRef.current && dropdownRef.current.contains(target);
+      const insideMobile = mobileDropdownRef.current && mobileDropdownRef.current.contains(target);
+      if (!insideDesktop && !insideMobile) {
         setDropdownOpen(false);
       }
     }
@@ -101,6 +105,89 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
 
   const isActive = (path: string) => location.pathname === path;
 
+  // Reusable QR & Settings Dropdown Menu
+  const renderDropdownMenu = () => (
+    <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl border border-slate-200 shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
+      <div className="px-3.5 py-2 border-b border-slate-100">
+        <p className="text-xs font-extrabold text-navy-950 truncate">{shopName}</p>
+        <p className="text-[10px] text-slate-400 font-mono mt-0.5">Permanent ID: {shopId}</p>
+      </div>
+
+      <div className="py-1">
+        <Link
+          to="/owner/qr"
+          onClick={() => setDropdownOpen(false)}
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
+        >
+          <QrCode className="w-4 h-4 text-brand-600 shrink-0" />
+          <span>View / Download Shop QR</span>
+        </Link>
+
+        <Link
+          to="/owner/profile"
+          onClick={() => setDropdownOpen(false)}
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
+        >
+          <User className="w-4 h-4 text-brand-600 shrink-0" />
+          <span>Shop Profile</span>
+        </Link>
+
+        <Link
+          to="/owner/settings"
+          onClick={() => setDropdownOpen(false)}
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
+        >
+          <Settings className="w-4 h-4 text-brand-600 shrink-0" />
+          <span>Settings</span>
+        </Link>
+
+        <Link
+          to="/owner/printers"
+          onClick={() => setDropdownOpen(false)}
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
+        >
+          <Laptop className="w-4 h-4 text-brand-600 shrink-0" />
+          <span>Connected Devices</span>
+        </Link>
+
+        <Link
+          to="/owner/reports"
+          onClick={() => setDropdownOpen(false)}
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
+        >
+          <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+          <span>Sales &amp; Volume Reports</span>
+        </Link>
+      </div>
+
+      <div className="pt-1 border-t border-slate-100">
+        <button
+          type="button"
+          onClick={() => {
+            setDropdownOpen(false);
+            handleGeneratePairingCode();
+          }}
+          className="w-full px-3.5 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50 flex items-center gap-2.5 transition text-left"
+        >
+          <Smartphone className="w-4 h-4 shrink-0" />
+          <span>Pair Windows PC (Code)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setDropdownOpen(false);
+            handleLogout();
+          }}
+          className="w-full px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition text-left"
+        >
+          <LogOut className="w-4 h-4 shrink-0" />
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-slate-50/70 text-slate-900 font-sans flex flex-col">
       {/* Top Header Navigation */}
@@ -136,7 +223,7 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
             </div>
           </div>
 
-          {/* Desktop Navigation Items: Profile, Settings, QR Code, Connected Devices, Logout */}
+          {/* Desktop Navigation Items: Profile, Settings, QR Code, Connected Devices, QR & Settings, Logout */}
           <div className="hidden md:flex items-center gap-2 shrink-0">
             {/* Live Printer Connection Pill */}
             <Link
@@ -227,88 +314,7 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
                 <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* Dropdown Menu Popup */}
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl border border-slate-200 shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                  <div className="px-3 py-2 border-b border-slate-100">
-                    <p className="text-xs font-extrabold text-navy-950 truncate">{shopName}</p>
-                    <p className="text-[10px] text-slate-400 font-mono mt-0.5">ID: {shopId}</p>
-                  </div>
-
-                  <div className="py-1">
-                    <Link
-                      to="/owner/qr"
-                      onClick={() => setDropdownOpen(false)}
-                      className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
-                    >
-                      <QrCode className="w-4 h-4 text-brand-600" />
-                      <span>View / Download Shop QR</span>
-                    </Link>
-
-                    <Link
-                      to="/owner/profile"
-                      onClick={() => setDropdownOpen(false)}
-                      className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
-                    >
-                      <User className="w-4 h-4 text-brand-600" />
-                      <span>Shop Profile</span>
-                    </Link>
-
-                    <Link
-                      to="/owner/settings"
-                      onClick={() => setDropdownOpen(false)}
-                      className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
-                    >
-                      <Settings className="w-4 h-4 text-brand-600" />
-                      <span>Settings</span>
-                    </Link>
-
-                    <Link
-                      to="/owner/printers"
-                      onClick={() => setDropdownOpen(false)}
-                      className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
-                    >
-                      <Laptop className="w-4 h-4 text-brand-600" />
-                      <span>Connected Devices</span>
-                    </Link>
-
-                    <Link
-                      to="/owner/reports"
-                      onClick={() => setDropdownOpen(false)}
-                      className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
-                    >
-                      <Sparkles className="w-4 h-4 text-amber-500" />
-                      <span>Sales &amp; Volume Reports</span>
-                    </Link>
-                  </div>
-
-                  <div className="pt-1 border-t border-slate-100">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        handleGeneratePairingCode();
-                      }}
-                      className="w-full px-3.5 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50 flex items-center gap-2.5 transition text-left"
-                    >
-                      <Smartphone className="w-4 h-4" />
-                      <span>Pair Windows PC (Code)</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        handleLogout();
-                      }}
-                      className="w-full px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition text-left"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Logout</span>
-                    </button>
-                  </div>
-                </div>
-              )}
+              {dropdownOpen && renderDropdownMenu()}
             </div>
 
             {/* Logout Button */}
@@ -321,20 +327,53 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
             </button>
           </div>
 
-          {/* Mobile Right Controls: Mobile Menu Toggle */}
-          <div className="flex md:hidden items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold flex items-center gap-1 text-slate-700"
+          {/* Mobile Right Controls: Accessible Profile, Settings, QR & Settings, Menu Drawer */}
+          <div className="flex md:hidden items-center gap-1.5" ref={mobileDropdownRef}>
+            <Link
+              to="/owner/profile"
+              className={`p-2 rounded-xl border text-xs font-bold transition flex items-center gap-1 ${
+                isActive('/owner/profile')
+                  ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
+                  : 'bg-white text-slate-700 border-slate-200'
+              }`}
+              title="Profile"
             >
-              <QrCode className="w-3.5 h-3.5 text-navy-950" />
-              <span>QR &amp; Settings</span>
-            </button>
+              <User className="w-4 h-4" />
+            </Link>
+
+            <Link
+              to="/owner/settings"
+              className={`p-2 rounded-xl border text-xs font-bold transition flex items-center gap-1 ${
+                isActive('/owner/settings')
+                  ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
+                  : 'bg-white text-slate-700 border-slate-200'
+              }`}
+              title="Settings"
+            >
+              <Settings className="w-4 h-4" />
+            </Link>
+
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="px-2.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold flex items-center gap-1 text-slate-700"
+                title="QR & Settings Menu"
+              >
+                <QrCode className="w-3.5 h-3.5 text-navy-950" />
+                <span className="hidden xs:inline">QR</span>
+                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {dropdownOpen && renderDropdownMenu()}
+            </div>
 
             <button
               type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => {
+                setMobileMenuOpen(!mobileMenuOpen);
+                if (dropdownOpen) setDropdownOpen(false);
+              }}
               className="p-2 rounded-xl border border-slate-200 bg-white text-slate-700"
               aria-label="Open navigation menu"
             >

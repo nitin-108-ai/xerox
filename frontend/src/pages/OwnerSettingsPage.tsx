@@ -357,6 +357,19 @@ export const OwnerSettingsPage: React.FC = () => {
               <Laptop className="w-3.5 h-3.5 text-slate-500" />
               <span>Connected Devices</span>
             </Link>
+            <button
+              type="button"
+              onClick={() => handleSaveSettings()}
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold shadow-2xs transition disabled:opacity-50"
+            >
+              {saving ? (
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5" />
+              )}
+              <span>Save Settings</span>
+            </button>
           </div>
         </div>
 

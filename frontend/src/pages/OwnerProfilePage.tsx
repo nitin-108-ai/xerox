@@ -688,11 +688,24 @@ export const OwnerProfilePage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2.5">
             <button
               type="button"
+              onClick={() => {
+                const el = document.getElementById('shopNameInput');
+                if (el) el.focus();
+                setSuccessMessage('Editing mode active. Make changes to any field below and click "Save Changes".');
+              }}
+              className="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs flex items-center gap-2 transition-colors"
+              title="Edit Profile Details"
+            >
+              <Store className="w-4 h-4 text-brand-600" />
+              <span>Edit Details</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setPreviewOpen(true)}
               className="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs flex items-center gap-2 transition-colors"
             >
               <Eye className="w-4 h-4 text-brand-600" />
-              Preview Public Profile
+              <span>Preview Public Profile</span>
             </button>
             <button
               type="button"
@@ -705,7 +718,7 @@ export const OwnerProfilePage: React.FC = () => {
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              Save Profile Changes
+              <span>Save Changes</span>
             </button>
           </div>
         </div>
@@ -730,6 +743,7 @@ export const OwnerProfilePage: React.FC = () => {
                   Shop Name <span className="text-rose-500">*</span>
                 </label>
                 <input
+                  id="shopNameInput"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -1342,6 +1356,19 @@ export const OwnerProfilePage: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 type="button"
+                onClick={() => {
+                  const el = document.getElementById('shopNameInput');
+                  if (el) el.focus();
+                  setSuccessMessage('Editing mode active. Make changes to any field above and click "Save Changes".');
+                }}
+                className="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                title="Edit Details"
+              >
+                <Store className="w-3.5 h-3.5 text-brand-600" />
+                <span>Edit Details</span>
+              </button>
+              <button
+                type="button"
                 onClick={handleReset}
                 disabled={!hasUnsavedChanges}
                 className="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-40"
@@ -1369,7 +1396,7 @@ export const OwnerProfilePage: React.FC = () => {
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              Save Profile Changes
+              Save Changes
             </button>
           </div>
         </form>
