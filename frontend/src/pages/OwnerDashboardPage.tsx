@@ -78,6 +78,9 @@ export const OwnerDashboardPage: React.FC = () => {
   const [previewDoc, setPreviewDoc] = useState<any | null>(null);
   const [copiedRef, setCopiedRef] = useState<string | null>(null);
 
+  // Audio and QR scan notification states
+  const [qrScanNotice, setQrScanNotice] = useState<{ slug?: string; time: string } | null>(null);
+
   // Queue Tab: 'INCOMING' | 'ACTIVE' | 'READY' | 'ALL'
   const [queueTab, setQueueTab] = useState<'INCOMING' | 'ACTIVE' | 'READY' | 'ALL'>('ACTIVE');
 
@@ -142,26 +145,56 @@ export const OwnerDashboardPage: React.FC = () => {
     try {
       if (typeof BroadcastChannel !== 'undefined') {
         bc = new BroadcastChannel('smart_xerox_orders_channel');
-        bc.onmessage = () => {
-          loadData(true);
+        bc.onmessage = (ev) => {
+          if (ev.data?.type === 'QR_SCANNED') {
+            if (soundEnabled) playChime();
+            setQrScanNotice({
+              slug: ev.data.slug,
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            });
+            setTimeout(() => setQrScanNotice(null), 8000);
+          } else if (ev.data?.type === 'NEW_ORDER') {
+            if (soundEnabled) playChime();
+            loadData(true);
+          } else {
+            loadData(true);
+          }
         };
       }
     } catch {}
 
-    // Instant real-time notification listener via CustomEvent & storage
-    const handleNewOrderEvent = () => {
+    // Instant real-time notification listener via storage
+    const handleStorageEvent = (e: StorageEvent) => {
+      if (e.key === 'smart_xerox_last_qr_scan') {
+        try {
+          const scanData = JSON.parse(e.newValue || '{}');
+          if (soundEnabled) playChime();
+          setQrScanNotice({
+            slug: scanData.slug,
+            time: new Date(scanData.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+          });
+          setTimeout(() => setQrScanNotice(null), 8000);
+        } catch {}
+      } else {
+        loadData(true);
+      }
+    };
+
+    const handleNewOrder = () => {
+      if (soundEnabled) playChime();
       loadData(true);
     };
-    window.addEventListener('smart_xerox_new_order', handleNewOrderEvent);
-    window.addEventListener('storage', handleNewOrderEvent);
+
+    window.addEventListener('smart_xerox_new_order', handleNewOrder);
+    window.addEventListener('storage', handleStorageEvent);
 
     return () => {
       clearInterval(interval);
       if (bc) {
         try { bc.close(); } catch {}
       }
-      window.removeEventListener('smart_xerox_new_order', handleNewOrderEvent);
-      window.removeEventListener('storage', handleNewOrderEvent);
+      window.removeEventListener('smart_xerox_new_order', handleNewOrder);
+      window.removeEventListener('storage', handleStorageEvent);
     };
   }, [soundEnabled]);
 
@@ -415,6 +448,31 @@ export const OwnerDashboardPage: React.FC = () => {
           </button>
         </div>
 
+        {/* QR Code Scanned Real-Time Alert Banner */}
+        {qrScanNotice && (
+          <div className="p-4 rounded-2xl bg-indigo-50 border-2 border-indigo-400 text-indigo-950 text-xs flex items-center justify-between gap-3 animate-in fade-in duration-200 shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shrink-0">
+                <Bell className="w-4 h-4 animate-bounce" />
+              </div>
+              <div>
+                <strong className="block text-sm font-extrabold text-indigo-950">
+                  🔔 Counter Alert: Customer Scanned Counter QR Code!
+                </strong>
+                <span className="text-[11px] text-indigo-700">
+                  A customer just scanned your shop QR at {qrScanNotice.time}. Uploaded documents will arrive in this queue momentarily.
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setQrScanNotice(null)}
+              className="text-indigo-600 hover:text-indigo-900 font-bold text-xs underline shrink-0"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {/* Global Alert Notification */}
         {printAlert && (
           <div
@@ -638,6 +696,15 @@ export const OwnerDashboardPage: React.FC = () => {
                       {isNew && (
                         <>
                           <button
+                            onClick={() => handleUpdateStatus(order.id, 'ACCEPTED', 'Order accepted and approved by staff.')}
+                            className="px-3.5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-98"
+                            title="Accept and approve print request immediately"
+                          >
+                            <Check className="w-4 h-4" />
+                            Accept
+                          </button>
+
+                          <button
                             onClick={() => handleAcceptAndPrint(order)}
                             disabled={directPrintingId === order.id}
                             className="px-4 py-2.5 rounded-2xl bg-navy-950 hover:bg-brand-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-98"
@@ -669,6 +736,17 @@ export const OwnerDashboardPage: React.FC = () => {
                       {/* ACCEPTED / QUEUED / FAILED */}
                       {(isAccepted || isQueued || isFailed) && (
                         <>
+                          {isAccepted && (
+                            <button
+                              onClick={() => handleUpdateStatus(order.id, 'PRINTING', 'Printing physically started in printer.')}
+                              className="px-3.5 py-2.5 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-98"
+                              title="Mark order as printing in progress"
+                            >
+                              <Printer className="w-4 h-4" />
+                              Start Printing
+                            </button>
+                          )}
+
                           <button
                             onClick={() => handleAcceptAndPrint(order)}
                             disabled={directPrintingId === order.id}

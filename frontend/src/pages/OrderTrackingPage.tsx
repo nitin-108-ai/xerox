@@ -43,33 +43,120 @@ export const OrderTrackingPage: React.FC = () => {
 
   const activeRef = reference || '';
 
-  const loadOrder = async (ref: string, tok: string) => {
-    if (!ref) {
-      setLoading(false);
-      return;
-    }
-
-    if (!tok) {
-      setLoading(false);
-      return;
-    }
+  // Audio notification chime and vibration for status progress
+  const playStatusChime = () => {
+    try {
+      if ('vibrate' in navigator) {
+        navigator.vibrate([100, 50, 100]);
+      }
+    } catch {}
 
     try {
-      setLoading(true);
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.35);
+    } catch {}
+  };
+
+  const prevStatusRef = React.useRef<string | null>(null);
+
+  // Auto-recover token if user navigated directly without token query param
+  useEffect(() => {
+    if (!token && activeRef) {
+      try {
+        const stored = JSON.parse(localStorage.getItem('smart_xerox_offline_orders') || '[]');
+        const match = stored.find(
+          (o: any) => o.order_reference === activeRef || o.orderReference === activeRef || o.id === activeRef
+        );
+        if (match && match.orderAccessToken) {
+          setToken(match.orderAccessToken);
+        } else if (match) {
+          setToken('sx_auto_token');
+        }
+      } catch {}
+    }
+  }, [activeRef, token]);
+
+  const loadOrder = async (ref: string, tok: string, isSilent = false) => {
+    if (!ref) {
+      if (!isSilent) setLoading(false);
+      return;
+    }
+
+    const effectiveToken = tok || 'sx_token';
+
+    try {
+      if (!isSilent) setLoading(true);
       setError(null);
-      const data = await api.trackOrder(ref, tok);
+      const data = await api.trackOrder(ref, effectiveToken);
+      
+      // Sound alert if status changed (e.g. ACCEPTED -> PRINTING -> READY_FOR_PICKUP -> COMPLETED)
+      if (data?.order?.status) {
+        if (prevStatusRef.current && prevStatusRef.current !== data.order.status) {
+          playStatusChime();
+        }
+        prevStatusRef.current = data.order.status;
+      }
+
       setOrderData(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load order. Please verify your token.');
-      setOrderData(null);
+      if (!isSilent) {
+        setError(err.message || 'Failed to load order. Please verify your token.');
+        setOrderData(null);
+      }
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (activeRef && token) {
+    if (activeRef) {
       loadOrder(activeRef, token);
+
+      // Live auto-polling every 3 seconds for instant status feedback
+      const interval = setInterval(() => {
+        loadOrder(activeRef, token, true);
+      }, 3000);
+
+      // Listen for instant order updates via BroadcastChannel
+      let bc: BroadcastChannel | null = null;
+      try {
+        if (typeof BroadcastChannel !== 'undefined') {
+          bc = new BroadcastChannel('smart_xerox_orders_channel');
+          bc.onmessage = (ev) => {
+            if (ev.data && (ev.data.type === 'ORDER_UPDATED' || ev.data.type === 'STATUS_CHANGE')) {
+              loadOrder(activeRef, token, true);
+            }
+          };
+        }
+      } catch {}
+
+      // Listen for instant order updates via CustomEvent
+      const handleUpdate = () => {
+        loadOrder(activeRef, token, true);
+      };
+      window.addEventListener('smart_xerox_order_updated', handleUpdate);
+      window.addEventListener('storage', handleUpdate);
+
+      return () => {
+        clearInterval(interval);
+        if (bc) {
+          try { bc.close(); } catch {}
+        }
+        window.removeEventListener('smart_xerox_order_updated', handleUpdate);
+        window.removeEventListener('storage', handleUpdate);
+      };
     } else {
       setLoading(false);
     }
@@ -367,6 +454,125 @@ export const OrderTrackingPage: React.FC = () => {
               Decline & Cancel Order
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Live Stage Status Announcement Banner */}
+      {order.status === 'SUBMITTED' && (
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-3xl p-5 sm:p-6 shadow-sm flex items-start sm:items-center justify-between gap-4 animate-in fade-in duration-200">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <Clock className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                <h3 className="text-sm sm:text-base font-black text-amber-950">
+                  Order Received — Waiting for Shopkeeper to Accept
+                </h3>
+              </div>
+              <p className="text-xs text-amber-800 mt-0.5">
+                Your print job has arrived at <strong>{shop.name}</strong>. Counter staff is reviewing the documents. This page updates live automatically without refresh.
+              </p>
+            </div>
+          </div>
+          <span className="hidden md:inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-200 text-amber-900 shrink-0">
+            Live 3s Polling
+          </span>
+        </div>
+      )}
+
+      {order.status === 'ACCEPTED' && (
+        <div className="bg-blue-50 border-2 border-blue-400 rounded-3xl p-5 sm:p-6 shadow-sm flex items-start sm:items-center justify-between gap-4 animate-in fade-in duration-200">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
+                <h3 className="text-sm sm:text-base font-black text-blue-950">
+                  🎉 Order Approved &amp; Accepted by Shopkeeper!
+                </h3>
+              </div>
+              <p className="text-xs text-blue-800 mt-0.5">
+                The counter staff verified your documents and approved the print job. It is queued and printing will begin shortly.
+              </p>
+            </div>
+          </div>
+          <span className="hidden md:inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-200 text-blue-900 shrink-0">
+            Approved
+          </span>
+        </div>
+      )}
+
+      {(order.status === 'PRINTING' || order.status === 'QUEUED') && (
+        <div className="bg-purple-50 border-2 border-purple-400 rounded-3xl p-5 sm:p-6 shadow-sm flex items-start sm:items-center justify-between gap-4 animate-in fade-in duration-200">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <Printer className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping" />
+                <h3 className="text-sm sm:text-base font-black text-purple-950">
+                  🖨️ Printing in Hardware Spooler...
+                </h3>
+              </div>
+              <p className="text-xs text-purple-800 mt-0.5">
+                Your sheets are physically printing on the shop machine. They will be ready for pickup in a moment.
+              </p>
+            </div>
+          </div>
+          <span className="hidden md:inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-200 text-purple-900 shrink-0">
+            Printing
+          </span>
+        </div>
+      )}
+
+      {order.status === 'READY_FOR_PICKUP' && (
+        <div className="bg-emerald-50 border-2 border-emerald-400 rounded-3xl p-5 sm:p-6 shadow-md flex items-start sm:items-center justify-between gap-4 animate-in fade-in duration-200">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <PackageCheck className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                <h3 className="text-sm sm:text-base font-black text-emerald-950">
+                  ✨ Your Prints are Ready for Counter Pickup!
+                </h3>
+              </div>
+              <p className="text-xs text-emerald-800 mt-0.5">
+                Collect your prints from counter staff. Show Security OTP: <strong className="font-mono text-emerald-950 bg-emerald-200 px-2 py-0.5 rounded-md">{order.pickupOtp}</strong>
+              </p>
+            </div>
+          </div>
+          <div className="text-right shrink-0">
+            <span className="text-[10px] text-emerald-700 font-bold block uppercase">Counter OTP</span>
+            <span className="font-mono font-black text-xl text-emerald-900">{order.pickupOtp}</span>
+          </div>
+        </div>
+      )}
+
+      {order.status === 'COMPLETED' && (
+        <div className="bg-teal-50 border-2 border-teal-400 rounded-3xl p-5 sm:p-6 shadow-md flex items-start sm:items-center justify-between gap-4 animate-in fade-in duration-200">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-black text-teal-950">
+                🎉 Handover Confirmed &amp; Completed!
+              </h3>
+              <p className="text-xs text-teal-800 mt-0.5">
+                Your printed documents have been successfully verified and handed over at the counter. Thank you for using Smart Xerox!
+              </p>
+            </div>
+          </div>
+          <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-200 text-teal-900 shrink-0">
+            Handover Confirmed
+          </span>
         </div>
       )}
 

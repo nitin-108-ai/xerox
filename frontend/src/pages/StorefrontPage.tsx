@@ -62,6 +62,28 @@ export const StorefrontPage: React.FC = () => {
   const [orientation, setOrientation] = useState<'PORTRAIT' | 'LANDSCAPE'>('PORTRAIT');
   const [customNotes, setCustomNotes] = useState<string>('');
 
+  // Duplex front & back photo/document selector (for 2+ documents)
+  const [duplexFrontIndex, setDuplexFrontIndex] = useState<number>(0);
+  const [duplexBackIndex, setDuplexBackIndex] = useState<number>(1);
+
+  const handleSwapDuplexSides = () => {
+    setDuplexFrontIndex((prevFront) => {
+      const oldBack = duplexBackIndex;
+      setDuplexBackIndex(prevFront);
+      return oldBack;
+    });
+  };
+
+  // Clamp duplex indices when file queue changes
+  useEffect(() => {
+    if (duplexFrontIndex >= queuedFiles.length) {
+      setDuplexFrontIndex(0);
+    }
+    if (duplexBackIndex >= queuedFiles.length) {
+      setDuplexBackIndex(Math.min(1, Math.max(0, queuedFiles.length - 1)));
+    }
+  }, [queuedFiles.length, duplexFrontIndex, duplexBackIndex]);
+
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -88,6 +110,23 @@ export const StorefrontPage: React.FC = () => {
         setError(null);
         const data = await api.getStorefront(slug);
         setShopData(data);
+
+        // Notify shop owner panel that a customer scanned the counter QR
+        try {
+          if (typeof BroadcastChannel !== 'undefined') {
+            const bc = new BroadcastChannel('smart_xerox_orders_channel');
+            bc.postMessage({
+              type: 'QR_SCANNED',
+              slug: slug,
+              timestamp: Date.now()
+            });
+            bc.close();
+          }
+          localStorage.setItem('smart_xerox_last_qr_scan', JSON.stringify({
+            slug: slug,
+            timestamp: Date.now()
+          }));
+        } catch {}
       } catch (err: any) {
         setError(err.message || 'Shop could not be loaded.');
       } finally {
@@ -256,16 +295,28 @@ export const StorefrontPage: React.FC = () => {
       formData.append('copies', String(copies));
       formData.append('customerAlias', 'Customer');
 
+      // Reorder documents according to duplex front & back pairing when duplex is enabled with 2+ files
+      let orderedFiles = [...queuedFiles];
+      let duplexArrangementNote = '';
+      if (isDuplex && queuedFiles.length >= 2) {
+        const frontItem = queuedFiles[duplexFrontIndex] || queuedFiles[0];
+        const backItem = queuedFiles[duplexBackIndex] || queuedFiles[1];
+        const remaining = queuedFiles.filter((_, idx) => idx !== duplexFrontIndex && idx !== duplexBackIndex);
+        orderedFiles = [frontItem, backItem, ...remaining];
+        duplexArrangementNote = `Duplex Layout: FRONT = "${frontItem.file.name}" | BACK = "${backItem.file.name}"`;
+      }
+
       // Append all queued files
-      queuedFiles.forEach((item) => {
+      orderedFiles.forEach((item) => {
         formData.append('documents', item.file);
       });
       // Backward-compatible single document field
-      if (queuedFiles[0]) {
-        formData.append('document', queuedFiles[0].file);
+      if (orderedFiles[0]) {
+        formData.append('document', orderedFiles[0].file);
       }
 
       const fullNotes = [
+        duplexArrangementNote || null,
         pageRangeMode === 'CUSTOM' && customPageRange ? `Pages: ${customPageRange}` : null,
         orientation ? `Orientation: ${orientation}` : null,
         customNotes ? `Notes: ${customNotes}` : null,
@@ -788,6 +839,107 @@ export const StorefrontPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Double-Sided Page Arrangement for 2+ Photos/Documents */}
+            {isDuplex && queuedFiles.length >= 2 && (
+              <div className="p-4 rounded-2xl bg-brand-50/70 border border-brand-200/90 space-y-3 animate-in fade-in duration-150">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <span className="text-xs font-black text-navy-950 flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-brand-600" />
+                      Double-Sided Page Arrangement
+                    </span>
+                    <p className="text-[11px] text-slate-500">
+                      Choose which photo/document prints on Front (Sheet 1) and Back (Sheet 2).
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSwapDuplexSides}
+                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-brand-100 text-brand-700 text-xs font-bold border border-brand-300 flex items-center gap-1.5 shadow-2xs transition active:scale-95"
+                    title="Swap Front and Back sides"
+                  >
+                    <span>⇄ Swap Sides (Palat Dein)</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* FRONT SIDE (Sheet 1) */}
+                  <div className="p-3 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full border border-brand-200">
+                        Front Side (Samne)
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-bold">Page 1</span>
+                    </div>
+
+                    <select
+                      value={duplexFrontIndex}
+                      onChange={(e) => setDuplexFrontIndex(Number(e.target.value))}
+                      className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 text-navy-950 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    >
+                      {queuedFiles.map((f, idx) => (
+                        <option key={f.id} value={idx}>
+                          {idx + 1}. {f.file.name} {idx === duplexBackIndex ? '— (Currently Back)' : ''}
+                        </option>
+                      ))}
+                    </select>
+
+                    {queuedFiles[duplexFrontIndex]?.previewUrl ? (
+                      <div className="h-24 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center p-1">
+                        <img
+                          src={queuedFiles[duplexFrontIndex].previewUrl!}
+                          alt="Front side preview"
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-16 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-400 text-xs">
+                        <FileText className="w-5 h-5 mr-1.5 text-brand-500" />
+                        <span className="truncate max-w-[150px]">{queuedFiles[duplexFrontIndex]?.file.name}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* BACK SIDE (Sheet 2) */}
+                  <div className="p-3 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                        Back Side (Piche)
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-bold">Page 2</span>
+                    </div>
+
+                    <select
+                      value={duplexBackIndex}
+                      onChange={(e) => setDuplexBackIndex(Number(e.target.value))}
+                      className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 text-navy-950 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    >
+                      {queuedFiles.map((f, idx) => (
+                        <option key={f.id} value={idx}>
+                          {idx + 1}. {f.file.name} {idx === duplexFrontIndex ? '— (Currently Front)' : ''}
+                        </option>
+                      ))}
+                    </select>
+
+                    {queuedFiles[duplexBackIndex]?.previewUrl ? (
+                      <div className="h-24 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center p-1">
+                        <img
+                          src={queuedFiles[duplexBackIndex].previewUrl!}
+                          alt="Back side preview"
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-16 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-400 text-xs">
+                        <FileText className="w-5 h-5 mr-1.5 text-emerald-500" />
+                        <span className="truncate max-w-[150px]">{queuedFiles[duplexBackIndex]?.file.name}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* 3. Copies & Orientation */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -846,51 +998,123 @@ export const StorefrontPage: React.FC = () => {
               </div>
             </div>
 
-            {/* 4. Page Selection & Special Instructions */}
-            <div className="space-y-2">
+            {/* 4. Page Range to Print & Special Instructions */}
+            <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-bold text-navy-950 uppercase tracking-wider">
-                  4. Page Range &amp; Instructions
+                  4. Pages to Print &amp; Notes
                 </label>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPageRangeMode('ALL')}
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
-                      pageRangeMode === 'ALL'
-                        ? 'bg-brand-50 border-brand-300 text-brand-700'
-                        : 'border-slate-200 text-slate-500'
-                    }`}
-                  >
-                    All Pages
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPageRangeMode('CUSTOM')}
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
-                      pageRangeMode === 'CUSTOM'
-                        ? 'bg-brand-50 border-brand-300 text-brand-700'
-                        : 'border-slate-200 text-slate-500'
-                    }`}
-                  >
-                    Custom Range
-                  </button>
-                </div>
+                <span className="text-[10px] text-slate-400">PDF Multi-Page Selection</span>
+              </div>
+
+              {/* Quick Page Presets */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPageRangeMode('ALL');
+                    setCustomPageRange('');
+                  }}
+                  className={`text-[11px] font-bold px-3 py-1.5 rounded-xl border transition ${
+                    pageRangeMode === 'ALL'
+                      ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  All Pages (Sabhi)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPageRangeMode('CUSTOM');
+                    setCustomPageRange('1');
+                  }}
+                  className={`text-[11px] font-bold px-3 py-1.5 rounded-xl border transition ${
+                    pageRangeMode === 'CUSTOM' && customPageRange === '1'
+                      ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  Page 1 Only
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPageRangeMode('CUSTOM');
+                    setCustomPageRange('1-2');
+                  }}
+                  className={`text-[11px] font-bold px-3 py-1.5 rounded-xl border transition ${
+                    pageRangeMode === 'CUSTOM' && customPageRange === '1-2'
+                      ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  Pages 1–2
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPageRangeMode('CUSTOM');
+                    setCustomPageRange('odd');
+                  }}
+                  className={`text-[11px] font-bold px-3 py-1.5 rounded-xl border transition ${
+                    pageRangeMode === 'CUSTOM' && customPageRange === 'odd'
+                      ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  Odd Pages (1,3,5..)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPageRangeMode('CUSTOM');
+                    setCustomPageRange('even');
+                  }}
+                  className={`text-[11px] font-bold px-3 py-1.5 rounded-xl border transition ${
+                    pageRangeMode === 'CUSTOM' && customPageRange === 'even'
+                      ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  Even Pages (2,4,6..)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPageRangeMode('CUSTOM');
+                    if (!customPageRange || ['1', '1-2', 'odd', 'even'].includes(customPageRange)) {
+                      setCustomPageRange('');
+                    }
+                  }}
+                  className={`text-[11px] font-bold px-3 py-1.5 rounded-xl border transition ${
+                    pageRangeMode === 'CUSTOM' && !['1', '1-2', 'odd', 'even'].includes(customPageRange)
+                      ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  Custom Range...
+                </button>
               </div>
 
               {pageRangeMode === 'CUSTOM' && (
-                <input
-                  type="text"
-                  placeholder="e.g. 1-5, 8, 11-14"
-                  value={customPageRange}
-                  onChange={(e) => setCustomPageRange(e.target.value)}
-                  className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50"
-                />
+                <div className="space-y-1">
+                  <input
+                    type="text"
+                    placeholder="Enter specific pages to print (e.g. 1-4, 7, 9-12)"
+                    value={customPageRange}
+                    onChange={(e) => setCustomPageRange(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs font-mono border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+                  />
+                  <p className="text-[10px] text-slate-400">
+                    💡 Example: "1, 3, 5-8" prints page 1, page 3, and pages 5 through 8.
+                  </p>
+                </div>
               )}
 
               <input
                 type="text"
-                placeholder="Special notes for shopkeeper (e.g. Spiral binding, staple top-left)"
+                placeholder="Special notes for shopkeeper (e.g. Aadhaar both sides, staple top-left, spiral binding)"
                 value={customNotes}
                 onChange={(e) => setCustomNotes(e.target.value)}
                 className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50"
@@ -969,6 +1193,19 @@ export const StorefrontPage: React.FC = () => {
                   <span className="font-extrabold text-navy-950">{copies}</span>
                 </div>
               </div>
+
+              {/* Duplex Front / Back pairing confirmation */}
+              {isDuplex && queuedFiles.length >= 2 && (
+                <div className="bg-white p-3 rounded-xl border border-brand-200 text-xs space-y-1">
+                  <span className="text-[10px] font-black text-brand-700 uppercase tracking-wider block">
+                    Double-Sided Page Arrangement:
+                  </span>
+                  <div className="flex items-center justify-between text-[11px] text-slate-700">
+                    <span><strong>Front (Page 1):</strong> {queuedFiles[duplexFrontIndex]?.file.name}</span>
+                    <span><strong>Back (Page 2):</strong> {queuedFiles[duplexBackIndex]?.file.name}</span>
+                  </div>
+                </div>
+              )}
 
               {customNotes && (
                 <div className="text-[11px] text-slate-600 pt-1 border-t border-slate-200">

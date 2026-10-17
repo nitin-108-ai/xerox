@@ -1113,6 +1113,20 @@ export const api = {
       }
     } catch {}
 
+    // Real-time broadcast for customer tracking page and owner panel
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('smart_xerox_orders_channel');
+        bc.postMessage({ type: 'ORDER_UPDATED', orderId, status, note, timestamp: Date.now() });
+        bc.close();
+      }
+    } catch {}
+    try {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('smart_xerox_order_updated', { detail: { orderId, status, note } }));
+      }
+    } catch {}
+
     try {
       const res = await fetch(`${API_BASE}/orders/owner/${encodeURIComponent(orderId)}/status`, {
         method: 'PATCH',

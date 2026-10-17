@@ -272,12 +272,47 @@ export const CustomerDocumentPreviewModal: React.FC<CustomerDocumentPreviewModal
               />
             </div>
           ) : isPdf && fileUrl ? (
-            <div className="w-full h-full rounded-2xl overflow-hidden border border-slate-300 bg-white shadow-md">
-              <iframe
-                src={`${fileUrl}#toolbar=1&navpanes=0&scrollbar=1`}
-                title={currentFile.file.name}
-                className="w-full h-full border-none"
-              />
+            <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-300 bg-white shadow-md">
+              <div className="bg-slate-100 border-b border-slate-200 px-3 py-2 flex items-center justify-between text-xs text-slate-600">
+                <span className="flex items-center gap-1.5 font-medium truncate">
+                  <FileText className="w-3.5 h-3.5 text-brand-600 shrink-0" />
+                  <span>Scroll to review all pages</span>
+                </span>
+                <a
+                  href={fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-navy-900 hover:bg-brand-600 text-white font-bold text-[11px] shadow-2xs transition"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  <span>Open Full PDF</span>
+                </a>
+              </div>
+              <div className="flex-1 w-full h-full relative bg-slate-100">
+                <object
+                  data={`${fileUrl}#toolbar=1&navpanes=1&scrollbar=1`}
+                  type="application/pdf"
+                  className="w-full h-full border-none"
+                >
+                  <iframe
+                    src={`${fileUrl}#toolbar=1&navpanes=0&scrollbar=1`}
+                    title={currentFile.file.name}
+                    className="w-full h-full border-none"
+                  >
+                    <div className="p-6 text-center text-slate-500">
+                      <p>Your browser does not support inline PDF viewing.</p>
+                      <a
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-block px-3 py-1.5 rounded-xl bg-brand-600 text-white text-xs font-bold"
+                      >
+                        Download / View PDF
+                      </a>
+                    </div>
+                  </iframe>
+                </object>
+              </div>
             </div>
           ) : (
             <div className="text-center p-8 bg-white rounded-2xl border border-slate-200 shadow-sm max-w-sm">
