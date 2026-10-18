@@ -12,7 +12,8 @@ import {
   LayoutDashboard,
   Settings,
   FileCheck2,
-  Building2
+  Building2,
+  ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -30,103 +31,91 @@ export const Navbar: React.FC<{ onOpenScanner?: () => void }> = ({ onOpenScanner
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
+    <header className="sticky top-0 z-40 bg-[#0b120c]/90 backdrop-blur-md border-b border-[#1b2b1e]/90 shadow-2xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           {/* Brand Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-xl bg-navy-900 flex items-center justify-center text-white shadow-md group-hover:bg-brand-600 transition-colors">
-              <Printer className="w-5 h-5 text-brand-50" />
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#162719] to-[#25422b] border border-[#3b6243] flex items-center justify-center text-white shadow-lg shadow-[#102213]/50 group-hover:border-[#bbf451] transition-all">
+              <Printer className="w-5 h-5 text-[#bbf451]" />
             </div>
             <div>
-              <span className="text-xl font-bold tracking-tight text-navy-900 flex items-center gap-1.5">
+              <span className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2 font-syne">
                 Smart Xerox
-                <span className="text-[10px] font-semibold uppercase tracking-wider bg-brand-50 text-brand-600 border border-brand-100 px-1.5 py-0.5 rounded-md">
-                  Private
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-[#bbf451]/15 text-[#bbf451] border border-[#bbf451]/30 px-2 py-0.5 rounded-full">
+                  3D Studio
                 </span>
               </span>
-              <span className="text-[11px] block -mt-1 text-slate-500 font-medium">
-                QR Print Dispatch
+              <span className="text-[11px] block -mt-1 text-slate-400 font-medium">
+                Cloud Press & QR Print Dispatch
               </span>
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          {/* Center Floating Pill Navigation */}
+          <nav className="hidden lg:flex items-center bg-[#131d15]/90 border border-[#253929] rounded-full p-1.5 shadow-inner backdrop-blur-sm">
             <Link
               to="/"
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive('/') ? 'text-brand-600 bg-brand-50' : 'text-slate-600 hover:text-navy-900 hover:bg-slate-50'
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all ${
+                isActive('/') ? 'bg-[#223626] text-white shadow-sm' : 'text-slate-300 hover:text-white hover:bg-[#1a291e]'
               }`}
             >
               Home
             </Link>
 
+            <a
+              href="#samples"
+              className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide text-slate-300 hover:text-white hover:bg-[#1a291e] transition-all"
+            >
+              3D Samples
+            </a>
+
             <Link
               to="/shop/quickcopy-express"
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive('/shop/quickcopy-express') ? 'text-brand-600 bg-brand-50' : 'text-slate-600 hover:text-navy-900 hover:bg-slate-50'
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all ${
+                isActive('/shop/quickcopy-express') ? 'bg-[#223626] text-white shadow-sm' : 'text-slate-300 hover:text-white hover:bg-[#1a291e]'
               }`}
             >
-              Demo Storefront
+              Demo Store
             </Link>
 
             <Link
               to="/track"
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive('/track') ? 'text-brand-600 bg-brand-50' : 'text-slate-600 hover:text-navy-900 hover:bg-slate-50'
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all ${
+                isActive('/track') ? 'bg-[#223626] text-white shadow-sm' : 'text-slate-300 hover:text-white hover:bg-[#1a291e]'
               }`}
             >
               Track Order
             </Link>
 
-            {onOpenScanner && (
-              <button
-                type="button"
-                onClick={onOpenScanner}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors"
-              >
-                <QrCode className="w-4 h-4 text-brand-600" />
-                Scan Shop QR
-              </button>
-            )}
-
             {/* Authenticated Links */}
             {user?.role === 'SHOP_OWNER' && (
               <>
-                <div className="h-4 w-px bg-slate-200 mx-1" />
+                <div className="h-4 w-px bg-[#2b4130] mx-1" />
                 <Link
                   to="/owner/dashboard"
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive('/owner/dashboard') ? 'text-brand-600 bg-brand-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    isActive('/owner/dashboard') ? 'bg-[#223626] text-[#bbf451]' : 'text-slate-300 hover:text-white hover:bg-[#1a291e]'
                   }`}
                 >
-                  <LayoutDashboard className="w-4 h-4 text-slate-500" />
+                  <LayoutDashboard className="w-3.5 h-3.5" />
                   Dashboard
                 </Link>
                 <Link
-                  to="/owner/profile"
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive('/owner/profile') ? 'text-brand-600 bg-brand-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  My Profile
-                </Link>
-                <Link
                   to="/owner/pricing"
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive('/owner/pricing') ? 'text-brand-600 bg-brand-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    isActive('/owner/pricing') ? 'bg-[#223626] text-[#bbf451]' : 'text-slate-300 hover:text-white hover:bg-[#1a291e]'
                   }`}
                 >
-                  Pricing
+                  Rates
                 </Link>
                 <Link
                   to="/owner/qr"
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive('/owner/qr') ? 'text-brand-600 bg-brand-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    isActive('/owner/qr') ? 'bg-[#223626] text-[#bbf451]' : 'text-slate-300 hover:text-white hover:bg-[#1a291e]'
                   }`}
                 >
-                  <QrCode className="w-4 h-4 text-slate-500" />
+                  <QrCode className="w-3.5 h-3.5" />
                   Shop QR
                 </Link>
               </>
@@ -134,15 +123,15 @@ export const Navbar: React.FC<{ onOpenScanner?: () => void }> = ({ onOpenScanner
 
             {user?.role === 'ADMIN' && (
               <>
-                <div className="h-4 w-px bg-slate-200 mx-1" />
+                <div className="h-4 w-px bg-[#2b4130] mx-1" />
                 <Link
                   to="/admin/dashboard"
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive('/admin/dashboard') ? 'text-brand-600 bg-brand-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    isActive('/admin/dashboard') ? 'bg-[#223626] text-[#bbf451]' : 'text-slate-300 hover:text-white hover:bg-[#1a291e]'
                   }`}
                 >
-                  <ShieldCheck className="w-4 h-4 text-brand-600" />
-                  Admin Console
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Admin
                 </Link>
               </>
             )}
@@ -150,13 +139,24 @@ export const Navbar: React.FC<{ onOpenScanner?: () => void }> = ({ onOpenScanner
 
           {/* Right Header Action Buttons */}
           <div className="hidden md:flex items-center gap-3">
+            {onOpenScanner && (
+              <button
+                type="button"
+                onClick={onOpenScanner}
+                title="Scan Shop Counter QR"
+                className="w-10 h-10 rounded-full bg-[#162319] hover:bg-[#203424] border border-[#2c4431] flex items-center justify-center text-slate-300 hover:text-white transition-all shadow-sm"
+              >
+                <QrCode className="w-4 h-4 text-[#bbf451]" />
+              </button>
+            )}
+
             {user ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <div className="text-right">
-                  <div className="text-xs font-semibold text-navy-900 leading-tight">
+                  <div className="text-xs font-bold text-white leading-tight">
                     {user.fullName}
                   </div>
-                  <div className="text-[11px] text-slate-500 font-medium">
+                  <div className="text-[10px] text-[#bbf451] font-medium">
                     {user.role === 'ADMIN' ? 'Platform Admin' : user.shopName || 'Shop Owner'}
                   </div>
                 </div>
@@ -165,7 +165,7 @@ export const Navbar: React.FC<{ onOpenScanner?: () => void }> = ({ onOpenScanner
                   type="button"
                   onClick={handleLogout}
                   title="Sign out"
-                  className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                  className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-full transition-colors border border-transparent hover:border-rose-500/20"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -174,27 +174,36 @@ export const Navbar: React.FC<{ onOpenScanner?: () => void }> = ({ onOpenScanner
               <div className="flex items-center gap-2">
                 <Link
                   to="/owner/login"
-                  className="text-xs font-semibold text-navy-900 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors"
+                  className="text-xs font-semibold text-slate-300 hover:text-white px-3.5 py-2 rounded-full hover:bg-[#162319] transition-colors"
                 >
-                  Shop Login
+                  Owner Login
                 </Link>
                 <Link
-                  to="/owner/register"
-                  className="text-xs font-semibold text-white bg-navy-900 hover:bg-brand-600 px-3.5 py-2 rounded-lg shadow-xs transition-colors flex items-center gap-1.5"
+                  to="/shop/quickcopy-express"
+                  className="text-xs font-bold text-[#0c140e] bg-[#bbf451] hover:bg-[#c9f86e] px-5 py-2.5 rounded-full shadow-lg shadow-[#bbf451]/20 transition-all hover:scale-105 flex items-center gap-2"
                 >
-                  <Building2 className="w-3.5 h-3.5" />
-                  Register Xerox Shop
+                  <span>Get Started</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             )}
           </div>
 
           {/* Mobile hamburger button */}
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex lg:hidden items-center gap-2">
+            {onOpenScanner && (
+              <button
+                type="button"
+                onClick={onOpenScanner}
+                className="w-9 h-9 rounded-full bg-[#162319] border border-[#2c4431] flex items-center justify-center text-[#bbf451]"
+              >
+                <QrCode className="w-4 h-4" />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-600 hover:bg-slate-100"
+              className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-[#162319]"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -204,57 +213,57 @@ export const Navbar: React.FC<{ onOpenScanner?: () => void }> = ({ onOpenScanner
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-slate-200 bg-white px-4 pt-2 pb-6 space-y-2">
+        <div className="lg:hidden border-b border-[#1f3123] bg-[#0f1711] px-4 pt-3 pb-6 space-y-2">
           <Link
             to="/"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50"
+            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:text-white hover:bg-[#1a291e]"
           >
             Home
           </Link>
+          <a
+            href="#samples"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:text-white hover:bg-[#1a291e]"
+          >
+            3D Samples
+          </a>
           <Link
             to="/shop/quickcopy-express"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50"
+            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:text-white hover:bg-[#1a291e]"
           >
             Demo Storefront
           </Link>
           <Link
             to="/track"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50"
+            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:text-white hover:bg-[#1a291e]"
           >
             Track Order
           </Link>
 
           {user?.role === 'SHOP_OWNER' && (
             <>
-              <div className="pt-2 border-t border-slate-100" />
+              <div className="pt-2 border-t border-[#1f3123]" />
               <Link
                 to="/owner/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-brand-600 bg-brand-50"
+                className="block px-3 py-2 rounded-lg text-sm font-medium text-[#bbf451] bg-[#1a291e]"
               >
                 Owner Dashboard
               </Link>
               <Link
-                to="/owner/profile"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50"
-              >
-                My Shop Profile
-              </Link>
-              <Link
                 to="/owner/pricing"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50"
+                className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:text-white hover:bg-[#1a291e]"
               >
-                Printing & Pricing
+                Printing Rates
               </Link>
               <Link
                 to="/owner/qr"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50"
+                className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:text-white hover:bg-[#1a291e]"
               >
                 Shop QR Code
               </Link>
@@ -263,18 +272,18 @@ export const Navbar: React.FC<{ onOpenScanner?: () => void }> = ({ onOpenScanner
 
           {user?.role === 'ADMIN' && (
             <>
-              <div className="pt-2 border-t border-slate-100" />
+              <div className="pt-2 border-t border-[#1f3123]" />
               <Link
                 to="/admin/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-brand-600 bg-brand-50"
+                className="block px-3 py-2 rounded-lg text-sm font-medium text-[#bbf451] bg-[#1a291e]"
               >
                 Admin Console
               </Link>
             </>
           )}
 
-          <div className="pt-3 border-t border-slate-200 flex flex-col gap-2">
+          <div className="pt-3 border-t border-[#1f3123] flex flex-col gap-2">
             {user ? (
               <button
                 type="button"
@@ -282,7 +291,7 @@ export const Navbar: React.FC<{ onOpenScanner?: () => void }> = ({ onOpenScanner
                   setMobileMenuOpen(false);
                   handleLogout();
                 }}
-                className="w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+                className="w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-rose-400 hover:bg-rose-500/10 flex items-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
                 Sign Out ({user.fullName})
@@ -292,16 +301,16 @@ export const Navbar: React.FC<{ onOpenScanner?: () => void }> = ({ onOpenScanner
                 <Link
                   to="/owner/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-center py-2.5 rounded-lg text-sm font-semibold border border-slate-300 text-slate-700"
+                  className="w-full text-center py-2.5 rounded-full text-xs font-semibold border border-[#2c4431] text-slate-200 hover:bg-[#1a291e]"
                 >
                   Shop Owner Login
                 </Link>
                 <Link
-                  to="/owner/register"
+                  to="/shop/quickcopy-express"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-center py-2.5 rounded-lg text-sm font-semibold bg-navy-900 text-white"
+                  className="w-full text-center py-2.5 rounded-full text-xs font-bold bg-[#bbf451] text-[#0c140e]"
                 >
-                  Register Xerox Shop
+                  Get Started
                 </Link>
               </>
             )}

@@ -69,9 +69,10 @@ function AppContent() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const location = useLocation();
   const isDedicatedView = location.pathname.startsWith('/shop/') || location.pathname.startsWith('/s/') || location.pathname.startsWith('/owner');
+  const isHomePage = location.pathname === '/';
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50/40 text-slate-900 font-sans antialiased selection:bg-brand-500 selection:text-white">
+    <div className={`min-h-screen flex flex-col ${isHomePage ? 'bg-[#080d09] text-slate-100' : 'bg-slate-50/40 text-slate-900'} font-sans antialiased selection:bg-[#bbf451] selection:text-[#0b120c]`}>
       {!isDedicatedView && <Navbar onOpenScanner={() => setScannerOpen(true)} />}
 
       <main className="flex-1">
