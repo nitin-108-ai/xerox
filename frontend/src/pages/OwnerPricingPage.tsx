@@ -327,8 +327,8 @@ export const OwnerPricingPage: React.FC = () => {
     return (
       <OwnerLayout shop={shopRecord} title="Printing Services & Pricing">
         <div className="py-24 text-center">
-          <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-brand-600 mb-3" />
-          <p className="text-sm font-medium text-slate-500">Loading pricing rules...</p>
+          <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-[#bbf451] mb-3" />
+          <p className="text-sm font-medium text-slate-400">Loading pricing rules...</p>
         </div>
       </OwnerLayout>
     );
@@ -343,33 +343,33 @@ export const OwnerPricingPage: React.FC = () => {
       <form onSubmit={handleSave} className="max-w-6xl mx-auto space-y-6">
         {/* Success / Error Alerts */}
         {successMessage && (
-          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 text-xs font-semibold flex items-center justify-between gap-2 shadow-xs">
+          <div className="p-4 bg-emerald-950/60 border border-emerald-500/40 rounded-2xl text-emerald-300 text-xs font-semibold flex items-center justify-between gap-2 shadow-lg backdrop-blur-md">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-[#bbf451] shrink-0" />
               <span>{successMessage}</span>
             </div>
           </div>
         )}
 
         {errorMessage && (
-          <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 text-xs font-semibold flex items-center justify-between gap-2 shadow-xs">
+          <div className="p-4 bg-rose-950/60 border border-rose-500/40 rounded-2xl text-rose-300 text-xs font-semibold flex items-center justify-between gap-2 shadow-lg backdrop-blur-md">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
               <span>{errorMessage}</span>
             </div>
           </div>
         )}
 
         {/* Top Control Header Card */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-glass flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-6 sm:p-8 border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#bbf451] bg-[#bbf451]/10 border border-[#bbf451]/30 px-3 py-1 rounded-full">
               Automated Cost Engine
             </span>
-            <h1 className="text-xl sm:text-2xl font-black text-navy-950 tracking-tight mt-2">
+            <h1 className="text-xl sm:text-2xl font-black text-white font-syne tracking-tight mt-2">
               Shop Pricing Rules & Services
             </h1>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-400 mt-1">
               Changes saved here instantly update customer quotation estimates across your QR code storefront.
             </p>
           </div>
@@ -378,7 +378,7 @@ export const OwnerPricingPage: React.FC = () => {
             <button
               type="button"
               onClick={loadPricingData}
-              className="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              className="px-4 py-2.5 rounded-xl border border-[#273d2c] bg-[#121c14] hover:bg-[#1b2b1e] text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               Reset
@@ -386,10 +386,10 @@ export const OwnerPricingPage: React.FC = () => {
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold shadow-md shadow-brand-500/20 flex items-center gap-2 transition-all disabled:opacity-50"
+              className="px-6 py-2.5 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] text-xs font-black shadow-[0_0_20px_rgba(187,244,81,0.25)] flex items-center gap-2 transition-all disabled:opacity-50"
             >
               {saving ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-[#080d09] border-t-transparent rounded-full animate-spin" />
               ) : (
                 <Save className="w-4 h-4" />
               )}
@@ -399,18 +399,18 @@ export const OwnerPricingPage: React.FC = () => {
         </div>
 
         {/* Section 1: Standard Paper Size & Duplex Printing Rules */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-glass space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+        <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-6 sm:p-8 border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#273d2c]/60 pb-4">
             <div>
-              <h2 className="text-base font-extrabold text-navy-950 flex items-center gap-2">
-                <Printer className="w-4 h-4 text-brand-600" />
+              <h2 className="text-base font-extrabold text-white flex items-center gap-2 font-syne">
+                <Printer className="w-4 h-4 text-[#bbf451]" />
                 1. Standard Paper Printing & Photocopying Rates
               </h2>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 Configure rates for Single-Sided (Simplex) and Double-Sided (Duplex) printing for each supported paper size.
               </p>
             </div>
-            <span className="text-[11px] text-slate-400 font-mono self-start sm:self-auto">
+            <span className="text-[11px] text-slate-400 font-mono self-start sm:self-auto bg-[#0c140e] px-2.5 py-1 rounded-lg border border-[#273d2c]">
               Currency: INR (₹)
             </span>
           </div>
@@ -418,65 +418,65 @@ export const OwnerPricingPage: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50/50">
+                <tr className="border-b border-[#273d2c] text-[11px] font-extrabold uppercase tracking-wider text-slate-400 bg-[#0c140e]/90">
                   <th className="py-3 px-3">Paper Size</th>
                   <th className="py-3 px-3">Color Mode</th>
                   <th className="py-3 px-3">
-                    Single-Sided <span className="text-[10px] text-slate-400 font-normal">(₹ / page)</span>
+                    Single-Sided <span className="text-[10px] text-slate-500 font-normal">(₹ / page)</span>
                   </th>
                   <th className="py-3 px-3">
-                    Double-Sided <span className="text-[10px] text-slate-400 font-normal">(₹ / sheet)</span>
+                    Double-Sided <span className="text-[10px] text-slate-500 font-normal">(₹ / sheet)</span>
                   </th>
                   <th className="py-3 px-3">
-                    Bulk Discount Threshold <span className="text-[10px] text-slate-400 font-normal">(Pages)</span>
+                    Bulk Discount Threshold <span className="text-[10px] text-slate-500 font-normal">(Pages)</span>
                   </th>
                   <th className="py-3 px-3">
-                    Discount / Page <span className="text-[10px] text-slate-400 font-normal">(₹ off)</span>
+                    Discount / Page <span className="text-[10px] text-slate-500 font-normal">(₹ off)</span>
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-xs">
+              <tbody className="divide-y divide-[#273d2c]/50 text-xs">
                 {pricingRules.map((rule, idx) => (
-                  <tr key={`${rule.paperSize}_${rule.colorMode}`} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-3 px-3 font-bold text-navy-950">
-                      <span className="px-2.5 py-1 rounded-lg bg-navy-50 text-navy-900 border border-navy-100">
+                  <tr key={`${rule.paperSize}_${rule.colorMode}`} className="hover:bg-[#142317]/50 transition-colors">
+                    <td className="py-3 px-3 font-bold text-white">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#0c140e] text-white border border-[#273d2c] font-mono">
                         {rule.paperSize}
                       </span>
                     </td>
                     <td className="py-3 px-3">
                       {rule.colorMode === 'COLOR' ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-50 text-amber-700 border border-amber-200">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/10 text-amber-300 border border-amber-500/30">
                           Color
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-slate-100 text-slate-700 border border-slate-200">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-slate-800 text-slate-300 border border-slate-700">
                           B&W
                         </span>
                       )}
                     </td>
                     <td className="py-3 px-3">
                       <div className="relative w-28">
-                        <span className="absolute left-2.5 top-2 text-slate-400 font-mono">₹</span>
+                        <span className="absolute left-2.5 top-2 text-slate-500 font-mono">₹</span>
                         <input
                           type="number"
                           step="0.25"
                           min="0"
                           value={rule.singleSidedPrice}
                           onChange={(e) => handleRuleChange(idx, 'singleSidedPrice', e.target.value)}
-                          className="w-full pl-6 pr-2 py-1.5 rounded-lg border border-slate-300 font-mono text-xs focus:ring-1 focus:ring-brand-500"
+                          className="w-full pl-6 pr-2 py-1.5 rounded-lg border border-[#273d2c] bg-[#0c140e] font-mono text-xs text-white focus:border-[#bbf451] focus:outline-none"
                         />
                       </div>
                     </td>
                     <td className="py-3 px-3">
                       <div className="relative w-28">
-                        <span className="absolute left-2.5 top-2 text-slate-400 font-mono">₹</span>
+                        <span className="absolute left-2.5 top-2 text-slate-500 font-mono">₹</span>
                         <input
                           type="number"
                           step="0.25"
                           min="0"
                           value={rule.doubleSidedPrice}
                           onChange={(e) => handleRuleChange(idx, 'doubleSidedPrice', e.target.value)}
-                          className="w-full pl-6 pr-2 py-1.5 rounded-lg border border-slate-300 font-mono text-xs focus:ring-1 focus:ring-brand-500"
+                          className="w-full pl-6 pr-2 py-1.5 rounded-lg border border-[#273d2c] bg-[#0c140e] font-mono text-xs text-white focus:border-[#bbf451] focus:outline-none"
                         />
                       </div>
                     </td>
@@ -487,20 +487,20 @@ export const OwnerPricingPage: React.FC = () => {
                           min="1"
                           value={rule.discountThreshold}
                           onChange={(e) => handleRuleChange(idx, 'discountThreshold', e.target.value)}
-                          className="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-mono text-xs text-center"
+                          className="w-full px-2 py-1.5 rounded-lg border border-[#273d2c] bg-[#0c140e] font-mono text-xs text-center text-white focus:border-[#bbf451] focus:outline-none"
                         />
                       </div>
                     </td>
                     <td className="py-3 px-3">
                       <div className="relative w-24">
-                        <span className="absolute left-2.5 top-2 text-slate-400 font-mono">₹</span>
+                        <span className="absolute left-2.5 top-2 text-slate-500 font-mono">₹</span>
                         <input
                           type="number"
                           step="0.05"
                           min="0"
                           value={rule.discountRate}
                           onChange={(e) => handleRuleChange(idx, 'discountRate', e.target.value)}
-                          className="w-full pl-6 pr-2 py-1.5 rounded-lg border border-slate-300 font-mono text-xs"
+                          className="w-full pl-6 pr-2 py-1.5 rounded-lg border border-[#273d2c] bg-[#0c140e] font-mono text-xs text-white focus:border-[#bbf451] focus:outline-none"
                         />
                       </div>
                     </td>
@@ -512,13 +512,13 @@ export const OwnerPricingPage: React.FC = () => {
         </div>
 
         {/* Section 2: Scanning & Finishing Services */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-glass space-y-6">
-          <div className="border-b border-slate-100 pb-4">
-            <h2 className="text-base font-extrabold text-navy-950 flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-brand-600" />
+        <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-6 sm:p-8 border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6">
+          <div className="border-b border-[#273d2c]/60 pb-4">
+            <h2 className="text-base font-extrabold text-white flex items-center gap-2 font-syne">
+              <BookOpen className="w-4 h-4 text-[#bbf451]" />
               2. Document Finishing, Binding & Scanning Services
             </h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-400 mt-1">
               Set fixed or unit rates for value-added counter services like Spiral Binding, Lamination, and Scanning.
             </p>
           </div>
@@ -528,13 +528,13 @@ export const OwnerPricingPage: React.FC = () => {
               <div
                 key={svc.serviceType}
                 className={`p-4 rounded-2xl border transition-all space-y-3 ${
-                  svc.isEnabled ? 'border-slate-200 bg-white shadow-xs' : 'border-slate-200 bg-slate-50/60 opacity-60'
+                  svc.isEnabled ? 'border-[#273d2c] bg-[#0c140e]/90 shadow-md' : 'border-[#273d2c]/40 bg-[#09110b]/50 opacity-50'
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-navy-950">{svc.name}</p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">{svc.description}</p>
+                    <p className="text-xs font-bold text-white">{svc.name}</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">{svc.description}</p>
                   </div>
 
                   <label className="relative inline-flex items-center cursor-pointer shrink-0">
@@ -544,17 +544,17 @@ export const OwnerPricingPage: React.FC = () => {
                       onChange={(e) => handleServiceChange(idx, 'isEnabled', e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-9 h-5 bg-slate-300 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-600"></div>
+                    <div className="w-9 h-5 bg-[#1b2b1e] peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#080d09] after:border-slate-500 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#bbf451]"></div>
                   </label>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                       Rate (Price)
                     </label>
                     <div className="relative">
-                      <span className="absolute left-2.5 top-2 text-slate-400 font-mono text-xs">₹</span>
+                      <span className="absolute left-2.5 top-2 text-slate-500 font-mono text-xs">₹</span>
                       <input
                         type="number"
                         step="0.5"
@@ -562,13 +562,13 @@ export const OwnerPricingPage: React.FC = () => {
                         disabled={!svc.isEnabled}
                         value={svc.rate}
                         onChange={(e) => handleServiceChange(idx, 'rate', e.target.value)}
-                        className="w-full pl-6 pr-2 py-1.5 rounded-lg border border-slate-300 font-mono text-xs font-bold text-slate-800 disabled:bg-slate-100"
+                        className="w-full pl-6 pr-2 py-1.5 rounded-lg border border-[#273d2c] bg-[#121c14] font-mono text-xs font-bold text-white disabled:bg-[#0a100b] disabled:text-slate-600 focus:border-[#bbf451] focus:outline-none"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                       Pricing Unit
                     </label>
                     <input
@@ -577,7 +577,7 @@ export const OwnerPricingPage: React.FC = () => {
                       value={svc.unit}
                       onChange={(e) => handleServiceChange(idx, 'unit', e.target.value)}
                       placeholder="e.g. ₹ / book"
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-medium text-slate-700 disabled:bg-slate-100"
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-[#273d2c] bg-[#121c14] text-xs font-medium text-white disabled:bg-[#0a100b] disabled:text-slate-600 focus:border-[#bbf451] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -587,43 +587,43 @@ export const OwnerPricingPage: React.FC = () => {
         </div>
 
         {/* Section 3: Minimum Order & Turnaround Time Policy */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-glass space-y-6">
-          <div className="border-b border-slate-100 pb-4">
-            <h2 className="text-base font-extrabold text-navy-950 flex items-center gap-2">
-              <Shield className="w-4 h-4 text-brand-600" />
+        <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-6 sm:p-8 border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6">
+          <div className="border-b border-[#273d2c]/60 pb-4">
+            <h2 className="text-base font-extrabold text-white flex items-center gap-2 font-syne">
+              <Shield className="w-4 h-4 text-[#bbf451]" />
               3. Order Floor Amount & Turnaround Policy
             </h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-400 mt-1">
               Safeguard against micro-orders by establishing a minimum bill amount and communicating estimated completion times.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-2">
-              <label className="block text-xs font-bold text-navy-950">
+            <div className="p-4 rounded-2xl border border-[#273d2c] bg-[#0c140e]/90 space-y-2">
+              <label className="block text-xs font-bold text-white">
                 Minimum Order Amount Floor
               </label>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-400">
                 Any customer estimate below this amount will automatically round up to the minimum order charge.
               </p>
               <div className="relative w-40 pt-1">
-                <span className="absolute left-3 top-3 text-slate-400 font-mono">₹</span>
+                <span className="absolute left-3 top-3 text-slate-500 font-mono">₹</span>
                 <input
                   type="number"
                   step="1"
                   min="0"
                   value={minOrderAmount}
                   onChange={(e) => setMinOrderAmount(Math.max(0, parseFloat(e.target.value) || 0))}
-                  className="w-full pl-7 pr-3 py-2 rounded-xl border border-slate-300 font-mono text-sm font-bold text-navy-950 shadow-2xs"
+                  className="w-full pl-7 pr-3 py-2 rounded-xl border border-[#273d2c] bg-[#121c14] font-mono text-sm font-bold text-white shadow-inner focus:border-[#bbf451] focus:outline-none"
                 />
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-2">
-              <label className="block text-xs font-bold text-navy-950">
+            <div className="p-4 rounded-2xl border border-[#273d2c] bg-[#0c140e]/90 space-y-2">
+              <label className="block text-xs font-bold text-white">
                 Standard Turnaround Time
               </label>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-400">
                 Displayed to customers on the QR storefront before they submit their print jobs.
               </p>
               <input
@@ -631,23 +631,23 @@ export const OwnerPricingPage: React.FC = () => {
                 value={estCompletionTime}
                 onChange={(e) => setEstCompletionTime(e.target.value)}
                 placeholder="e.g. 15-30 mins"
-                className="w-full sm:w-64 px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-navy-950 shadow-2xs"
+                className="w-full sm:w-64 px-3 py-2 rounded-xl border border-[#273d2c] bg-[#121c14] text-xs font-semibold text-white shadow-inner focus:border-[#bbf451] focus:outline-none"
               />
             </div>
           </div>
         </div>
 
         {/* Section 4: Interactive Quotation Calculator & Live Estimator */}
-        <div className="bg-gradient-to-br from-navy-950 to-navy-900 text-white rounded-3xl p-6 sm:p-8 shadow-glass space-y-6">
-          <div className="border-b border-navy-800 pb-4">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-brand-400 bg-brand-500/10 px-2.5 py-0.5 rounded-full border border-brand-500/20">
+        <div className="bg-gradient-to-br from-[#121c14] via-[#0e1710] to-[#070c08] text-white rounded-3xl p-6 sm:p-8 border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6">
+          <div className="border-b border-[#273d2c]/60 pb-4">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#bbf451] bg-[#bbf451]/10 px-2.5 py-0.5 rounded-full border border-[#bbf451]/30">
               Interactive Test Sandbox
             </span>
-            <h2 className="text-base font-extrabold text-white flex items-center gap-2 mt-2">
-              <Calculator className="w-5 h-5 text-brand-400" />
+            <h2 className="text-base font-extrabold text-white flex items-center gap-2 mt-2 font-syne">
+              <Calculator className="w-5 h-5 text-[#bbf451]" />
               Live Customer Price Estimator
             </h2>
-            <p className="text-xs text-slate-300 mt-1">
+            <p className="text-xs text-slate-400 mt-1">
               Verify your rules in real-time. This preview demonstrates the exact calculation customer browsers run when estimating order totals.
             </p>
           </div>
@@ -660,7 +660,7 @@ export const OwnerPricingPage: React.FC = () => {
                 <select
                   value={simPaperSize}
                   onChange={(e) => setSimPaperSize(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl bg-navy-900 border border-navy-700 text-white font-medium"
+                  className="w-full px-3 py-2 rounded-xl bg-[#0c140e] border border-[#273d2c] text-white font-medium focus:border-[#bbf451] focus:outline-none"
                 >
                   <option value="A4">A4 (Standard Document)</option>
                   <option value="A3">A3 (Large Format)</option>
@@ -677,8 +677,8 @@ export const OwnerPricingPage: React.FC = () => {
                     onClick={() => setSimColorMode('BW')}
                     className={`py-2 rounded-xl border text-center font-bold transition ${
                       simColorMode === 'BW'
-                        ? 'bg-brand-600 border-brand-500 text-white'
-                        : 'bg-navy-900 border-navy-800 text-slate-400 hover:text-white'
+                        ? 'bg-[#bbf451] border-[#bbf451] text-[#080d09]'
+                        : 'bg-[#0c140e] border-[#273d2c] text-slate-400 hover:text-white'
                     }`}
                   >
                     B&W
@@ -688,8 +688,8 @@ export const OwnerPricingPage: React.FC = () => {
                     onClick={() => setSimColorMode('COLOR')}
                     className={`py-2 rounded-xl border text-center font-bold transition ${
                       simColorMode === 'COLOR'
-                        ? 'bg-brand-600 border-brand-500 text-white'
-                        : 'bg-navy-900 border-navy-800 text-slate-400 hover:text-white'
+                        ? 'bg-[#bbf451] border-[#bbf451] text-[#080d09]'
+                        : 'bg-[#0c140e] border-[#273d2c] text-slate-400 hover:text-white'
                     }`}
                   >
                     Color
@@ -705,8 +705,8 @@ export const OwnerPricingPage: React.FC = () => {
                     onClick={() => setSimIsDuplex(false)}
                     className={`py-2 rounded-xl border text-center font-bold transition ${
                       !simIsDuplex
-                        ? 'bg-brand-600 border-brand-500 text-white'
-                        : 'bg-navy-900 border-navy-800 text-slate-400 hover:text-white'
+                        ? 'bg-[#bbf451] border-[#bbf451] text-[#080d09]'
+                        : 'bg-[#0c140e] border-[#273d2c] text-slate-400 hover:text-white'
                     }`}
                   >
                     Single-Sided
@@ -716,8 +716,8 @@ export const OwnerPricingPage: React.FC = () => {
                     onClick={() => setSimIsDuplex(true)}
                     className={`py-2 rounded-xl border text-center font-bold transition ${
                       simIsDuplex
-                        ? 'bg-brand-600 border-brand-500 text-white'
-                        : 'bg-navy-900 border-navy-800 text-slate-400 hover:text-white'
+                        ? 'bg-[#bbf451] border-[#bbf451] text-[#080d09]'
+                        : 'bg-[#0c140e] border-[#273d2c] text-slate-400 hover:text-white'
                     }`}
                   >
                     Double-Sided (Duplex)
@@ -732,7 +732,7 @@ export const OwnerPricingPage: React.FC = () => {
                   min="1"
                   value={simPages}
                   onChange={(e) => setSimPages(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                  className="w-full px-3 py-2 rounded-xl bg-navy-900 border border-navy-700 text-white font-mono"
+                  className="w-full px-3 py-2 rounded-xl bg-[#0c140e] border border-[#273d2c] text-white font-mono focus:border-[#bbf451] focus:outline-none"
                 />
               </div>
 
@@ -743,7 +743,7 @@ export const OwnerPricingPage: React.FC = () => {
                   min="1"
                   value={simCopies}
                   onChange={(e) => setSimCopies(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                  className="w-full px-3 py-2 rounded-xl bg-navy-900 border border-navy-700 text-white font-mono"
+                  className="w-full px-3 py-2 rounded-xl bg-[#0c140e] border border-[#273d2c] text-white font-mono focus:border-[#bbf451] focus:outline-none"
                 />
               </div>
 
@@ -753,7 +753,7 @@ export const OwnerPricingPage: React.FC = () => {
                     type="checkbox"
                     checked={simAddBinding}
                     onChange={(e) => setSimAddBinding(e.target.checked)}
-                    className="rounded border-navy-700 bg-navy-900 text-brand-500 focus:ring-0"
+                    className="rounded border-[#273d2c] bg-[#0c140e] text-[#bbf451] focus:ring-0"
                   />
                   <span>Add Spiral Binding (+₹{servicePricing.find((s) => s.serviceType === 'SPIRAL_BINDING')?.rate || 35})</span>
                 </label>
@@ -761,10 +761,10 @@ export const OwnerPricingPage: React.FC = () => {
             </div>
 
             {/* Simulated Quotation Receipt Card */}
-            <div className="bg-navy-900/90 border border-navy-800 rounded-2xl p-5 space-y-3.5 shadow-lg">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-navy-800 pb-2 flex items-center justify-between">
+            <div className="bg-[#0c140e] border border-[#273d2c] rounded-2xl p-5 space-y-3.5 shadow-xl">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-[#273d2c] pb-2 flex items-center justify-between">
                 <span>Calculated Quotation</span>
-                <span className="text-brand-400 font-mono">Live</span>
+                <span className="text-[#bbf451] font-mono">Live</span>
               </h4>
 
               <div className="space-y-2 text-xs">
@@ -777,13 +777,13 @@ export const OwnerPricingPage: React.FC = () => {
                   <span className="font-mono text-white">₹{simResult.printSubtotal}</span>
                 </div>
                 {parseFloat(simResult.discount) > 0 && (
-                  <div className="flex justify-between text-emerald-400">
+                  <div className="flex justify-between text-[#bbf451]">
                     <span>Volume Discount:</span>
                     <span className="font-mono">-₹{simResult.discount}</span>
                   </div>
                 )}
                 {parseFloat(simResult.extraServices) > 0 && (
-                  <div className="flex justify-between text-brand-300">
+                  <div className="flex justify-between text-amber-300">
                     <span>Finishing Services:</span>
                     <span className="font-mono">+₹{simResult.extraServices}</span>
                   </div>
@@ -795,9 +795,9 @@ export const OwnerPricingPage: React.FC = () => {
                   </div>
                 )}
 
-                <div className="pt-2 border-t border-navy-800 flex justify-between items-baseline">
+                <div className="pt-2 border-t border-[#273d2c] flex justify-between items-baseline">
                   <span className="font-bold text-white text-sm">Estimated Total:</span>
-                  <span className="font-black text-2xl text-emerald-400 font-mono">
+                  <span className="font-black text-2xl text-[#bbf451] font-mono">
                     ₹{simResult.finalTotal}
                   </span>
                 </div>
@@ -807,17 +807,17 @@ export const OwnerPricingPage: React.FC = () => {
         </div>
 
         {/* Sticky Save Bar */}
-        <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-glass flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-slate-500">
-            Make sure to click <strong className="text-navy-950 font-bold">Save Pricing Rules</strong> after modifying rates.
+        <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-6 border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-slate-400">
+            Make sure to click <strong className="text-white font-bold">Save Pricing Rules</strong> after modifying rates.
           </p>
           <button
             type="submit"
             disabled={saving}
-            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold shadow-md shadow-brand-500/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] text-xs font-black shadow-[0_0_20px_rgba(187,244,81,0.25)] flex items-center justify-center gap-2 transition-all disabled:opacity-50"
           >
             {saving ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-[#080d09] border-t-transparent rounded-full animate-spin" />
             ) : (
               <Save className="w-4 h-4" />
             )}

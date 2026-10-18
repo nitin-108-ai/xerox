@@ -196,29 +196,29 @@ export const OwnerPrintersPage: React.FC = () => {
     switch (status) {
       case 'READY':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-950/60 border border-emerald-500/40 text-[#bbf451]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#bbf451] animate-pulse" />
             Ready
           </span>
         );
       case 'OFFLINE':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-amber-950/60 border border-amber-500/40 text-amber-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
             Offline
           </span>
         );
       case 'ERROR':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-rose-950/60 border border-rose-500/40 text-rose-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
             Error
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-slate-900 border border-slate-700 text-slate-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
             Unknown
           </span>
         );
@@ -237,45 +237,45 @@ export const OwnerPrintersPage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link
             to="/owner/dashboard"
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-2xs transition"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-[#273d2c] bg-[#121c14] hover:bg-[#1b2b1e] text-slate-200 text-xs font-bold shadow-md transition"
           >
-            <ArrowLeft className="w-4 h-4 text-brand-600" />
+            <ArrowLeft className="w-4 h-4 text-[#bbf451]" />
             <span>Back to Receiving Panel</span>
           </Link>
 
           <div className="flex items-center gap-2">
             <Link
               to="/owner/profile"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#273d2c] bg-[#121c14] hover:bg-[#1b2b1e] text-slate-300 text-xs font-semibold shadow-md transition"
             >
-              <Building2 className="w-3.5 h-3.5 text-slate-500" />
+              <Building2 className="w-3.5 h-3.5 text-[#bbf451]" />
               <span>Profile</span>
             </Link>
             <Link
               to="/owner/settings"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#273d2c] bg-[#121c14] hover:bg-[#1b2b1e] text-slate-300 text-xs font-semibold shadow-md transition"
             >
-              <Settings className="w-3.5 h-3.5 text-slate-500" />
+              <Settings className="w-3.5 h-3.5 text-[#bbf451]" />
               <span>Settings</span>
             </Link>
             <Link
               to="/owner/qr"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#273d2c] bg-[#121c14] hover:bg-[#1b2b1e] text-slate-300 text-xs font-semibold shadow-md transition"
             >
-              <QrCode className="w-3.5 h-3.5 text-slate-500" />
+              <QrCode className="w-3.5 h-3.5 text-[#bbf451]" />
               <span>Shop QR</span>
             </Link>
           </div>
         </div>
 
         {/* Top Header Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] p-6 sm:p-8 rounded-3xl border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
           <div>
-            <h2 className="text-xl font-extrabold text-navy-950 flex items-center gap-2">
-              <Printer className="w-6 h-6 text-brand-600" />
+            <h2 className="text-xl sm:text-2xl font-black text-white font-syne flex items-center gap-2.5">
+              <Printer className="w-6 h-6 text-[#bbf451]" />
               Connected Shop Printers
             </h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-400 mt-1">
               Supports USB, Wi-Fi, and Network printers installed on Windows 10/11.
             </p>
           </div>
@@ -283,7 +283,7 @@ export const OwnerPrintersPage: React.FC = () => {
           <div className="flex items-center gap-2 flex-wrap">
             <Link
               to="/owner/setup-wizard"
-              className="px-4 py-2 rounded-xl border border-brand-200 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold text-xs flex items-center gap-1.5 transition"
+              className="px-4 py-2.5 rounded-xl border border-[#bbf451]/30 bg-[#bbf451]/10 hover:bg-[#bbf451]/20 text-[#bbf451] font-bold text-xs flex items-center gap-1.5 transition"
             >
               <Sparkles className="w-3.5 h-3.5" />
               Setup Wizard
@@ -291,14 +291,14 @@ export const OwnerPrintersPage: React.FC = () => {
             <button
               onClick={() => loadPrinterData(true)}
               disabled={refreshing}
-              className="p-2 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-600 bg-white transition"
+              className="p-2.5 rounded-xl border border-[#273d2c] hover:border-[#bbf451]/50 text-slate-300 bg-[#121c14] transition"
               title="Refresh Printers"
             >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-brand-600' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-[#bbf451]' : ''}`} />
             </button>
             <button
               onClick={() => setAddPrinterModalOpen(true)}
-              className="px-4 py-2 rounded-xl bg-navy-950 hover:bg-brand-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition"
+              className="px-5 py-2.5 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] font-black text-xs flex items-center gap-1.5 shadow-[0_0_20px_rgba(187,244,81,0.25)] transition"
             >
               <Plus className="w-4 h-4" />
               Add Printer
@@ -307,8 +307,8 @@ export const OwnerPrintersPage: React.FC = () => {
         </div>
 
         {error && (
-          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="p-4 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2 shadow-lg backdrop-blur-md">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
             <span>{error}</span>
           </div>
         )}
@@ -316,77 +316,77 @@ export const OwnerPrintersPage: React.FC = () => {
         {/* Printing Mode Cards (Mode A vs Mode B) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Mode A: Manual Print */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between">
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl border border-[#273d2c] p-6 sm:p-7 shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col justify-between">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-slate-100 text-slate-700">
+                <span className="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-[#0c140e] border border-[#273d2c] text-slate-300">
                   Mode A • Always Available
                 </span>
-                <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                <span className="text-xs font-bold text-[#bbf451] flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Built-in Fallback
                 </span>
               </div>
-              <h3 className="text-base font-extrabold text-navy-950">Simple Manual Printing</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-lg font-black text-white font-syne">Simple Manual Printing</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
                 Opens customer documents directly in your browser or standard Windows print dialog. Works on any computer without requiring background connector services.
               </p>
-              <ul className="text-xs text-slate-500 space-y-1.5 pt-2">
+              <ul className="text-xs text-slate-400 space-y-1.5 pt-2">
                 <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#bbf451]" />
                   No extra software installation needed
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#bbf451]" />
                   Works with any Windows-installed printer or virtual PDF
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#bbf451]" />
                   Full manual control over page layout and duplex settings
                 </li>
               </ul>
             </div>
-            <div className="pt-5 mt-5 border-t border-slate-100 flex items-center justify-between">
+            <div className="pt-5 mt-5 border-t border-[#273d2c]/60 flex items-center justify-between">
               <span className="text-xs text-slate-500">Available on every order card</span>
-              <span className="text-xs font-bold text-slate-700">Status: Active</span>
+              <span className="text-xs font-bold text-slate-300">Status: <strong className="text-[#bbf451]">Active</strong></span>
             </div>
           </div>
 
           {/* Mode B: Direct Print Connector */}
-          <div className="bg-gradient-to-br from-navy-950 to-navy-900 text-white rounded-3xl p-6 shadow-md flex flex-col justify-between border border-navy-800">
+          <div className="bg-gradient-to-br from-[#121c14] via-[#0e1710] to-[#070c08] text-white rounded-3xl p-6 sm:p-7 shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col justify-between border border-[#273d2c]">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                <span className="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-[#bbf451]/10 text-[#bbf451] border border-[#bbf451]/30">
                   Mode B • Direct Desktop Connector
                 </span>
                 {connector.isOnline ? (
-                  <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-xs font-bold text-[#bbf451] flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#bbf451] animate-pulse" />
                     Connector Online
                   </span>
                 ) : (
-                  <span className="text-xs font-bold text-slate-400 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-slate-500" />
+                  <span className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-slate-600" />
                     Not Connected
                   </span>
                 )}
               </div>
-              <h3 className="text-base font-extrabold text-white">Direct Windows Spooler Printing</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <h3 className="text-lg font-black text-white font-syne">Direct Windows Spooler Printing</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
                 Connects directly to Windows 10/11 Print Spooler. Allows one-click printing directly from the Owner Dashboard without opening file viewers.
               </p>
-              <div className="p-3 rounded-2xl bg-navy-900/80 border border-navy-800 text-xs space-y-1">
-                <div className="flex items-center justify-between text-slate-300">
+              <div className="p-3.5 rounded-2xl bg-[#0c140e] border border-[#273d2c] text-xs space-y-1.5">
+                <div className="flex items-center justify-between text-slate-400">
                   <span>Paired PC:</span>
                   <span className="font-mono text-white font-bold">{connector.deviceName || 'None paired'}</span>
                 </div>
-                <div className="flex items-center justify-between text-slate-300">
+                <div className="flex items-center justify-between text-slate-400">
                   <span>Operating System:</span>
-                  <span className="text-slate-200">{connector.osInfo || 'Windows 10/11'}</span>
+                  <span className="text-slate-300">{connector.osInfo || 'Windows 10/11'}</span>
                 </div>
                 {connector.lastHeartbeatAt && (
-                  <div className="flex items-center justify-between text-slate-300">
+                  <div className="flex items-center justify-between text-slate-400">
                     <span>Last Heartbeat:</span>
-                    <span className="text-emerald-400 text-[11px]">
+                    <span className="text-[#bbf451] text-[11px] font-mono">
                       {new Date(connector.lastHeartbeatAt).toLocaleTimeString()}
                     </span>
                   </div>
@@ -394,18 +394,18 @@ export const OwnerPrintersPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-4 mt-4 border-t border-navy-800/80 flex items-center justify-between gap-3 flex-wrap">
+            <div className="pt-4 mt-4 border-t border-[#273d2c]/60 flex items-center justify-between gap-3 flex-wrap">
               {connector.isPaired ? (
                 <>
                   <button
                     onClick={handleRevokeConnector}
-                    className="px-3 py-1.5 rounded-xl border border-rose-500/40 text-rose-300 hover:bg-rose-500/10 text-xs font-semibold transition"
+                    className="px-3.5 py-2 rounded-xl border border-rose-500/40 text-rose-300 hover:bg-rose-500/10 text-xs font-semibold transition"
                   >
                     Disconnect PC
                   </button>
                   <button
                     onClick={handleGeneratePairingCode}
-                    className="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold shadow-xs transition"
+                    className="px-4 py-2 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] text-xs font-black shadow-md transition"
                   >
                     Re-Pair Device
                   </button>
@@ -414,7 +414,7 @@ export const OwnerPrintersPage: React.FC = () => {
                 <button
                   onClick={handleGeneratePairingCode}
                   disabled={pairingLoading}
-                  className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition"
+                  className="w-full py-2.5 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] font-black text-xs flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(187,244,81,0.25)] transition"
                 >
                   <KeyRound className="w-4 h-4" />
                   Pair Windows PC (Get 6-Digit Code)
@@ -425,17 +425,17 @@ export const OwnerPrintersPage: React.FC = () => {
         </div>
 
         {/* Printers List Table / Cards */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] overflow-hidden">
+          <div className="p-6 sm:p-7 border-b border-[#273d2c]/60 flex items-center justify-between">
             <div>
-              <h3 className="text-base font-extrabold text-navy-950">Installed & Supported Printers</h3>
-              <p className="text-xs text-slate-500">
+              <h3 className="text-base font-black text-white font-syne">Installed & Supported Printers</h3>
+              <p className="text-xs text-slate-400 mt-0.5">
                 {printers.length} printer(s) configured for this shop
               </p>
             </div>
             <button
               onClick={() => setAddPrinterModalOpen(true)}
-              className="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1"
+              className="text-xs font-bold text-[#bbf451] hover:text-[#cbff5e] flex items-center gap-1.5 transition"
             >
               <Plus className="w-3.5 h-3.5" /> Add Another Printer
             </button>
@@ -443,67 +443,67 @@ export const OwnerPrintersPage: React.FC = () => {
 
           {loading ? (
             <div className="py-16 text-center text-slate-400 text-xs">
-              <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-brand-600" />
+              <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-[#bbf451]" />
               Scanning for installed printers...
             </div>
           ) : printers.length === 0 ? (
             <div className="py-16 text-center px-4">
-              <Printer className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <h4 className="text-sm font-bold text-slate-700">No Printers Detected</h4>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
+              <Printer className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+              <h4 className="text-sm font-bold text-white font-syne">No Printers Detected</h4>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1">
                 Pair the Windows Desktop Connector or manually add your installed shop printer above.
               </p>
               <button
                 onClick={() => setAddPrinterModalOpen(true)}
-                className="mt-4 px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-bold shadow-xs hover:bg-brand-500 transition"
+                className="mt-4 px-5 py-2.5 rounded-xl bg-[#bbf451] text-[#080d09] text-xs font-black shadow-md hover:bg-[#cbff5e] transition"
               >
                 Add Printer Manually
               </button>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-[#273d2c]/40">
               {printers.map((printer) => (
-                <div key={printer.id} className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 transition">
+                <div key={printer.id} className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-[#142317]/50 transition">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-700">
-                      <Printer className="w-6 h-6 text-brand-600" />
+                    <div className="w-12 h-12 rounded-2xl bg-[#0c140e] border border-[#273d2c] flex items-center justify-center shrink-0 text-[#bbf451]">
+                      <Printer className="w-6 h-6" />
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="font-extrabold text-navy-950 text-sm">{printer.name}</h4>
+                        <h4 className="font-extrabold text-white text-sm">{printer.name}</h4>
                         {printer.isDefault && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-brand-100 text-brand-800 flex items-center gap-1">
-                            <Star className="w-2.5 h-2.5 fill-brand-600" /> Default
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#bbf451]/15 text-[#bbf451] border border-[#bbf451]/30 flex items-center gap-1">
+                            <Star className="w-2.5 h-2.5 fill-[#bbf451]" /> Default
                           </span>
                         )}
                         {getStatusBadge(printer.status)}
                       </div>
 
-                      <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
-                        <span className="flex items-center gap-1">
+                      <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
+                        <span className="flex items-center gap-1 text-slate-300">
                           {getConnectionIcon(printer.connectionType)}
                           {printer.connectionType} ({printer.portName || 'Port'})
                         </span>
-                        <span>•</span>
-                        <span>Driver: {printer.driverName}</span>
+                        <span className="text-[#273d2c]">•</span>
+                        <span>Driver: <strong className="text-slate-300 font-normal">{printer.driverName}</strong></span>
                       </div>
 
                       <div className="flex items-center gap-2 pt-1 flex-wrap">
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#0c140e] border border-[#273d2c] text-slate-300 font-mono">
                           Sizes: {Array.isArray(printer.supportedPaperSizes) ? printer.supportedPaperSizes.join(', ') : 'A4'}
                         </span>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${printer.supportsColor ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'}`}>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${printer.supportsColor ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-slate-800 border-slate-700 text-slate-300'}`}>
                           {printer.supportsColor ? 'Color & B/W' : 'Monochrome Only'}
                         </span>
                         {printer.supportsDuplex && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/40 text-[#bbf451]">
                             Duplex Supported
                           </span>
                         )}
                       </div>
 
                       {testPrintResult && testPrintResult.id === printer.id && (
-                        <p className="text-xs text-emerald-700 font-semibold pt-1 flex items-center gap-1">
+                        <p className="text-xs text-[#bbf451] font-semibold pt-1 flex items-center gap-1">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           {testPrintResult.message}
                         </p>
@@ -515,7 +515,7 @@ export const OwnerPrintersPage: React.FC = () => {
                     {!printer.isDefault && (
                       <button
                         onClick={() => handleSetDefault(printer.id)}
-                        className="px-3 py-1.5 rounded-xl border border-slate-200 hover:border-brand-300 text-slate-700 hover:text-brand-700 text-xs font-semibold bg-white transition"
+                        className="px-3.5 py-2 rounded-xl border border-[#273d2c] hover:border-[#bbf451]/50 text-slate-300 hover:text-white text-xs font-semibold bg-[#121c14] transition"
                       >
                         Make Default
                       </button>
@@ -524,11 +524,11 @@ export const OwnerPrintersPage: React.FC = () => {
                     <button
                       onClick={() => handleTriggerTestPrint(printer)}
                       disabled={testPrintRunning === printer.id}
-                      className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-xl bg-[#0c140e] border border-[#273d2c] hover:border-[#bbf451]/40 text-slate-200 text-xs font-bold transition flex items-center gap-1.5"
                     >
                       {testPrintRunning === printer.id ? (
                         <>
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#bbf451]" />
                           Testing...
                         </>
                       ) : (
@@ -538,7 +538,7 @@ export const OwnerPrintersPage: React.FC = () => {
 
                     <button
                       onClick={() => handleDeletePrinter(printer.id, printer.name)}
-                      className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                      className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 border border-transparent hover:border-rose-500/30 transition"
                       title="Remove Printer"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -551,31 +551,31 @@ export const OwnerPrintersPage: React.FC = () => {
         </div>
 
         {/* Troubleshooting & Guide Section */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs space-y-4">
-          <h3 className="text-base font-extrabold text-navy-950 flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-brand-600" />
+        <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl border border-[#273d2c] p-6 sm:p-7 shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-4">
+          <h3 className="text-base font-black text-white font-syne flex items-center gap-2">
+            <HelpCircle className="w-5 h-5 text-[#bbf451]" />
             Printer Connection & Troubleshooting Guide
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-600">
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-              <h5 className="font-bold text-navy-950">1. USB Printers</h5>
-              <p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-300">
+            <div className="p-4 rounded-2xl bg-[#0c140e] border border-[#273d2c] space-y-1.5">
+              <h5 className="font-bold text-white">1. USB Printers</h5>
+              <p className="text-slate-400 leading-relaxed">
                 Connect the USB cable firmly to the shop PC. Ensure printer driver is installed from the CD or manufacturer website (Epson, HP, Canon). Test printing from Notepad first.
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-              <h5 className="font-bold text-navy-950">2. Wi-Fi & LAN Printers</h5>
-              <p>
+            <div className="p-4 rounded-2xl bg-[#0c140e] border border-[#273d2c] space-y-1.5">
+              <h5 className="font-bold text-white">2. Wi-Fi & LAN Printers</h5>
+              <p className="text-slate-400 leading-relaxed">
                 Ensure both the printer and the shop PC are connected to the same Wi-Fi router. Add the network printer in Windows Settings &gt; Printers & Scanners.
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-              <h5 className="font-bold text-navy-950">3. Offline Status or Paper Jam</h5>
-              <p>
-                If status shows Offline, check power and paper trays. If Windows spooler stalls, restart the Windows Print Spooler service or switch to <strong>Mode A (Manual Print)</strong>.
+            <div className="p-4 rounded-2xl bg-[#0c140e] border border-[#273d2c] space-y-1.5">
+              <h5 className="font-bold text-white">3. Offline Status or Paper Jam</h5>
+              <p className="text-slate-400 leading-relaxed">
+                If status shows Offline, check power and paper trays. If Windows spooler stalls, restart the Windows Print Spooler service or switch to <strong className="text-[#bbf451]">Mode A (Manual Print)</strong>.
               </p>
             </div>
           </div>
@@ -584,26 +584,26 @@ export const OwnerPrintersPage: React.FC = () => {
 
       {/* Pairing Code Modal */}
       {pairingModalOpen && pairingData && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-navy-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#080d09] rounded-3xl max-w-md w-full border border-[#273d2c] shadow-[0_25px_60px_rgba(0,0,0,0.9)] p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
             <div className="text-center space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 mx-auto flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-[#bbf451]/10 border border-[#bbf451]/30 text-[#bbf451] mx-auto flex items-center justify-center">
                 <Laptop className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-extrabold text-navy-950">Connect Windows PC</h3>
-              <p className="text-xs text-slate-500">
+              <h3 className="text-lg font-black text-white font-syne">Connect Windows PC</h3>
+              <p className="text-xs text-slate-400">
                 Enter this one-time code in the Smart Xerox Windows Connector to pair this shop.
               </p>
             </div>
 
-            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200 text-center space-y-2">
+            <div className="bg-[#0c140e] rounded-2xl p-6 border border-[#273d2c] text-center space-y-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 6-Digit Pairing Code
               </span>
-              <div className="text-4xl font-mono font-black text-navy-950 tracking-widest">
+              <div className="text-4xl font-mono font-black text-[#bbf451] tracking-widest">
                 {pairingData.pairingCode}
               </div>
-              <p className="text-[11px] text-amber-600 font-medium flex items-center justify-center gap-1">
+              <p className="text-[11px] text-amber-300 font-medium flex items-center justify-center gap-1">
                 <Clock className="w-3 h-3" /> Valid for 10 minutes
               </p>
             </div>
@@ -611,7 +611,7 @@ export const OwnerPrintersPage: React.FC = () => {
             <div className="space-y-2">
               <button
                 onClick={handleCopyCode}
-                className="w-full py-2.5 rounded-xl bg-navy-950 hover:bg-brand-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition"
+                className="w-full py-2.5 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] font-black text-xs flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(187,244,81,0.25)] transition"
               >
                 <Copy className="w-4 h-4" />
                 {copiedCode ? 'Code Copied!' : 'Copy Pairing Code'}
@@ -619,14 +619,14 @@ export const OwnerPrintersPage: React.FC = () => {
 
               <button
                 onClick={() => setPairingModalOpen(false)}
-                className="w-full py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition"
+                className="w-full py-2 rounded-xl text-slate-400 hover:text-white hover:bg-[#121c14] font-semibold text-xs transition"
               >
                 Close Window
               </button>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-500 space-y-1">
-              <p className="font-bold text-slate-700">How to use:</p>
+            <div className="p-3.5 rounded-xl bg-[#0c140e] border border-[#273d2c] text-[11px] text-slate-400 space-y-1 font-mono">
+              <p className="font-bold text-slate-300">How to use:</p>
               <p>1. Open the <code>windows-connector</code> folder on the shop PC.</p>
               <p>2. Double-click <code>install.bat</code> or run <code>node src/connector.js --pair {pairingData.pairingCode}</code>.</p>
             </div>
@@ -636,16 +636,16 @@ export const OwnerPrintersPage: React.FC = () => {
 
       {/* Add Printer Modal */}
       {addPrinterModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-navy-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full border border-slate-200 shadow-2xl p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#080d09] rounded-3xl max-w-lg w-full border border-[#273d2c] shadow-[0_25px_60px_rgba(0,0,0,0.9)] p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-[#273d2c]/60 pb-3">
               <div>
-                <h3 className="text-base font-extrabold text-navy-950">Add / Configure Printer</h3>
-                <p className="text-xs text-slate-500">Configure a local or network printer for this shop</p>
+                <h3 className="text-base font-black text-white font-syne">Add / Configure Printer</h3>
+                <p className="text-xs text-slate-400">Configure a local or network printer for this shop</p>
               </div>
               <button
                 onClick={() => setAddPrinterModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 hover:text-white transition"
               >
                 ✕
               </button>
@@ -653,7 +653,7 @@ export const OwnerPrintersPage: React.FC = () => {
 
             <form onSubmit={handleSaveNewPrinter} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-300 mb-1">
                   Printer Name (Exact Windows Name) *
                 </label>
                 <input
@@ -662,17 +662,17 @@ export const OwnerPrintersPage: React.FC = () => {
                   value={newPrinter.name}
                   onChange={(e) => setNewPrinter({ ...newPrinter, name: e.target.value })}
                   placeholder="e.g. EPSON L3150 Series or HP LaserJet M126nw"
-                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-brand-500"
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-[#273d2c] bg-[#0c140e] text-white focus:outline-none focus:border-[#bbf451]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Connection Type</label>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Connection Type</label>
                   <select
                     value={newPrinter.connectionType}
                     onChange={(e) => setNewPrinter({ ...newPrinter, connectionType: e.target.value })}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-brand-500 bg-white"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#273d2c] bg-[#0c140e] text-white focus:outline-none focus:border-[#bbf451]"
                   >
                     <option value="USB">USB Cable</option>
                     <option value="WIFI">Wi-Fi Wireless</option>
@@ -682,71 +682,71 @@ export const OwnerPrintersPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Port Name</label>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Port Name</label>
                   <input
                     type="text"
                     value={newPrinter.portName}
                     onChange={(e) => setNewPrinter({ ...newPrinter, portName: e.target.value })}
                     placeholder="e.g. USB001 or 192.168.1.50"
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-brand-500"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#273d2c] bg-[#0c140e] text-white focus:outline-none focus:border-[#bbf451]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Driver Name</label>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Driver Name</label>
                 <input
                   type="text"
                   value={newPrinter.driverName}
                   onChange={(e) => setNewPrinter({ ...newPrinter, driverName: e.target.value })}
                   placeholder="e.g. EPSON L3150 Series"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-brand-500"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#273d2c] bg-[#0c140e] text-white focus:outline-none focus:border-[#bbf451]"
                 />
               </div>
 
-              <div className="space-y-2 pt-2 border-t border-slate-100">
-                <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <div className="space-y-2 pt-2 border-t border-[#273d2c]/60">
+                <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newPrinter.supportsColor}
                     onChange={(e) => setNewPrinter({ ...newPrinter, supportsColor: e.target.checked })}
-                    className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                    className="rounded border-[#273d2c] bg-[#0c140e] text-[#bbf451] focus:ring-0"
                   />
                   <span>Supports Color Printing</span>
                 </label>
 
-                <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newPrinter.supportsDuplex}
                     onChange={(e) => setNewPrinter({ ...newPrinter, supportsDuplex: e.target.checked })}
-                    className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                    className="rounded border-[#273d2c] bg-[#0c140e] text-[#bbf451] focus:ring-0"
                   />
                   <span>Supports Automatic Double-Sided (Duplex) Printing</span>
                 </label>
 
-                <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newPrinter.isDefault}
                     onChange={(e) => setNewPrinter({ ...newPrinter, isDefault: e.target.checked })}
-                    className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                    className="rounded border-[#273d2c] bg-[#0c140e] text-[#bbf451] focus:ring-0"
                   />
-                  <span className="font-bold text-navy-950">Set as Primary Shop Printer</span>
+                  <span className="font-bold text-white">Set as Primary Shop Printer</span>
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-[#273d2c]/60">
                 <button
                   type="button"
                   onClick={() => setAddPrinterModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-[#121c14] text-xs font-semibold transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-xs"
+                  className="px-5 py-2 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] font-black text-xs shadow-md transition"
                 >
                   Save Printer
                 </button>

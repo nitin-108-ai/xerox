@@ -93,20 +93,20 @@ export const PrintablePosterModal: React.FC<PrintablePosterModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-elevated border border-slate-200 overflow-hidden flex flex-col max-h-[95vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl bg-gradient-to-b from-[#142217] via-[#0f1a11] to-[#0a120c] rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.9)] border border-[#273d2c] overflow-hidden flex flex-col max-h-[95vh] text-slate-100">
         {/* Top Controls */}
-        <div className="flex items-center justify-between px-6 py-4 bg-navy-900 text-white shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 bg-[#0c140e] text-white shrink-0 border-b border-[#233827]">
           <div className="flex items-center gap-2">
-            <QrCode className="w-5 h-5 text-brand-400" />
-            <h3 className="text-base font-semibold">Printable Shop Counter Poster</h3>
+            <QrCode className="w-5 h-5 text-[#bbf451]" />
+            <h3 className="text-base font-bold font-syne">Printable Shop Counter Poster</h3>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#162519] hover:bg-[#203323] text-slate-200 border border-[#273d2c] transition-colors"
             >
               <Printer className="w-3.5 h-3.5" />
               Print
@@ -114,7 +114,7 @@ export const PrintablePosterModal: React.FC<PrintablePosterModalProps> = ({
             <button
               type="button"
               onClick={handleDownloadPdf}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] shadow-[0_0_15px_rgba(187,244,81,0.25)] transition active:scale-98"
             >
               <Download className="w-3.5 h-3.5" />
               Download PDF
@@ -122,7 +122,7 @@ export const PrintablePosterModal: React.FC<PrintablePosterModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-navy-800 transition-colors"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -130,7 +130,7 @@ export const PrintablePosterModal: React.FC<PrintablePosterModalProps> = ({
         </div>
 
         {/* Printable Poster Canvas */}
-        <div className="flex-1 overflow-auto p-6 bg-slate-100 flex justify-center">
+        <div className="flex-1 overflow-auto p-6 bg-[#080d09] flex justify-center">
           <div className="w-[450px] bg-white rounded-2xl shadow-xl border-4 border-navy-900 p-8 text-center flex flex-col items-center">
             {/* Header Badge */}
             <div className="w-full bg-navy-900 text-white py-3 px-4 rounded-xl mb-4">

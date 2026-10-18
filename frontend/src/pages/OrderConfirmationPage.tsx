@@ -1,23 +1,18 @@
 import React, { useState } from 'react';
-import { useLocation, useParams, Link, useNavigate } from 'react-router-dom';
+import { useLocation, useParams, Link } from 'react-router-dom';
 import {
   CheckCircle2,
   Copy,
   Check,
-  QrCode,
   ShieldCheck,
   ArrowRight,
-  Clock,
   Printer,
-  Key,
-  ExternalLink,
-  AlertTriangle
+  Key
 } from 'lucide-react';
 
 export const OrderConfirmationPage: React.FC = () => {
   const { reference } = useParams<{ reference: string }>();
   const location = useLocation();
-  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
   const orderData = location.state?.order;
@@ -35,73 +30,73 @@ export const OrderConfirmationPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-12 space-y-8">
+    <div className="bg-[#080d09] min-h-screen text-slate-100 font-outfit py-12 px-4 flex items-center justify-center">
       {/* Success Badge Banner */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-elevated p-8 text-center space-y-6">
-        <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border-2 border-emerald-200/80 shadow-xs">
+      <div className="bg-gradient-to-b from-[#152317] via-[#101b12] to-[#0c140e] rounded-[36px] border border-[#273d2c] shadow-[0_25px_60px_rgba(0,0,0,0.85)] p-8 sm:p-10 text-center space-y-6 max-w-xl w-full">
+        <div className="w-16 h-16 rounded-full bg-[#bbf451]/15 text-[#bbf451] flex items-center justify-center mx-auto border-2 border-[#bbf451]/30 shadow-lg">
           <CheckCircle2 className="w-8 h-8" />
         </div>
 
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-            Order Submitted to Counter
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#bbf451] bg-[#1a2d1d] px-3.5 py-1 rounded-full border border-[#2a462f]">
+            Directly Received at Counter
           </span>
-          <h1 className="text-3xl font-extrabold text-navy-950 tracking-tight mt-2.5">
+          <h1 className="text-3xl font-black text-white tracking-tight mt-3 font-syne">
             Print Job Dispatched!
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            {shopData?.name ? `Sent directly to ${shopData.name}` : 'Sent directly to verified Xerox shop'}
+          <p className="text-xs text-slate-300 mt-1">
+            {shopData?.name ? `Sent directly to ${shopData.name}` : 'Sent directly to verified Xerox shop counter'}
           </p>
         </div>
 
         {/* Order Reference & OTP Highlight Box */}
-        <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200 grid grid-cols-2 gap-4 text-center">
+        <div className="bg-[#101911] rounded-2xl p-6 border border-[#223525] grid grid-cols-2 gap-4 text-center">
           <div>
-            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
               Order Reference
             </div>
-            <div className="text-xl sm:text-2xl font-mono font-extrabold text-navy-950 mt-1">
+            <div className="text-xl sm:text-2xl font-mono font-black text-white mt-1">
               {orderRef}
             </div>
           </div>
 
-          <div className="border-l border-slate-200">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          <div className="border-l border-[#223525]">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
               Counter Pickup OTP
             </div>
-            <div className="text-xl sm:text-2xl font-mono font-extrabold text-brand-600 mt-1">
+            <div className="text-xl sm:text-2xl font-mono font-black text-[#0a120c] bg-[#bbf451] px-3 py-0.5 rounded-lg inline-block mt-1">
               {orderData?.pickupOtp || '----'}
             </div>
           </div>
         </div>
 
         {/* Secret Tracking Link Box */}
-        <div className="bg-navy-900 text-white rounded-2xl p-6 text-left space-y-3 shadow-md">
+        <div className="bg-[#121c13] text-white rounded-2xl p-5 sm:p-6 text-left space-y-3 border border-[#233526]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-brand-300 flex items-center gap-1.5 uppercase tracking-wider">
+            <span className="text-xs font-bold text-[#bbf451] flex items-center gap-1.5 uppercase tracking-wider">
               <Key className="w-4 h-4" />
-              Private Tracking Link & Access Token
+              Private Tracking Link &amp; Access Token
             </span>
-            <span className="text-[10px] bg-white/10 text-slate-300 px-2 py-0.5 rounded">
-              High Entropy Secret
+            <span className="text-[10px] bg-[#1a2c1d] text-slate-300 px-2.5 py-0.5 rounded-full border border-[#29422f]">
+              Encrypted Key
             </span>
           </div>
 
           <p className="text-xs text-slate-300 leading-relaxed">
-            Because Smart Xerox never asked for your phone number or email, this encrypted URL is your unique key to track status, approve revised quotes, or cancel your order.
+            Smart Xerox never asked for your phone number. This encrypted URL is your unique key to track status, approve revised quotes, or cancel your order.
           </p>
 
-          <div className="flex items-center gap-2 bg-navy-950 p-2 rounded-xl border border-navy-800">
+          <div className="flex items-center gap-2 bg-[#0a120b] p-2 rounded-xl border border-[#1e2f22]">
             <input
               type="text"
               readOnly
               value={fullTrackingUrl}
-              className="flex-1 bg-transparent text-xs text-brand-200 font-mono focus:outline-none px-2 truncate"
+              className="flex-1 bg-transparent text-xs text-[#bbf451] font-mono focus:outline-none px-2 truncate"
             />
             <button
               type="button"
               onClick={handleCopyLink}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white flex items-center gap-1 shrink-0 transition-colors"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#bbf451] hover:bg-[#cbff5e] text-[#0a120c] flex items-center gap-1 shrink-0 transition"
             >
               {copied ? (
                 <>
@@ -120,16 +115,16 @@ export const OrderConfirmationPage: React.FC = () => {
         <div className="pt-2 flex flex-col sm:flex-row gap-3">
           <Link
             to={trackingUrl}
-            className="flex-1 py-3.5 px-6 rounded-xl font-bold text-sm bg-navy-900 hover:bg-brand-600 text-white shadow-elevated flex items-center justify-center gap-2 transition-all"
+            className="flex-1 py-4 px-6 rounded-full font-black text-xs bg-[#bbf451] hover:bg-[#cbff5e] text-[#0a120c] shadow-xl shadow-[#bbf451]/20 flex items-center justify-center gap-2 transition hover:scale-[1.01]"
           >
-            Open Live Order Tracker
+            <span>Open Live Order Tracker</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
         {/* Retention Policy Footer */}
-        <div className="text-[11px] text-slate-400 flex items-center justify-center gap-1.5 pt-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-500" />
+        <div className="text-[11px] text-slate-400 flex items-center justify-center gap-1.5 pt-1">
+          <ShieldCheck className="w-4 h-4 text-[#bbf451]" />
           <span>
             {orderData?.retentionNotice || 'File will be automatically wiped from disk post-pickup.'}
           </span>

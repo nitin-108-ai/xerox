@@ -40,25 +40,25 @@ export const OwnerLoginPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto px-4 py-16 space-y-6">
-      <div className="bg-white rounded-3xl p-8 border border-slate-200/90 shadow-elevated space-y-6">
+    <div className="bg-[#080d09] min-h-screen text-slate-100 font-outfit max-w-md mx-auto px-4 py-16 space-y-6 flex items-center justify-center">
+      <div className="bg-gradient-to-b from-[#152317] via-[#101b12] to-[#0c140e] rounded-[36px] p-8 border border-[#273d2c] shadow-2xl space-y-6 w-full">
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-navy-900 text-white flex items-center justify-center mx-auto shadow-md">
-            <Printer className="w-6 h-6 text-brand-300" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#162719] to-[#25422b] border border-[#3b6243] text-[#bbf451] flex items-center justify-center mx-auto shadow-lg">
+            <Printer className="w-7 h-7" />
           </div>
-          <h1 className="text-2xl font-extrabold text-navy-950 tracking-tight">
+          <h1 className="text-2xl font-black text-white tracking-tight font-syne">
             Sign In to Smart Xerox
           </h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-400">
             Access your shop counter order management dashboard
           </p>
         </div>
 
         {/* Demo Accounts Quick-Fill Helper */}
-        <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 space-y-2">
-          <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-            <span className="flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-brand-600" />
+        <div className="bg-[#101911] border border-[#213524] rounded-2xl p-3.5 space-y-2">
+          <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            <span className="flex items-center gap-1.5 text-[#bbf451]">
+              <Sparkles className="w-3.5 h-3.5" />
               Demo Quick-Fill Accounts
             </span>
           </div>
@@ -66,47 +66,47 @@ export const OwnerLoginPage: React.FC = () => {
             <button
               type="button"
               onClick={() => fillDemoAccount('owner1@smartxerox.io', 'Owner@12345')}
-              className="py-1.5 px-2.5 rounded-xl text-left text-xs bg-white hover:bg-brand-50 border border-slate-200 hover:border-brand-300 transition-colors shadow-2xs"
+              className="py-2 px-2.5 rounded-xl text-left text-xs bg-[#152218] hover:bg-[#1f3323] border border-[#253928] hover:border-[#bbf451]/50 transition shadow-sm"
             >
-              <div className="font-bold text-navy-900 text-[11px] truncate">1. QuickCopy Express</div>
-              <div className="text-[10px] text-slate-500 font-mono">owner1@...</div>
+              <div className="font-bold text-white text-[11px] truncate">1. QuickCopy Express</div>
+              <div className="text-[10px] text-slate-400 font-mono">owner1@...</div>
             </button>
             <button
               type="button"
               onClick={() => fillDemoAccount('owner2@smartxerox.io', 'Owner@12345')}
-              className="py-1.5 px-2.5 rounded-xl text-left text-xs bg-white hover:bg-brand-50 border border-slate-200 hover:border-brand-300 transition-colors shadow-2xs"
+              className="py-2 px-2.5 rounded-xl text-left text-xs bg-[#152218] hover:bg-[#1f3323] border border-[#253928] hover:border-[#bbf451]/50 transition shadow-sm"
             >
-              <div className="font-bold text-navy-900 text-[11px] truncate">2. Metro Hub Xerox</div>
-              <div className="text-[10px] text-slate-500 font-mono">owner2@...</div>
+              <div className="font-bold text-white text-[11px] truncate">2. Metro Hub Xerox</div>
+              <div className="text-[10px] text-slate-400 font-mono">owner2@...</div>
             </button>
             <button
               type="button"
               onClick={() => fillDemoAccount('owner3@smartxerox.io', 'Owner@12345')}
-              className="py-1.5 px-2.5 rounded-xl text-left text-xs bg-white hover:bg-brand-50 border border-slate-200 hover:border-brand-300 transition-colors shadow-2xs"
+              className="py-2 px-2.5 rounded-xl text-left text-xs bg-[#152218] hover:bg-[#1f3323] border border-[#253928] hover:border-[#bbf451]/50 transition shadow-sm"
             >
-              <div className="font-bold text-navy-900 text-[11px] truncate">3. Campus Print Point</div>
-              <div className="text-[10px] text-slate-500 font-mono">owner3@...</div>
+              <div className="font-bold text-white text-[11px] truncate">3. Campus Print Point</div>
+              <div className="text-[10px] text-slate-400 font-mono">owner3@...</div>
             </button>
             <button
               type="button"
               onClick={() => fillDemoAccount('admin@smartxerox.io', 'Admin@12345')}
-              className="py-1.5 px-2.5 rounded-xl text-left text-xs bg-white hover:bg-brand-50 border border-slate-200 hover:border-brand-300 transition-colors shadow-2xs"
+              className="py-2 px-2.5 rounded-xl text-left text-xs bg-[#152218] hover:bg-[#1f3323] border border-[#253928] hover:border-[#bbf451]/50 transition shadow-sm"
             >
-              <div className="font-bold text-navy-900 text-[11px] truncate">Platform Admin</div>
-              <div className="text-[10px] text-slate-500 font-mono">admin@...</div>
+              <div className="font-bold text-[#bbf451] text-[11px] truncate">Platform Admin</div>
+              <div className="text-[10px] text-slate-400 font-mono">admin@...</div>
             </button>
           </div>
         </div>
 
         {error && (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium">
+          <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs text-rose-300 font-medium">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
               Email Address
             </label>
             <div className="relative">
@@ -116,14 +116,14 @@ export const OwnerLoginPage: React.FC = () => {
                 placeholder="owner@yourshop.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-2.5 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full pl-9 pr-3.5 py-2.5 text-xs border border-[#263c29] rounded-xl focus:outline-none focus:border-[#bbf451] bg-[#0c140e] text-white placeholder-slate-500"
               />
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+              <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
               Password
             </label>
             <div className="relative">
@@ -133,25 +133,25 @@ export const OwnerLoginPage: React.FC = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-2.5 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full pl-9 pr-3.5 py-2.5 text-xs border border-[#263c29] rounded-xl focus:outline-none focus:border-[#bbf451] bg-[#0c140e] text-white placeholder-slate-500"
               />
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+              <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
             </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 rounded-xl font-bold text-xs bg-navy-900 hover:bg-brand-600 text-white shadow-elevated flex items-center justify-center gap-1.5 transition-colors disabled:bg-slate-300"
+            className="w-full py-3.5 px-4 rounded-full font-black text-xs bg-[#bbf451] hover:bg-[#cbff5e] text-[#0a120c] shadow-xl shadow-[#bbf451]/20 flex items-center justify-center gap-1.5 transition disabled:opacity-40"
           >
-            {loading ? 'Authenticating...' : 'Sign In to Dashboard'}
+            <span>{loading ? 'Authenticating...' : 'Sign In to Dashboard'}</span>
             {!loading && <ArrowRight className="w-3.5 h-3.5" />}
           </button>
         </form>
 
-        <div className="pt-4 border-t border-slate-100 text-center text-xs text-slate-500">
+        <div className="pt-4 border-t border-[#1f3122] text-center text-xs text-slate-400">
           Need to register a new Xerox or photocopy shop?{' '}
-          <Link to="/owner/register" className="font-semibold text-brand-600 hover:underline">
+          <Link to="/owner/register" className="font-bold text-[#bbf451] hover:underline">
             Register here
           </Link>
         </div>

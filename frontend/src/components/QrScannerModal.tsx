@@ -273,23 +273,23 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ isOpen, onClose 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-navy-950/80 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg bg-gradient-to-b from-[#142217] via-[#0f1a11] to-[#0a120c] rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.9)] border border-[#273d2c] overflow-hidden flex flex-col max-h-[92vh] text-slate-100">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 bg-navy-950 text-white shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 bg-[#0c140e] text-white shrink-0 border-b border-[#233827]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-brand-600/30 border border-brand-500/40 text-brand-300 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-[#bbf451]/15 border border-[#bbf451]/30 text-[#bbf451] flex items-center justify-center">
               <QrCode className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-extrabold tracking-tight">Real-Time Camera QR Scanner</h3>
+              <h3 className="text-sm font-bold font-syne tracking-tight">Real-Time Camera QR Scanner</h3>
               <p className="text-[10px] text-slate-400">Aim camera at counter poster to open upload portal</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -297,7 +297,7 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ isOpen, onClose 
 
         <div className="p-5 overflow-y-auto space-y-5">
           {/* Real Camera Viewfinder */}
-          <div className="relative aspect-4/3 rounded-2xl bg-black border-2 border-slate-800 flex flex-col items-center justify-center text-slate-400 overflow-hidden shadow-inner">
+          <div className="relative aspect-4/3 rounded-2xl bg-black border-2 border-[#273d2c] flex flex-col items-center justify-center text-slate-400 overflow-hidden shadow-inner">
             {/* Live Video Feed */}
             <video
               ref={videoRef}
@@ -311,25 +311,25 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ isOpen, onClose 
 
             {/* Success Overlay when QR detected */}
             {scanState === 'SUCCESS' && (
-              <div className="absolute inset-0 bg-emerald-950/90 flex flex-col items-center justify-center text-white z-20 animate-in fade-in zoom-in-95 duration-200">
-                <CheckCircle2 className="w-14 h-14 text-emerald-400 mb-2 animate-bounce" />
-                <span className="text-sm font-black">Shop QR Code Detected!</span>
-                <span className="text-xs text-emerald-200 font-mono mt-0.5">{detectedShop}</span>
-                <span className="text-[10px] text-emerald-300 mt-2">Connecting to shop counter...</span>
+              <div className="absolute inset-0 bg-[#080d09]/95 flex flex-col items-center justify-center text-white z-20 animate-in fade-in zoom-in-95 duration-200">
+                <CheckCircle2 className="w-14 h-14 text-[#bbf451] mb-2 animate-bounce" />
+                <span className="text-sm font-black text-white font-syne">Shop QR Code Detected!</span>
+                <span className="text-xs text-[#bbf451] font-mono mt-0.5">{detectedShop}</span>
+                <span className="text-[10px] text-slate-300 mt-2">Connecting to shop counter...</span>
               </div>
             )}
 
             {/* Viewfinder Target & Laser Scanning Animation */}
             {cameraActive && scanState !== 'SUCCESS' && (
-              <div className="absolute inset-6 sm:inset-10 border border-white/30 rounded-2xl pointer-events-none z-10">
+              <div className="absolute inset-6 sm:inset-10 border border-white/20 rounded-2xl pointer-events-none z-10">
                 {/* Viewfinder corner guides */}
-                <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-brand-400 rounded-tl-lg" />
-                <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-brand-400 rounded-tr-lg" />
-                <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-brand-400 rounded-bl-lg" />
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-brand-400 rounded-br-lg" />
+                <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-[#bbf451] rounded-tl-lg" />
+                <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-[#bbf451] rounded-tr-lg" />
+                <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-[#bbf451] rounded-bl-lg" />
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-[#bbf451] rounded-br-lg" />
 
                 {/* Animated laser line */}
-                <div className="absolute inset-x-2 top-0 h-1 bg-brand-400 shadow-[0_0_16px_#38bdf8] animate-[bounce_1.8s_infinite] rounded-full" />
+                <div className="absolute inset-x-2 top-0 h-1 bg-[#bbf451] shadow-[0_0_16px_#bbf451] animate-[bounce_1.8s_infinite] rounded-full" />
               </div>
             )}
 
@@ -343,14 +343,14 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ isOpen, onClose 
                     <button
                       type="button"
                       onClick={() => startCamera(facingMode)}
-                      className="px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition shadow-xs"
+                      className="px-3.5 py-1.5 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] text-xs font-black transition shadow-xs"
                     >
                       Retry Camera Access
                     </button>
                   </div>
                 ) : (
                   <div>
-                    <div className="w-7 h-7 rounded-full border-2 border-brand-400 border-t-transparent animate-spin mx-auto mb-2" />
+                    <div className="w-7 h-7 rounded-full border-2 border-[#bbf451] border-t-transparent animate-spin mx-auto mb-2" />
                     <p className="text-xs text-slate-300 font-medium">Starting camera...</p>
                   </div>
                 )}
@@ -363,7 +363,7 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ isOpen, onClose 
                 <button
                   type="button"
                   onClick={handleToggleFacing}
-                  className="px-3 py-1.5 rounded-xl bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-[11px] font-bold flex items-center gap-1.5 border border-white/20 transition"
+                  className="px-3 py-1.5 rounded-xl bg-black/70 hover:bg-black/90 backdrop-blur-md text-white text-[11px] font-bold flex items-center gap-1.5 border border-white/20 transition"
                   title="Switch Front / Rear Camera"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -373,10 +373,10 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ isOpen, onClose 
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-3 py-1.5 rounded-xl bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-[11px] font-bold flex items-center gap-1.5 border border-white/20 transition"
+                  className="px-3 py-1.5 rounded-xl bg-black/70 hover:bg-black/90 backdrop-blur-md text-white text-[11px] font-bold flex items-center gap-1.5 border border-white/20 transition"
                   title="Pick photo from gallery"
                 >
-                  <ImageIcon className="w-3.5 h-3.5 text-brand-300" />
+                  <ImageIcon className="w-3.5 h-3.5 text-[#bbf451]" />
                   <span>Scan Photo</span>
                 </button>
               </div>
@@ -393,9 +393,9 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ isOpen, onClose 
 
           {/* Quick Select Local Verified Shops */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
               <span>Verified Counter Demo Shops</span>
-              <span className="text-brand-600 text-[11px] font-semibold flex items-center gap-1">
+              <span className="text-[#bbf451] text-[11px] font-semibold flex items-center gap-1">
                 <Sparkles className="w-3 h-3" /> Tap to connect
               </span>
             </div>
@@ -404,36 +404,36 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ isOpen, onClose 
               <button
                 type="button"
                 onClick={() => handleSimulateCameraScan('quickcopy-express')}
-                className="flex items-center justify-between p-3 rounded-2xl border border-slate-200 hover:border-brand-500 hover:bg-brand-50/50 text-left transition-all group shadow-2xs"
+                className="flex items-center justify-between p-3 rounded-2xl border border-[#233827] bg-[#121c14] hover:border-[#bbf451]/60 hover:bg-[#18281b] text-left transition-all group"
               >
                 <div className="min-w-0 pr-2">
-                  <div className="text-xs font-bold text-navy-900 group-hover:text-brand-600 truncate">
+                  <div className="text-xs font-bold text-slate-200 group-hover:text-[#bbf451] truncate">
                     1. QuickCopy Express
                   </div>
-                  <div className="text-[10px] text-slate-500 truncate">Sector 18 Metro Gate 2</div>
+                  <div className="text-[10px] text-slate-400 truncate">Sector 18 Metro Gate 2</div>
                 </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-brand-600 shrink-0" />
+                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#bbf451] shrink-0" />
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSimulateCameraScan('metro-doc-hub')}
-                className="flex items-center justify-between p-3 rounded-2xl border border-slate-200 hover:border-brand-500 hover:bg-brand-50/50 text-left transition-all group shadow-2xs"
+                className="flex items-center justify-between p-3 rounded-2xl border border-[#233827] bg-[#121c14] hover:border-[#bbf451]/60 hover:bg-[#18281b] text-left transition-all group"
               >
                 <div className="min-w-0 pr-2">
-                  <div className="text-xs font-bold text-navy-900 group-hover:text-brand-600 truncate">
+                  <div className="text-xs font-bold text-slate-200 group-hover:text-[#bbf451] truncate">
                     2. Metro Document Hub
                   </div>
-                  <div className="text-[10px] text-slate-500 truncate">IT Tech Park Floor 1</div>
+                  <div className="text-[10px] text-slate-400 truncate">IT Tech Park Floor 1</div>
                 </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-brand-600 shrink-0" />
+                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#bbf451] shrink-0" />
               </button>
             </div>
           </div>
 
           {/* Manual Storefront Code input */}
-          <form onSubmit={handleManualSubmit} className="pt-2 border-t border-slate-100">
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+          <form onSubmit={handleManualSubmit} className="pt-2 border-t border-[#233827]">
+            <label className="block text-xs font-bold text-slate-300 mb-1.5">
               Or enter Shop Slug / Token manually:
             </label>
             <div className="flex gap-2">
@@ -442,11 +442,11 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ isOpen, onClose 
                 placeholder="e.g. quickcopy-express"
                 value={manualCode}
                 onChange={(e) => setManualCode(e.target.value)}
-                className="flex-1 px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono bg-slate-50"
+                className="flex-1 px-3.5 py-2 text-xs border border-[#273d2c] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#bbf451] font-mono bg-[#0c140e] text-white"
               />
               <button
                 type="submit"
-                className="px-4 py-2 bg-navy-950 hover:bg-brand-600 text-white text-xs font-bold rounded-xl transition-colors shadow-xs"
+                className="px-4 py-2 bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] text-xs font-black rounded-xl transition-colors shadow-[0_0_15px_rgba(187,244,81,0.25)]"
               >
                 Open Shop
               </button>

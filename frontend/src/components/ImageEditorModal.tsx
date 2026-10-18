@@ -162,37 +162,37 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
   if (!isOpen || !file) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-navy-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-      <div className="bg-white rounded-3xl max-w-2xl w-full border border-slate-200 shadow-2xl flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-gradient-to-b from-[#142217] via-[#0f1a11] to-[#0a120c] rounded-3xl max-w-2xl w-full border border-[#273d2c] shadow-[0_25px_60px_rgba(0,0,0,0.9)] flex flex-col max-h-[92vh] overflow-hidden text-slate-100 animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-[#233827] bg-[#0c140e] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-[#bbf451]/15 border border-[#bbf451]/30 text-[#bbf451] flex items-center justify-center">
               <ImageIcon className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-extrabold text-navy-950">Photo Print Adjustments</h3>
+              <h3 className="text-sm font-bold text-white font-syne">Photo Print Adjustments</h3>
               <p className="text-[11px] text-slate-400 truncate max-w-xs">{file.name}</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
+            className="p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Canvas Preview Area */}
-        <div className="flex-1 bg-slate-900/95 p-4 flex items-center justify-center min-h-[260px] max-h-[380px] overflow-hidden relative">
+        <div className="flex-1 bg-[#080d09] p-4 flex items-center justify-center min-h-[260px] max-h-[380px] overflow-hidden relative">
           <canvas
             ref={canvasRef}
-            className="max-h-[340px] max-w-full object-contain rounded-lg shadow-lg border border-slate-800"
+            className="max-h-[340px] max-w-full object-contain rounded-lg shadow-2xl border border-[#273d2c]"
           />
 
           {isGrayscale && (
-            <span className="absolute top-3 left-3 bg-slate-950/80 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-slate-800">
+            <span className="absolute top-3 left-3 bg-[#0c140e]/90 backdrop-blur-xs text-[#bbf451] text-[10px] font-bold px-2 py-0.5 rounded-md border border-[#bbf451]/30">
               B&amp;W Mode
             </span>
           )}
@@ -205,7 +205,7 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
             <button
               type="button"
               onClick={() => setRotation((r) => (r - 90 + 360) % 360)}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 shrink-0"
+              className="px-3 py-1.5 rounded-xl border border-[#273d2c] bg-[#162519] hover:bg-[#203323] text-slate-200 font-bold text-xs flex items-center gap-1.5 shrink-0 transition"
               title="Rotate Left"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -215,7 +215,7 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
             <button
               type="button"
               onClick={() => setRotation((r) => (r + 90) % 360)}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 shrink-0"
+              className="px-3 py-1.5 rounded-xl border border-[#273d2c] bg-[#162519] hover:bg-[#203323] text-slate-200 font-bold text-xs flex items-center gap-1.5 shrink-0 transition"
               title="Rotate Right"
             >
               <RotateCw className="w-3.5 h-3.5" />
@@ -225,8 +225,8 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
             <button
               type="button"
               onClick={() => setFlipH((f) => !f)}
-              className={`px-3 py-1.5 rounded-xl border font-bold text-xs flex items-center gap-1.5 shrink-0 ${
-                flipH ? 'bg-brand-50 border-brand-300 text-brand-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+              className={`px-3 py-1.5 rounded-xl border font-bold text-xs flex items-center gap-1.5 shrink-0 transition ${
+                flipH ? 'bg-[#bbf451] border-[#bbf451] text-[#080d09]' : 'border-[#273d2c] bg-[#162519] text-slate-200 hover:bg-[#203323]'
               }`}
               title="Flip Horizontal"
             >
@@ -237,8 +237,8 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
             <button
               type="button"
               onClick={() => setFlipV((f) => !f)}
-              className={`px-3 py-1.5 rounded-xl border font-bold text-xs flex items-center gap-1.5 shrink-0 ${
-                flipV ? 'bg-brand-50 border-brand-300 text-brand-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+              className={`px-3 py-1.5 rounded-xl border font-bold text-xs flex items-center gap-1.5 shrink-0 transition ${
+                flipV ? 'bg-[#bbf451] border-[#bbf451] text-[#080d09]' : 'border-[#273d2c] bg-[#162519] text-slate-200 hover:bg-[#203323]'
               }`}
               title="Flip Vertical"
             >
@@ -249,19 +249,19 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
             <button
               type="button"
               onClick={() => setIsGrayscale((g) => !g)}
-              className={`px-3 py-1.5 rounded-xl border font-bold text-xs flex items-center gap-1.5 shrink-0 ${
-                isGrayscale ? 'bg-navy-950 text-white border-navy-950' : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+              className={`px-3 py-1.5 rounded-xl border font-bold text-xs flex items-center gap-1.5 shrink-0 transition ${
+                isGrayscale ? 'bg-[#bbf451] text-[#080d09] border-[#bbf451]' : 'border-[#273d2c] bg-[#162519] text-slate-200 hover:bg-[#203323]'
               }`}
               title="Convert to pure Photocopy Grayscale"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>B&amp;W Grayscale</span>
             </button>
 
             <button
               type="button"
               onClick={handleReset}
-              className="px-3 py-1.5 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 font-bold text-xs flex items-center gap-1.5 shrink-0 ml-auto"
+              className="px-3 py-1.5 rounded-xl border border-rose-500/30 hover:bg-rose-500/10 text-rose-400 font-bold text-xs flex items-center gap-1.5 shrink-0 ml-auto transition"
               title="Reset all adjustments"
             >
               <Undo2 className="w-3.5 h-3.5" />
@@ -272,9 +272,9 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
           {/* Sliders: Brightness & Contrast */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
             <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-600">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-300">
                 <span className="flex items-center gap-1">
-                  <Sun className="w-3.5 h-3.5 text-amber-500" />
+                  <Sun className="w-3.5 h-3.5 text-amber-400" />
                   Brightness
                 </span>
                 <span className="font-mono text-[11px] text-slate-400">{brightness}%</span>
@@ -285,14 +285,14 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
                 max="180"
                 value={brightness}
                 onChange={(e) => setBrightness(Number(e.target.value))}
-                className="w-full accent-brand-600 cursor-pointer"
+                className="w-full accent-[#bbf451] cursor-pointer"
               />
             </div>
 
             <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-600">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-300">
                 <span className="flex items-center gap-1">
-                  <Contrast className="w-3.5 h-3.5 text-blue-500" />
+                  <Contrast className="w-3.5 h-3.5 text-blue-400" />
                   Contrast
                 </span>
                 <span className="font-mono text-[11px] text-slate-400">{contrast}%</span>
@@ -303,25 +303,25 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
                 max="180"
                 value={contrast}
                 onChange={(e) => setContrast(Number(e.target.value))}
-                className="w-full accent-brand-600 cursor-pointer"
+                className="w-full accent-[#bbf451] cursor-pointer"
               />
             </div>
           </div>
 
           {/* Background Solid Color & Aspect Ratio Crop */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 border-t border-slate-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#233827]">
             {/* Background Color */}
             <div className="space-y-1.5">
-              <span className="block text-xs font-bold text-slate-600 flex items-center gap-1">
-                <Palette className="w-3.5 h-3.5 text-purple-500" />
+              <span className="text-xs font-bold text-slate-300 flex items-center gap-1">
+                <Palette className="w-3.5 h-3.5 text-purple-400" />
                 Background Color Fill
               </span>
               <div className="flex items-center gap-2">
                 {[
                   { name: 'White', color: '#FFFFFF', border: 'border-slate-300' },
-                  { name: 'Off-White', color: '#F8FAFC', border: 'border-slate-300' },
-                  { name: 'Black', color: '#000000', border: 'border-slate-800' },
-                  { name: 'Passport Blue', color: '#1E40AF', border: 'border-blue-700' },
+                  { name: 'Off-White', color: '#F8FAFC', border: 'border-slate-400' },
+                  { name: 'Black', color: '#000000', border: 'border-slate-700' },
+                  { name: 'Passport Blue', color: '#1E40AF', border: 'border-blue-600' },
                 ].map((bg) => (
                   <button
                     key={bg.name}
@@ -329,7 +329,7 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
                     onClick={() => setBgColor(bg.color)}
                     style={{ backgroundColor: bg.color }}
                     className={`w-7 h-7 rounded-full border-2 transition ${bg.border} ${
-                      bgColor === bg.color ? 'ring-2 ring-brand-500 ring-offset-2 scale-110' : 'opacity-80 hover:opacity-100'
+                      bgColor === bg.color ? 'ring-2 ring-[#bbf451] ring-offset-2 ring-offset-[#0c140e] scale-110' : 'opacity-80 hover:opacity-100'
                     }`}
                     title={bg.name}
                   />
@@ -339,8 +339,8 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
 
             {/* Print Crop / Ratio Presets */}
             <div className="space-y-1.5">
-              <span className="block text-xs font-bold text-slate-600 flex items-center gap-1">
-                <Crop className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="text-xs font-bold text-slate-300 flex items-center gap-1">
+                <Crop className="w-3.5 h-3.5 text-emerald-400" />
                 Aspect Ratio / Crop
               </span>
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -351,8 +351,8 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
                     onClick={() => setAspectRatio(ratio)}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition ${
                       aspectRatio === ratio
-                        ? 'bg-navy-950 text-white border-navy-950'
-                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                        ? 'bg-[#bbf451] text-[#080d09] border-[#bbf451]'
+                        : 'border-[#273d2c] bg-[#162519] text-slate-300 hover:bg-[#203323]'
                     }`}
                   >
                     {ratio === 'ORIGINAL' ? 'Original' : ratio === 'PASSPORT' ? 'Passport (3.5x4.5)' : ratio}
@@ -364,11 +364,11 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
         </div>
 
         {/* Footer Buttons */}
-        <div className="p-4 border-t border-slate-100 flex items-center justify-between gap-3 bg-slate-50/50">
+        <div className="p-4 border-t border-[#233827] flex items-center justify-between gap-3 bg-[#0c140e]">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-100 transition"
+            className="px-4 py-2.5 rounded-xl border border-[#273d2c] text-slate-300 font-bold text-xs hover:bg-[#162519] transition"
           >
             Cancel
           </button>
@@ -376,7 +376,7 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
           <button
             type="button"
             onClick={handleSave}
-            className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-xs transition"
+            className="px-5 py-2.5 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] font-black text-xs flex items-center gap-1.5 shadow-[0_0_20px_rgba(187,244,81,0.25)] transition active:scale-98"
           >
             <Check className="w-4 h-4" />
             Apply &amp; Use in Print Order

@@ -107,9 +107,9 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
 
   // Reusable QR & Settings Dropdown Menu
   const renderDropdownMenu = () => (
-    <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl border border-slate-200 shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
-      <div className="px-3.5 py-2 border-b border-slate-100">
-        <p className="text-xs font-extrabold text-navy-950 truncate">{shopName}</p>
+    <div className="absolute right-0 mt-2 w-64 bg-[#101911] rounded-2xl border border-[#233526] shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
+      <div className="px-3.5 py-2 border-b border-[#1d2d20]">
+        <p className="text-xs font-extrabold text-white truncate font-syne">{shopName}</p>
         <p className="text-[10px] text-slate-400 font-mono mt-0.5">Permanent ID: {shopId}</p>
       </div>
 
@@ -117,57 +117,57 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
         <Link
           to="/owner/qr"
           onClick={() => setDropdownOpen(false)}
-          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-[#18261b] hover:text-[#bbf451] flex items-center gap-2.5 transition"
         >
-          <QrCode className="w-4 h-4 text-brand-600 shrink-0" />
+          <QrCode className="w-4 h-4 text-[#bbf451] shrink-0" />
           <span>View / Download Shop QR</span>
         </Link>
 
         <Link
           to="/owner/profile"
           onClick={() => setDropdownOpen(false)}
-          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-[#18261b] hover:text-[#bbf451] flex items-center gap-2.5 transition"
         >
-          <User className="w-4 h-4 text-brand-600 shrink-0" />
+          <User className="w-4 h-4 text-[#bbf451] shrink-0" />
           <span>Shop Profile</span>
         </Link>
 
         <Link
           to="/owner/settings"
           onClick={() => setDropdownOpen(false)}
-          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-[#18261b] hover:text-[#bbf451] flex items-center gap-2.5 transition"
         >
-          <Settings className="w-4 h-4 text-brand-600 shrink-0" />
+          <Settings className="w-4 h-4 text-[#bbf451] shrink-0" />
           <span>Settings</span>
         </Link>
 
         <Link
           to="/owner/printers"
           onClick={() => setDropdownOpen(false)}
-          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-[#18261b] hover:text-[#bbf451] flex items-center gap-2.5 transition"
         >
-          <Laptop className="w-4 h-4 text-brand-600 shrink-0" />
+          <Laptop className="w-4 h-4 text-[#bbf451] shrink-0" />
           <span>Connected Devices</span>
         </Link>
 
         <Link
           to="/owner/reports"
           onClick={() => setDropdownOpen(false)}
-          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-navy-950 flex items-center gap-2.5 transition"
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-[#18261b] hover:text-[#bbf451] flex items-center gap-2.5 transition"
         >
-          <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+          <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
           <span>Sales &amp; Volume Reports</span>
         </Link>
       </div>
 
-      <div className="pt-1 border-t border-slate-100">
+      <div className="pt-1 border-t border-[#1d2d20]">
         <button
           type="button"
           onClick={() => {
             setDropdownOpen(false);
             handleGeneratePairingCode();
           }}
-          className="w-full px-3.5 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50 flex items-center gap-2.5 transition text-left"
+          className="w-full px-3.5 py-2 text-xs font-semibold text-[#bbf451] hover:bg-[#18261b] flex items-center gap-2.5 transition text-left"
         >
           <Smartphone className="w-4 h-4 shrink-0" />
           <span>Pair Windows PC (Code)</span>
@@ -179,7 +179,7 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
             setDropdownOpen(false);
             handleLogout();
           }}
-          className="w-full px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition text-left"
+          className="w-full px-3.5 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 transition text-left"
         >
           <LogOut className="w-4 h-4 shrink-0" />
           <span>Logout</span>
@@ -189,21 +189,21 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
   );
 
   return (
-    <div className="min-h-screen bg-slate-50/70 text-slate-900 font-sans flex flex-col">
+    <div className="min-h-screen bg-[#080d09] text-slate-100 font-outfit flex flex-col">
       {/* Top Header Navigation */}
-      <header className="sticky top-0 z-40 bg-white border-b border-slate-200/90 shadow-2xs">
+      <header className="sticky top-0 z-40 bg-[#0b120c]/90 backdrop-blur-md border-b border-[#1b2b1e] shadow-2xl">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           {/* Brand & Shop Info */}
           <div className="flex items-center gap-3 min-w-0">
             <Link to="/owner/dashboard" className="flex items-center gap-2.5 shrink-0" title="Back to Receiving Panel">
-              <div className="w-9 h-9 rounded-xl bg-navy-950 text-white flex items-center justify-center font-black shadow-xs">
-                <Printer className="w-5 h-5 text-brand-300" />
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#162719] to-[#25422b] border border-[#3b6243] text-white flex items-center justify-center font-black shadow-md">
+                <Printer className="w-5 h-5 text-[#bbf451]" />
               </div>
               <div className="hidden sm:block">
-                <span className="font-extrabold text-sm text-navy-950 tracking-tight block">
+                <span className="font-extrabold text-sm text-white tracking-tight block font-syne">
                   Smart Xerox
                 </span>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block -mt-0.5">
+                <span className="text-[10px] text-[#bbf451] font-bold uppercase tracking-wider block -mt-0.5">
                   Counter Station
                 </span>
               </div>
@@ -213,11 +213,11 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
 
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-navy-950 truncate max-w-[130px] sm:max-w-xs" title={shopName}>
+                <span className="text-xs font-bold text-white truncate max-w-[130px] sm:max-w-xs font-syne" title={shopName}>
                   {shopName}
                 </span>
                 <span title="Verified Shop" className="inline-flex items-center">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#bbf451] shrink-0" />
                 </span>
               </div>
             </div>
@@ -228,10 +228,10 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
             {/* Live Printer Connection Pill */}
             <Link
               to="/owner/printers"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition ${
                 connector?.isOnline
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
-                  : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                  ? 'bg-[#152719] text-[#bbf451] border-[#2e4c33] hover:bg-[#1e3422]'
+                  : 'bg-[#221c10] text-amber-300 border-amber-500/30 hover:bg-[#2b2314]'
               }`}
               title="Click to manage connected printers & PC spoolers"
             >
@@ -239,7 +239,7 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
               <span className="truncate max-w-[120px]">
                 {defaultPrinter?.name || 'Default Printer'}
               </span>
-              <span className={`w-2 h-2 rounded-full shrink-0 ${connector?.isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+              <span className={`w-2 h-2 rounded-full shrink-0 ${connector?.isOnline ? 'bg-[#bbf451] animate-pulse' : 'bg-amber-400'}`} />
               <span className="text-[10px] font-semibold">
                 {connector?.isOnline ? 'Online' : 'Manual'}
               </span>
@@ -248,10 +248,10 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
             {/* Profile Button */}
             <Link
               to="/owner/profile"
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition ${
                 isActive('/owner/profile')
-                  ? 'bg-navy-950 text-white shadow-2xs'
-                  : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-navy-950'
+                  ? 'bg-[#223626] text-[#bbf451] border border-[#3b593f] shadow-sm'
+                  : 'border border-[#223525] bg-[#121c14] hover:bg-[#19271c] text-slate-300 hover:text-white'
               }`}
               title="Shop Profile"
             >
@@ -262,10 +262,10 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
             {/* Settings Button */}
             <Link
               to="/owner/settings"
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition ${
                 isActive('/owner/settings')
-                  ? 'bg-navy-950 text-white shadow-2xs'
-                  : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-navy-950'
+                  ? 'bg-[#223626] text-[#bbf451] border border-[#3b593f] shadow-sm'
+                  : 'border border-[#223525] bg-[#121c14] hover:bg-[#19271c] text-slate-300 hover:text-white'
               }`}
               title="Settings"
             >
@@ -276,10 +276,10 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
             {/* QR Code Button */}
             <Link
               to="/owner/qr"
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition ${
                 isActive('/owner/qr')
-                  ? 'bg-navy-950 text-white shadow-2xs'
-                  : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-navy-950'
+                  ? 'bg-[#223626] text-[#bbf451] border border-[#3b593f] shadow-sm'
+                  : 'border border-[#223525] bg-[#121c14] hover:bg-[#19271c] text-slate-300 hover:text-white'
               }`}
               title="Counter QR Code"
             >
@@ -290,10 +290,10 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
             {/* Connected Devices Button */}
             <Link
               to="/owner/printers"
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition ${
                 isActive('/owner/printers')
-                  ? 'bg-navy-950 text-white shadow-2xs'
-                  : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-navy-950'
+                  ? 'bg-[#223626] text-[#bbf451] border border-[#3b593f] shadow-sm'
+                  : 'border border-[#223525] bg-[#121c14] hover:bg-[#19271c] text-slate-300 hover:text-white'
               }`}
               title="Connected Devices & Printers"
             >
@@ -306,10 +306,10 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
               <button
                 type="button"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-navy-950 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition"
+                className="px-3.5 py-1.5 rounded-full border border-[#223525] bg-[#121c14] hover:bg-[#19271c] text-slate-300 hover:text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
                 title="Quick Menu"
               >
-                <QrCode className="w-3.5 h-3.5 text-navy-900" />
+                <QrCode className="w-3.5 h-3.5 text-[#bbf451]" />
                 <span>QR &amp; Settings</span>
                 <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -320,7 +320,7 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
             {/* Logout Button */}
             <button
               onClick={handleLogout}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+              className="p-2 rounded-full text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition border border-transparent hover:border-rose-500/20"
               title="Sign Out"
             >
               <LogOut className="w-4 h-4" />
@@ -333,8 +333,8 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
               to="/owner/profile"
               className={`p-2 rounded-xl border text-xs font-bold transition flex items-center gap-1 ${
                 isActive('/owner/profile')
-                  ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                  : 'bg-white text-slate-700 border-slate-200'
+                  ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]'
+                  : 'bg-[#121c14] text-slate-300 border-[#223525]'
               }`}
               title="Profile"
             >
@@ -345,8 +345,8 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
               to="/owner/settings"
               className={`p-2 rounded-xl border text-xs font-bold transition flex items-center gap-1 ${
                 isActive('/owner/settings')
-                  ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                  : 'bg-white text-slate-700 border-slate-200'
+                  ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]'
+                  : 'bg-[#121c14] text-slate-300 border-[#223525]'
               }`}
               title="Settings"
             >
@@ -357,10 +357,10 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
               <button
                 type="button"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="px-2.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold flex items-center gap-1 text-slate-700"
+                className="px-2.5 py-2 rounded-xl border border-[#223525] bg-[#121c14] text-xs font-bold flex items-center gap-1 text-slate-300"
                 title="QR & Settings Menu"
               >
-                <QrCode className="w-3.5 h-3.5 text-navy-950" />
+                <QrCode className="w-3.5 h-3.5 text-[#bbf451]" />
                 <span className="hidden xs:inline">QR</span>
                 <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -374,7 +374,7 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
                 setMobileMenuOpen(!mobileMenuOpen);
                 if (dropdownOpen) setDropdownOpen(false);
               }}
-              className="p-2 rounded-xl border border-slate-200 bg-white text-slate-700"
+              className="p-2 rounded-xl border border-[#223525] bg-[#121c14] text-slate-300"
               aria-label="Open navigation menu"
             >
               {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -384,13 +384,13 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
 
         {/* Mobile Dropdown Menu when toggled */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
-            <div className="px-2 py-1 pb-2 border-b border-slate-100 flex items-center justify-between">
+          <div className="md:hidden border-t border-[#1f3123] bg-[#0f1711] px-4 py-3 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="px-2 py-1 pb-2 border-b border-[#1f3123] flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-navy-950">{shopName}</p>
+                <p className="text-xs font-bold text-white font-syne">{shopName}</p>
                 <p className="text-[10px] text-slate-400 font-mono">ID: {shopId}</p>
               </div>
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+              <span className="text-[10px] font-bold text-[#bbf451] bg-[#1a2d1d] px-2.5 py-0.5 rounded-full border border-[#2b4431]">
                 Verified
               </span>
             </div>
@@ -400,7 +400,7 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
                 to="/owner/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
                 className={`p-2.5 rounded-xl border flex items-center gap-2 ${
-                  isActive('/owner/dashboard') ? 'bg-navy-950 text-white border-navy-950' : 'bg-slate-50 text-slate-700 border-slate-200'
+                  isActive('/owner/dashboard') ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]' : 'bg-[#142017] text-slate-300 border-[#223525]'
                 }`}
               >
                 <Printer className="w-4 h-4" />
@@ -411,7 +411,7 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
                 to="/owner/profile"
                 onClick={() => setMobileMenuOpen(false)}
                 className={`p-2.5 rounded-xl border flex items-center gap-2 ${
-                  isActive('/owner/profile') ? 'bg-navy-950 text-white border-navy-950' : 'bg-slate-50 text-slate-700 border-slate-200'
+                  isActive('/owner/profile') ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]' : 'bg-[#142017] text-slate-300 border-[#223525]'
                 }`}
               >
                 <User className="w-4 h-4" />
@@ -422,7 +422,7 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
                 to="/owner/settings"
                 onClick={() => setMobileMenuOpen(false)}
                 className={`p-2.5 rounded-xl border flex items-center gap-2 ${
-                  isActive('/owner/settings') ? 'bg-navy-950 text-white border-navy-950' : 'bg-slate-50 text-slate-700 border-slate-200'
+                  isActive('/owner/settings') ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]' : 'bg-[#142017] text-slate-300 border-[#223525]'
                 }`}
               >
                 <Settings className="w-4 h-4" />
@@ -433,7 +433,7 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
                 to="/owner/qr"
                 onClick={() => setMobileMenuOpen(false)}
                 className={`p-2.5 rounded-xl border flex items-center gap-2 ${
-                  isActive('/owner/qr') ? 'bg-navy-950 text-white border-navy-950' : 'bg-slate-50 text-slate-700 border-slate-200'
+                  isActive('/owner/qr') ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]' : 'bg-[#142017] text-slate-300 border-[#223525]'
                 }`}
               >
                 <QrCode className="w-4 h-4" />
@@ -444,7 +444,7 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
                 to="/owner/printers"
                 onClick={() => setMobileMenuOpen(false)}
                 className={`p-2.5 rounded-xl border flex items-center gap-2 ${
-                  isActive('/owner/printers') ? 'bg-navy-950 text-white border-navy-950' : 'bg-slate-50 text-slate-700 border-slate-200'
+                  isActive('/owner/printers') ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]' : 'bg-[#142017] text-slate-300 border-[#223525]'
                 }`}
               >
                 <Laptop className="w-4 h-4" />
@@ -455,22 +455,22 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
                 to="/owner/reports"
                 onClick={() => setMobileMenuOpen(false)}
                 className={`p-2.5 rounded-xl border flex items-center gap-2 ${
-                  isActive('/owner/reports') ? 'bg-navy-950 text-white border-navy-950' : 'bg-slate-50 text-slate-700 border-slate-200'
+                  isActive('/owner/reports') ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]' : 'bg-[#142017] text-slate-300 border-[#223525]'
                 }`}
               >
-                <Sparkles className="w-4 h-4 text-amber-500" />
+                <Sparkles className="w-4 h-4 text-amber-400" />
                 <span>Reports</span>
               </Link>
             </div>
 
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+            <div className="pt-2 border-t border-[#1f3123] flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => {
                   setMobileMenuOpen(false);
                   handleGeneratePairingCode();
                 }}
-                className="text-xs font-bold text-brand-700 flex items-center gap-1.5"
+                className="text-xs font-bold text-[#bbf451] flex items-center gap-1.5"
               >
                 <Smartphone className="w-3.5 h-3.5" />
                 <span>Pair Windows PC</span>
@@ -479,7 +479,7 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
               <button
                 type="button"
                 onClick={handleLogout}
-                className="text-xs font-bold text-rose-600 flex items-center gap-1"
+                className="text-xs font-bold text-rose-400 flex items-center gap-1"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Logout</span>
@@ -496,24 +496,24 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
 
       {/* 6-Digit Pairing Code Modal */}
       {pairingModalOpen && pairingCode && (
-        <div className="fixed inset-0 z-60 overflow-y-auto bg-navy-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full border border-slate-200 shadow-2xl p-6 space-y-4 text-center animate-in fade-in zoom-in-95 duration-150">
-            <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center mx-auto">
+        <div className="fixed inset-0 z-60 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#121c14] rounded-3xl max-w-sm w-full border border-[#233526] shadow-2xl p-6 space-y-4 text-center animate-in fade-in zoom-in-95 duration-150">
+            <div className="w-12 h-12 rounded-2xl bg-[#1b2b1d] text-[#bbf451] flex items-center justify-center mx-auto border border-[#2e4732]">
               <Laptop className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold text-navy-950">Pair Windows PC</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Enter this code into the desktop connector:</p>
+              <h3 className="text-base font-black text-white font-syne">Pair Windows PC</h3>
+              <p className="text-xs text-slate-400 mt-0.5">Enter this code into the desktop connector:</p>
             </div>
 
-            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-1">
+            <div className="bg-[#0c140e] rounded-2xl p-5 border border-[#223525] space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 6-Digit Pairing Code
               </span>
-              <div className="text-3xl font-mono font-black text-navy-950 tracking-widest">
+              <div className="text-3xl font-mono font-black text-[#bbf451] tracking-widest">
                 {pairingCode}
               </div>
-              <p className="text-[10px] text-amber-600 font-semibold flex items-center justify-center gap-1 pt-1">
+              <p className="text-[10px] text-amber-400 font-semibold flex items-center justify-center gap-1 pt-1">
                 <Clock className="w-3 h-3" /> Valid for 10 minutes
               </p>
             </div>

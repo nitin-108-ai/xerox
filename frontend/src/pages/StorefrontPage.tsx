@@ -207,8 +207,7 @@ export const StorefrontPage: React.FC = () => {
     setIsDragOver(true);
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
+  const handleDragLeave = () => {
     setIsDragOver(false);
   };
 
@@ -216,36 +215,46 @@ export const StorefrontPage: React.FC = () => {
     setQueuedFiles((prev) => {
       const target = prev[index];
       if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl);
-      return prev.filter((_, i) => i !== index);
+      const next = prev.filter((_, i) => i !== index);
+      if (next.length === 0) {
+        setCurrentStep(1);
+      }
+      return next;
     });
   };
 
   const moveFile = (index: number, direction: 'UP' | 'DOWN') => {
     setQueuedFiles((prev) => {
-      const copy = [...prev];
+      const next = [...prev];
       const targetIndex = direction === 'UP' ? index - 1 : index + 1;
-      if (targetIndex < 0 || targetIndex >= copy.length) return prev;
-      const temp = copy[index];
-      copy[index] = copy[targetIndex];
-      copy[targetIndex] = temp;
-      return copy;
+      if (targetIndex < 0 || targetIndex >= next.length) return prev;
+      const temp = next[index];
+      next[index] = next[targetIndex];
+      next[targetIndex] = temp;
+      return next;
     });
   };
 
-  const handleSaveEditedImage = (editedFile: File) => {
+  const handleSaveEditedImage = (editedBlob: Blob) => {
     if (editingFileIndex === null) return;
-    setQueuedFiles((prev) => {
-      const copy = [...prev];
-      const target = copy[editingFileIndex];
-      if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl);
-      const newPreview = URL.createObjectURL(editedFile);
-      copy[editingFileIndex] = {
-        ...target,
-        file: editedFile,
-        previewUrl: newPreview,
-      };
-      return copy;
+    const current = queuedFiles[editingFileIndex];
+    if (!current) return;
+
+    const newFile = new File([editedBlob], current.file.name, {
+      type: 'image/jpeg',
+      lastModified: Date.now(),
     });
+    const newPreview = URL.createObjectURL(newFile);
+
+    if (current.previewUrl) URL.revokeObjectURL(current.previewUrl);
+
+    setQueuedFiles((prev) =>
+      prev.map((item, idx) =>
+        idx === editingFileIndex
+          ? { ...item, file: newFile, previewUrl: newPreview }
+          : item
+      )
+    );
     setEditingFileIndex(null);
   };
 
@@ -349,10 +358,12 @@ export const StorefrontPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-3 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs font-semibold text-slate-500">Connecting to shop counter...</p>
+      <div className="min-h-screen bg-[#080d09] flex items-center justify-center p-4">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-3 border-[#bbf451] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+            Connecting to 3D Print Counter...
+          </p>
         </div>
       </div>
     );
@@ -360,19 +371,19 @@ export const StorefrontPage: React.FC = () => {
 
   if (error || !shopData) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl border border-slate-200 p-8 max-w-sm w-full text-center space-y-4 shadow-sm">
-          <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+      <div className="min-h-screen bg-[#080d09] flex items-center justify-center p-4">
+        <div className="bg-[#121c14] rounded-3xl border border-[#233526] p-8 max-w-sm w-full text-center space-y-4 shadow-2xl">
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto border border-rose-500/20">
             <AlertCircle className="w-6 h-6" />
           </div>
-          <h2 className="text-base font-extrabold text-navy-950">Shop Not Found</h2>
-          <p className="text-xs text-slate-500">{error || 'Please scan the shop counter QR code again.'}</p>
+          <h2 className="text-lg font-bold text-white font-syne">Shop Not Found</h2>
+          <p className="text-xs text-slate-400">{error || 'Please scan the shop counter QR code again.'}</p>
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-navy-900 text-white font-bold text-xs rounded-xl"
+            className="px-5 py-2.5 bg-[#bbf451] text-[#0a120c] font-black text-xs rounded-full hover:bg-[#cbff5e] transition"
           >
-            Retry
+            Retry Connection
           </button>
         </div>
       </div>
@@ -388,63 +399,63 @@ export const StorefrontPage: React.FC = () => {
     const trackingUrl = `/track/${orderRef}?token=${token}`;
 
     return (
-      <div className="min-h-screen bg-slate-50/70 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-elevated max-w-md w-full p-6 sm:p-8 space-y-6 text-center animate-in fade-in zoom-in-95 duration-150">
-          <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border-2 border-emerald-200 shadow-xs">
+      <div className="min-h-screen bg-[#080d09] flex items-center justify-center p-4 font-outfit">
+        <div className="bg-gradient-to-b from-[#162419] via-[#111a13] to-[#0c140e] border border-[#283e2c] shadow-[0_25px_60px_rgba(0,0,0,0.85)] rounded-[32px] max-w-md w-full p-6 sm:p-8 space-y-6 text-center animate-in fade-in zoom-in-95 duration-150">
+          <div className="w-16 h-16 rounded-full bg-[#bbf451]/15 text-[#bbf451] flex items-center justify-center mx-auto border-2 border-[#bbf451]/30 shadow-lg">
             <CheckCircle2 className="w-8 h-8" />
           </div>
 
-          <div className="space-y-1">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-              Sent to Shop Counter
+          <div className="space-y-1.5">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#bbf451] bg-[#1a2d1d] px-3.5 py-1 rounded-full border border-[#2a462f]">
+              Directly Dispatched to Press
             </span>
-            <h2 className="text-2xl font-black text-navy-950 pt-2">Order Submitted!</h2>
-            <p className="text-xs text-slate-500">
-              Your {submittedOrder.fileCount || queuedFiles.length} document(s) have been received directly at <strong>{shop?.name || 'the shop counter'}</strong>.
+            <h2 className="text-2xl font-black text-white pt-2 font-syne">Order Submitted!</h2>
+            <p className="text-xs text-slate-300">
+              Your {submittedOrder.fileCount || queuedFiles.length} document(s) have arrived live at <strong>{shop?.name || 'the shop counter'}</strong>.
             </p>
           </div>
 
           {/* Reference & Pickup OTP Box */}
-          <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-3 text-center">
+          <div className="bg-[#101911] rounded-2xl p-5 border border-[#213524] space-y-3 text-center">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                 Order Reference Number
               </span>
-              <div className="text-2xl font-mono font-black text-navy-950 tracking-wider">
+              <div className="text-2xl font-mono font-black text-white tracking-wider mt-0.5">
                 {orderRef}
               </div>
             </div>
 
             {(submittedOrder.pickupOtp || submittedOrder.pickup_otp) && (
-              <div className="pt-2 border-t border-slate-200/60 flex items-center justify-center gap-2">
-                <span className="text-[11px] font-bold text-slate-500">Pickup Security Code:</span>
-                <span className="font-mono font-black text-base text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded-lg border border-brand-200">
+              <div className="pt-2 border-t border-[#1f3122] flex items-center justify-center gap-2">
+                <span className="text-[11px] font-bold text-slate-300">Pickup Security Code:</span>
+                <span className="font-mono font-black text-base text-[#0a120c] bg-[#bbf451] px-3 py-0.5 rounded-lg">
                   {submittedOrder.pickupOtp || submittedOrder.pickup_otp}
                 </span>
               </div>
             )}
 
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-400">
               Show this reference number or security code to the shopkeeper at the counter.
             </p>
           </div>
 
           {/* Action buttons */}
-          <div className="space-y-2 pt-2">
+          <div className="space-y-2.5 pt-2">
             <button
               onClick={() => navigate(trackingUrl)}
-              className="w-full py-3.5 rounded-2xl bg-navy-950 hover:bg-brand-600 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition"
+              className="w-full py-3.5 rounded-full bg-[#bbf451] hover:bg-[#cbff5e] text-[#0a120c] font-black text-xs flex items-center justify-center gap-2 shadow-xl shadow-[#bbf451]/20 transition hover:scale-[1.02]"
             >
               <ExternalLink className="w-4 h-4" />
-              Track Order Live
+              <span>Track Order Live Status</span>
             </button>
 
             <button
               onClick={handleCopyTrackingLink}
-              className="w-full py-2.5 rounded-2xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition"
+              className="w-full py-2.5 rounded-full border border-[#283e2c] bg-[#142017] hover:bg-[#1a2b1f] text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition"
             >
-              {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-              {copiedLink ? 'Private Tracking Link Copied!' : 'Copy Private Tracking Link'}
+              {copiedLink ? <Check className="w-4 h-4 text-[#bbf451]" /> : <Copy className="w-4 h-4" />}
+              <span>{copiedLink ? 'Private Tracking Link Copied!' : 'Copy Private Tracking Link'}</span>
             </button>
 
             <button
@@ -455,7 +466,7 @@ export const StorefrontPage: React.FC = () => {
                 setCopies(1);
                 setCustomNotes('');
               }}
-              className="w-full py-2 text-slate-400 hover:text-slate-600 font-semibold text-xs transition"
+              className="w-full py-2 text-slate-400 hover:text-white font-semibold text-xs transition"
             >
               Print More Documents
             </button>
@@ -470,11 +481,11 @@ export const StorefrontPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/60 py-6 px-4 sm:px-6 flex flex-col justify-center items-center font-sans">
-      <div className="w-full max-w-lg space-y-4">
+    <div className="min-h-screen bg-[#080d09] text-slate-100 py-8 px-4 sm:px-6 flex flex-col justify-center items-center font-outfit">
+      <div className="w-full max-w-xl space-y-4">
         {/* Shop Header */}
-        <div className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-sm flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-brand-500 text-white font-black text-lg flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
+        <div className="bg-gradient-to-b from-[#152317] to-[#0d160f] rounded-3xl p-5 border border-[#243928] shadow-2xl flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#162719] to-[#25422b] border border-[#3b6243] text-[#bbf451] font-black text-lg flex items-center justify-center shrink-0 shadow-md overflow-hidden">
             {shop.logo_url ? (
               <img src={shop.logo_url} alt={shop.name} className="w-full h-full object-cover" />
             ) : (
@@ -483,68 +494,68 @@ export const StorefrontPage: React.FC = () => {
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#bbf451] bg-[#1a2d1d] px-2.5 py-0.5 rounded-full border border-[#2b4431] flex items-center gap-1">
                 <Check className="w-3 h-3" />
-                Verified Xerox Shop
+                Verified Print Counter
               </span>
             </div>
-            <h1 className="text-base font-extrabold text-navy-950 truncate mt-0.5" title={shop.name}>
+            <h1 className="text-base font-extrabold text-white truncate mt-1 font-syne" title={shop.name}>
               {shop.name}
             </h1>
-            <p className="text-[11px] text-slate-500 truncate">{shop.address || 'Digital Print Counter'}</p>
+            <p className="text-[11px] text-slate-400 truncate">{shop.address || 'Digital Print Counter'}</p>
           </div>
         </div>
 
         {/* Anonymous Customer Banner */}
-        <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-2xl px-4 py-2.5 flex items-center gap-2.5 text-xs text-emerald-900">
-          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+        <div className="bg-[#101b13] border border-[#203424] rounded-2xl px-4 py-2.5 flex items-center gap-2.5 text-xs text-slate-300">
+          <ShieldCheck className="w-4 h-4 text-[#bbf451] shrink-0" />
           <span className="text-[11px]">
-            <strong>Zero Login Required:</strong> Send documents anonymously. No phone number or account needed.
+            <strong className="text-white">Zero Phone Number Leak:</strong> Send files anonymously. Never stored permanently or shared on WhatsApp.
           </span>
         </div>
 
         {/* Multi-Step Flow Indicator */}
-        <div className="bg-white rounded-2xl px-4 py-3 border border-slate-200/80 shadow-2xs flex items-center justify-between text-xs font-bold">
+        <div className="bg-[#121c14] rounded-2xl px-4 py-3 border border-[#223525] shadow-inner flex items-center justify-between text-xs font-bold">
           <div
             onClick={() => setCurrentStep(1)}
             className={`flex items-center gap-1.5 cursor-pointer transition ${
-              currentStep === 1 ? 'text-brand-600' : currentStep > 1 ? 'text-emerald-700' : 'text-slate-400'
+              currentStep === 1 ? 'text-[#bbf451]' : currentStep > 1 ? 'text-emerald-400' : 'text-slate-400'
             }`}
           >
             <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-              currentStep === 1 ? 'bg-brand-600 text-white' : currentStep > 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'
+              currentStep === 1 ? 'bg-[#bbf451] text-[#0a120c]' : currentStep > 1 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-[#19261c] text-slate-400'
             }`}>
               {currentStep > 1 ? '✓' : '1'}
             </span>
             <span>Upload ({queuedFiles.length})</span>
           </div>
 
-          <div className="h-0.5 w-6 bg-slate-200" />
+          <div className="h-0.5 w-6 bg-[#213424]" />
 
           <div
             onClick={() => queuedFiles.length > 0 && setCurrentStep(2)}
             className={`flex items-center gap-1.5 cursor-pointer transition ${
-              currentStep === 2 ? 'text-brand-600' : currentStep > 2 ? 'text-emerald-700' : 'text-slate-400'
+              currentStep === 2 ? 'text-[#bbf451]' : currentStep > 2 ? 'text-emerald-400' : 'text-slate-400'
             }`}
           >
             <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-              currentStep === 2 ? 'bg-brand-600 text-white' : currentStep > 2 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'
+              currentStep === 2 ? 'bg-[#bbf451] text-[#0a120c]' : currentStep > 2 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-[#19261c] text-slate-400'
             }`}>
               {currentStep > 2 ? '✓' : '2'}
             </span>
             <span>Settings</span>
           </div>
 
-          <div className="h-0.5 w-6 bg-slate-200" />
+          <div className="h-0.5 w-6 bg-[#213424]" />
 
           <div
             onClick={() => queuedFiles.length > 0 && setCurrentStep(3)}
             className={`flex items-center gap-1.5 cursor-pointer transition ${
-              currentStep === 3 ? 'text-brand-600' : 'text-slate-400'
+              currentStep === 3 ? 'text-[#bbf451]' : 'text-slate-400'
             }`}
           >
             <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-              currentStep === 3 ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-500'
+              currentStep === 3 ? 'bg-[#bbf451] text-[#0a120c]' : 'bg-[#19261c] text-slate-400'
             }`}>
               3
             </span>
@@ -554,20 +565,20 @@ export const StorefrontPage: React.FC = () => {
 
         {/* Error Alert */}
         {submitError && (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 font-medium flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-xs text-rose-300 font-medium flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
             <span>{submitError}</span>
           </div>
         )}
 
         {/* STEP 1: Upload Documents Queue */}
         {currentStep === 1 && (
-          <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-md space-y-5 animate-in fade-in duration-150">
+          <div className="bg-gradient-to-b from-[#142217] to-[#0c140e] rounded-3xl p-6 border border-[#243928] shadow-2xl space-y-5 animate-in fade-in duration-150">
             <div className="space-y-1">
-              <h2 className="text-sm font-extrabold text-navy-950 uppercase tracking-wider">
+              <h2 className="text-xs font-bold text-[#bbf451] uppercase tracking-wider">
                 1. Select Document(s) to Print
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-300">
                 You can upload multiple PDFs or Photos at once (up to 20 files).
               </p>
             </div>
@@ -590,15 +601,15 @@ export const StorefrontPage: React.FC = () => {
               onClick={() => fileInputRef.current?.click()}
               className={`cursor-pointer block p-6 sm:p-8 rounded-2xl border-2 border-dashed transition text-center space-y-2 ${
                 isDragOver
-                  ? 'border-brand-500 bg-brand-50/60 scale-[1.01]'
-                  : 'border-slate-300 hover:border-brand-500 bg-slate-50/60 hover:bg-white'
+                  ? 'border-[#bbf451] bg-[#1b2f1f] scale-[1.01]'
+                  : 'border-[#29422f] hover:border-[#bbf451] bg-[#0e1610] hover:bg-[#121e14]'
               }`}
             >
-              <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center mx-auto transition-transform">
+              <div className="w-12 h-12 rounded-2xl bg-[#1b2b1d] border border-[#2e4732] text-[#bbf451] flex items-center justify-center mx-auto transition-transform">
                 <Upload className="w-6 h-6" />
               </div>
               <div>
-                <span className="text-xs font-extrabold text-navy-950">
+                <span className="text-xs font-bold text-white">
                   {queuedFiles.length > 0 ? 'Tap to Add More Documents' : 'Tap to Upload Documents'}
                 </span>
                 <p className="text-[11px] text-slate-400 mt-0.5">
@@ -610,16 +621,16 @@ export const StorefrontPage: React.FC = () => {
             {/* Uploaded Files Queue List */}
             {queuedFiles.length > 0 && (
               <div className="space-y-2 pt-2">
-                <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-400">
                   <span>Queued Documents ({queuedFiles.length})</span>
-                  <span className="text-[11px] text-slate-400">Reorder or edit photos</span>
+                  <span className="text-[11px] text-slate-500">Reorder or edit photos</span>
                 </div>
 
                 <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
                   {queuedFiles.map((item, index) => (
                     <div
                       key={item.id}
-                      className="p-3 rounded-2xl bg-slate-50 border border-slate-200/90 flex items-center justify-between gap-3 shadow-2xs hover:bg-white transition"
+                      className="p-3 rounded-2xl bg-[#101911] border border-[#203323] flex items-center justify-between gap-3 shadow-sm hover:border-[#bbf451]/50 transition"
                     >
                       <div
                         onClick={() => handleOpenPreview(index)}
@@ -627,27 +638,27 @@ export const StorefrontPage: React.FC = () => {
                         title="Click to preview this document"
                       >
                         {item.isImage && item.previewUrl ? (
-                          <div className="w-11 h-11 rounded-xl overflow-hidden bg-slate-200 shrink-0 border border-slate-300 relative group">
+                          <div className="w-11 h-11 rounded-xl overflow-hidden bg-[#162318] shrink-0 border border-[#2b4230] relative group">
                             <img
                               src={item.previewUrl}
                               alt={item.file.name}
                               className="w-full h-full object-cover"
                             />
-                            <div className="absolute inset-0 bg-navy-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
                               <Eye className="w-4 h-4 text-white" />
                             </div>
                           </div>
                         ) : (
-                          <div className="w-11 h-11 rounded-xl bg-brand-500 text-white flex items-center justify-center shrink-0">
+                          <div className="w-11 h-11 rounded-xl bg-[#182a1d] border border-[#2d4632] text-[#bbf451] flex items-center justify-center shrink-0">
                             <FileText className="w-5 h-5" />
                           </div>
                         )}
 
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-bold text-navy-950 truncate hover:text-brand-600 transition" title={item.file.name}>
+                          <p className="text-xs font-bold text-white truncate hover:text-[#bbf451] transition" title={item.file.name}>
                             {index + 1}. {item.file.name}
                           </p>
-                          <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                          <p className="text-[10px] text-slate-400 font-mono mt-0.5">
                             {(item.file.size / (1024 * 1024)).toFixed(2)} MB • {item.isImage ? 'Photo' : 'PDF Document'}
                           </p>
                         </div>
@@ -655,14 +666,14 @@ export const StorefrontPage: React.FC = () => {
 
                       {/* Item Actions */}
                       <div className="flex items-center gap-1.5 shrink-0">
-                        {/* Preview button for ALL files (PDF & Images) */}
+                        {/* Preview button */}
                         <button
                           type="button"
                           onClick={() => handleOpenPreview(index)}
-                          className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-brand-50 text-slate-700 hover:text-brand-700 text-[11px] font-bold flex items-center gap-1 border border-slate-200 hover:border-brand-300 transition shadow-2xs"
+                          className="px-2.5 py-1.5 rounded-xl bg-[#162418] hover:bg-[#203423] text-[#bbf451] text-[11px] font-bold flex items-center gap-1 border border-[#2b4330] transition"
                           title="Preview document before printing"
                         >
-                          <Eye className="w-3.5 h-3.5 text-brand-600" />
+                          <Eye className="w-3.5 h-3.5" />
                           <span>Preview</span>
                         </button>
 
@@ -671,7 +682,7 @@ export const StorefrontPage: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setEditingFileIndex(index)}
-                            className="px-2 py-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 text-[11px] font-bold flex items-center gap-1 transition"
+                            className="px-2 py-1.5 rounded-xl bg-[#162418] hover:bg-[#203423] text-slate-200 text-[11px] font-bold flex items-center gap-1 border border-[#2b4330] transition"
                             title="Crop, rotate, adjust photo"
                           >
                             <Sliders className="w-3 h-3" />
@@ -684,7 +695,7 @@ export const StorefrontPage: React.FC = () => {
                           type="button"
                           onClick={() => moveFile(index, 'UP')}
                           disabled={index === 0}
-                          className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-navy-950 disabled:opacity-30 transition"
+                          className="p-1.5 rounded-lg border border-[#243928] bg-[#121c14] text-slate-400 hover:text-white disabled:opacity-30 transition"
                           title="Move Up"
                         >
                           <ChevronUp className="w-3.5 h-3.5" />
@@ -695,7 +706,7 @@ export const StorefrontPage: React.FC = () => {
                           type="button"
                           onClick={() => moveFile(index, 'DOWN')}
                           disabled={index === queuedFiles.length - 1}
-                          className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-navy-950 disabled:opacity-30 transition"
+                          className="p-1.5 rounded-lg border border-[#243928] bg-[#121c14] text-slate-400 hover:text-white disabled:opacity-30 transition"
                           title="Move Down"
                         >
                           <ChevronDown className="w-3.5 h-3.5" />
@@ -705,7 +716,7 @@ export const StorefrontPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => removeFile(index)}
-                          className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                          className="p-1.5 rounded-lg border border-[#243928] bg-[#121c14] text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition"
                           title="Remove from queue"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -722,7 +733,7 @@ export const StorefrontPage: React.FC = () => {
               type="button"
               disabled={queuedFiles.length === 0}
               onClick={() => setCurrentStep(2)}
-              className="w-full py-4 rounded-2xl bg-navy-950 hover:bg-brand-600 disabled:bg-slate-200 disabled:text-slate-400 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition"
+              className="w-full py-3.5 rounded-full bg-[#bbf451] hover:bg-[#cbff5e] disabled:bg-[#1a281e] disabled:text-slate-500 text-[#0a120c] font-black text-xs flex items-center justify-center gap-2 shadow-xl shadow-[#bbf451]/20 transition hover:scale-[1.01]"
             >
               <span>Continue to Print Settings ({queuedFiles.length} file{queuedFiles.length === 1 ? '' : 's'})</span>
               <ArrowRight className="w-4 h-4" />
@@ -732,12 +743,12 @@ export const StorefrontPage: React.FC = () => {
 
         {/* STEP 2: Print Settings */}
         {currentStep === 2 && (
-          <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-md space-y-5 animate-in fade-in duration-150">
+          <div className="bg-gradient-to-b from-[#142217] to-[#0c140e] rounded-3xl p-6 border border-[#243928] shadow-2xl space-y-5 animate-in fade-in duration-150">
             <div className="flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => setCurrentStep(1)}
-                className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-navy-950 transition"
+                className="inline-flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-white transition"
               >
                 <ArrowLeft className="w-4 h-4" /> Back to Files
               </button>
@@ -745,13 +756,13 @@ export const StorefrontPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleOpenPreview(0)}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 px-2.5 py-1 rounded-xl border border-brand-200 transition"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#bbf451] bg-[#18291c] px-3 py-1 rounded-full border border-[#2b4431] transition"
                   title="Preview uploaded documents"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   <span>Preview Files ({queuedFiles.length})</span>
                 </button>
-                <span className="text-[11px] font-extrabold text-brand-600 uppercase tracking-wider">
+                <span className="text-[11px] font-extrabold text-[#bbf451] uppercase tracking-wider">
                   Step 2 of 3
                 </span>
               </div>
@@ -759,7 +770,7 @@ export const StorefrontPage: React.FC = () => {
 
             {/* 1. Paper Size */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-navy-950 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider">
                 1. Paper Size
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -770,8 +781,8 @@ export const StorefrontPage: React.FC = () => {
                     onClick={() => setPaperSize(size)}
                     className={`py-2.5 rounded-2xl text-xs font-extrabold border transition ${
                       paperSize === size
-                        ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[#bbf451] text-[#0a120c] border-[#bbf451] shadow-md'
+                        : 'bg-[#101911] text-slate-300 border-[#223525] hover:bg-[#162317]'
                     }`}
                   >
                     {size}
@@ -783,7 +794,7 @@ export const StorefrontPage: React.FC = () => {
             {/* 2. Color Mode & Duplex Settings */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="block text-xs font-bold text-navy-950 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider">
                   2. Color Mode
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -792,8 +803,8 @@ export const StorefrontPage: React.FC = () => {
                     onClick={() => setColorMode('BW')}
                     className={`py-2.5 rounded-2xl text-xs font-extrabold border transition ${
                       colorMode === 'BW'
-                        ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[#bbf451] text-[#0a120c] border-[#bbf451] shadow-md'
+                        : 'bg-[#101911] text-slate-300 border-[#223525] hover:bg-[#162317]'
                     }`}
                   >
                     B &amp; W
@@ -803,18 +814,18 @@ export const StorefrontPage: React.FC = () => {
                     onClick={() => setColorMode('COLOR')}
                     className={`py-2.5 rounded-2xl text-xs font-extrabold border transition flex items-center justify-center gap-1 ${
                       colorMode === 'COLOR'
-                        ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[#bbf451] text-[#0a120c] border-[#bbf451] shadow-md'
+                        : 'bg-[#101911] text-slate-300 border-[#223525] hover:bg-[#162317]'
                     }`}
                   >
-                    <Sparkles className="w-3 h-3 text-amber-400" />
+                    <Sparkles className="w-3 h-3 text-amber-300" />
                     Color
                   </button>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="block text-xs font-bold text-navy-950 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider">
                   Print Sides
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -823,8 +834,8 @@ export const StorefrontPage: React.FC = () => {
                     onClick={() => setIsDuplex(false)}
                     className={`py-2.5 rounded-2xl text-xs font-extrabold border transition ${
                       !isDuplex
-                        ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[#bbf451] text-[#0a120c] border-[#bbf451] shadow-md'
+                        : 'bg-[#101911] text-slate-300 border-[#223525] hover:bg-[#162317]'
                     }`}
                   >
                     Single-Sided
@@ -834,8 +845,8 @@ export const StorefrontPage: React.FC = () => {
                     onClick={() => setIsDuplex(true)}
                     className={`py-2.5 rounded-2xl text-xs font-extrabold border transition ${
                       isDuplex
-                        ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[#bbf451] text-[#0a120c] border-[#bbf451] shadow-md'
+                        : 'bg-[#101911] text-slate-300 border-[#223525] hover:bg-[#162317]'
                     }`}
                   >
                     Double-Sided
@@ -846,21 +857,21 @@ export const StorefrontPage: React.FC = () => {
 
             {/* Double-Sided Page Arrangement for 2+ Photos/Documents */}
             {isDuplex && queuedFiles.length >= 2 && (
-              <div className="p-4 rounded-2xl bg-brand-50/70 border border-brand-200/90 space-y-3 animate-in fade-in duration-150">
+              <div className="p-4 rounded-2xl bg-[#142318] border border-[#2a452f] space-y-3 animate-in fade-in duration-150">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
-                    <span className="text-xs font-black text-navy-950 flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5 text-brand-600" />
+                    <span className="text-xs font-black text-white flex items-center gap-1.5 font-syne">
+                      <Layers className="w-3.5 h-3.5 text-[#bbf451]" />
                       Double-Sided Page Arrangement
                     </span>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-[11px] text-slate-400">
                       Choose which photo/document prints on Front (Sheet 1) and Back (Sheet 2).
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={handleSwapDuplexSides}
-                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-brand-100 text-brand-700 text-xs font-bold border border-brand-300 flex items-center gap-1.5 shadow-2xs transition active:scale-95"
+                    className="px-3 py-1.5 rounded-xl bg-[#1c2c1f] hover:bg-[#263c2b] text-[#bbf451] text-xs font-bold border border-[#2d4732] flex items-center gap-1.5 transition active:scale-95 shadow-sm"
                     title="Swap Front and Back sides"
                   >
                     <span>⇄ Swap Sides (Palat Dein)</span>
@@ -869,9 +880,9 @@ export const StorefrontPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* FRONT SIDE (Sheet 1) */}
-                  <div className="p-3 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-2">
+                  <div className="p-3 rounded-2xl bg-[#0f1911] border border-[#223525] space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full border border-brand-200">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-[#bbf451] bg-[#1a2d1d] px-2.5 py-0.5 rounded-full border border-[#2a462f]">
                         Front Side (Samne)
                       </span>
                       <span className="text-[10px] text-slate-400 font-bold">Page 1</span>
@@ -880,7 +891,7 @@ export const StorefrontPage: React.FC = () => {
                     <select
                       value={duplexFrontIndex}
                       onChange={(e) => setDuplexFrontIndex(Number(e.target.value))}
-                      className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 text-navy-950 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      className="w-full text-xs font-bold p-2.5 rounded-xl border border-[#263c29] bg-[#152217] text-white focus:outline-none focus:border-[#bbf451]"
                     >
                       {queuedFiles.map((f, idx) => (
                         <option key={f.id} value={idx}>
@@ -890,7 +901,7 @@ export const StorefrontPage: React.FC = () => {
                     </select>
 
                     {queuedFiles[duplexFrontIndex]?.previewUrl ? (
-                      <div className="h-24 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center p-1">
+                      <div className="h-24 rounded-xl overflow-hidden border border-[#233826] bg-[#0c140e] flex items-center justify-center p-1">
                         <img
                           src={queuedFiles[duplexFrontIndex].previewUrl!}
                           alt="Front side preview"
@@ -898,17 +909,17 @@ export const StorefrontPage: React.FC = () => {
                         />
                       </div>
                     ) : (
-                      <div className="h-16 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-400 text-xs">
-                        <FileText className="w-5 h-5 mr-1.5 text-brand-500" />
+                      <div className="h-16 rounded-xl border border-[#233826] bg-[#0c140e] flex items-center justify-center text-slate-400 text-xs">
+                        <FileText className="w-5 h-5 mr-1.5 text-[#bbf451]" />
                         <span className="truncate max-w-[150px]">{queuedFiles[duplexFrontIndex]?.file.name}</span>
                       </div>
                     )}
                   </div>
 
                   {/* BACK SIDE (Sheet 2) */}
-                  <div className="p-3 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-2">
+                  <div className="p-3 rounded-2xl bg-[#0f1911] border border-[#223525] space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
                         Back Side (Piche)
                       </span>
                       <span className="text-[10px] text-slate-400 font-bold">Page 2</span>
@@ -917,7 +928,7 @@ export const StorefrontPage: React.FC = () => {
                     <select
                       value={duplexBackIndex}
                       onChange={(e) => setDuplexBackIndex(Number(e.target.value))}
-                      className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 text-navy-950 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      className="w-full text-xs font-bold p-2.5 rounded-xl border border-[#263c29] bg-[#152217] text-white focus:outline-none focus:border-[#bbf451]"
                     >
                       {queuedFiles.map((f, idx) => (
                         <option key={f.id} value={idx}>
@@ -927,7 +938,7 @@ export const StorefrontPage: React.FC = () => {
                     </select>
 
                     {queuedFiles[duplexBackIndex]?.previewUrl ? (
-                      <div className="h-24 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center p-1">
+                      <div className="h-24 rounded-xl overflow-hidden border border-[#233826] bg-[#0c140e] flex items-center justify-center p-1">
                         <img
                           src={queuedFiles[duplexBackIndex].previewUrl!}
                           alt="Back side preview"
@@ -935,8 +946,8 @@ export const StorefrontPage: React.FC = () => {
                         />
                       </div>
                     ) : (
-                      <div className="h-16 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-400 text-xs">
-                        <FileText className="w-5 h-5 mr-1.5 text-emerald-500" />
+                      <div className="h-16 rounded-xl border border-[#233826] bg-[#0c140e] flex items-center justify-center text-slate-400 text-xs">
+                        <FileText className="w-5 h-5 mr-1.5 text-emerald-400" />
                         <span className="truncate max-w-[150px]">{queuedFiles[duplexBackIndex]?.file.name}</span>
                       </div>
                     )}
@@ -948,24 +959,24 @@ export const StorefrontPage: React.FC = () => {
             {/* 3. Copies & Orientation */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="block text-xs font-bold text-navy-950 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider">
                   3. Copies per Document
                 </label>
-                <div className="flex items-center justify-between p-1.5 rounded-2xl border border-slate-200 bg-slate-50">
+                <div className="flex items-center justify-between p-1.5 rounded-2xl border border-[#243928] bg-[#101911]">
                   <button
                     type="button"
                     onClick={() => setCopies(Math.max(1, copies - 1))}
-                    className="w-8 h-8 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-navy-950 font-bold flex items-center justify-center transition shadow-2xs"
+                    className="w-8 h-8 rounded-xl bg-[#18261c] border border-[#2c4431] hover:bg-[#223727] text-white font-bold flex items-center justify-center transition"
                   >
                     <Minus className="w-3.5 h-3.5" />
                   </button>
-                  <span className="w-8 text-center text-sm font-mono font-black text-navy-950">
+                  <span className="w-8 text-center text-sm font-mono font-black text-white">
                     {copies}
                   </span>
                   <button
                     type="button"
                     onClick={() => setCopies(copies + 1)}
-                    className="w-8 h-8 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-navy-950 font-bold flex items-center justify-center transition shadow-2xs"
+                    className="w-8 h-8 rounded-xl bg-[#18261c] border border-[#2c4431] hover:bg-[#223727] text-white font-bold flex items-center justify-center transition"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
@@ -973,7 +984,7 @@ export const StorefrontPage: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-xs font-bold text-navy-950 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider">
                   Orientation
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -982,8 +993,8 @@ export const StorefrontPage: React.FC = () => {
                     onClick={() => setOrientation('PORTRAIT')}
                     className={`py-2.5 rounded-2xl text-xs font-extrabold border transition ${
                       orientation === 'PORTRAIT'
-                        ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[#bbf451] text-[#0a120c] border-[#bbf451] shadow-md'
+                        : 'bg-[#101911] text-slate-300 border-[#223525] hover:bg-[#162317]'
                     }`}
                   >
                     Portrait
@@ -993,8 +1004,8 @@ export const StorefrontPage: React.FC = () => {
                     onClick={() => setOrientation('LANDSCAPE')}
                     className={`py-2.5 rounded-2xl text-xs font-extrabold border transition ${
                       orientation === 'LANDSCAPE'
-                        ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[#bbf451] text-[#0a120c] border-[#bbf451] shadow-md'
+                        : 'bg-[#101911] text-slate-300 border-[#223525] hover:bg-[#162317]'
                     }`}
                   >
                     Landscape
@@ -1006,7 +1017,7 @@ export const StorefrontPage: React.FC = () => {
             {/* 4. Page Range to Print & Special Instructions */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold text-navy-950 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider">
                   4. Pages to Print &amp; Notes
                 </label>
                 <span className="text-[10px] text-slate-400">PDF Multi-Page Selection</span>
@@ -1022,8 +1033,8 @@ export const StorefrontPage: React.FC = () => {
                   }}
                   className={`text-[11px] font-bold px-3 py-1.5 rounded-xl border transition ${
                     pageRangeMode === 'ALL'
-                      ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-[#bbf451] text-[#0a120c] border-[#bbf451]'
+                      : 'bg-[#101911] text-slate-300 border-[#223525] hover:bg-[#162317]'
                   }`}
                 >
                   All Pages (Sabhi)
@@ -1036,8 +1047,8 @@ export const StorefrontPage: React.FC = () => {
                   }}
                   className={`text-[11px] font-bold px-3 py-1.5 rounded-xl border transition ${
                     pageRangeMode === 'CUSTOM' && customPageRange === '1'
-                      ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-[#bbf451] text-[#0a120c] border-[#bbf451]'
+                      : 'bg-[#101911] text-slate-300 border-[#223525] hover:bg-[#162317]'
                   }`}
                 >
                   Page 1 Only
@@ -1050,8 +1061,8 @@ export const StorefrontPage: React.FC = () => {
                   }}
                   className={`text-[11px] font-bold px-3 py-1.5 rounded-xl border transition ${
                     pageRangeMode === 'CUSTOM' && customPageRange === '1-2'
-                      ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-[#bbf451] text-[#0a120c] border-[#bbf451]'
+                      : 'bg-[#101911] text-slate-300 border-[#223525] hover:bg-[#162317]'
                   }`}
                 >
                   Pages 1–2
@@ -1064,8 +1075,8 @@ export const StorefrontPage: React.FC = () => {
                   }}
                   className={`text-[11px] font-bold px-3 py-1.5 rounded-xl border transition ${
                     pageRangeMode === 'CUSTOM' && customPageRange === 'odd'
-                      ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-[#bbf451] text-[#0a120c] border-[#bbf451]'
+                      : 'bg-[#101911] text-slate-300 border-[#223525] hover:bg-[#162317]'
                   }`}
                 >
                   Odd Pages (1,3,5..)
@@ -1078,8 +1089,8 @@ export const StorefrontPage: React.FC = () => {
                   }}
                   className={`text-[11px] font-bold px-3 py-1.5 rounded-xl border transition ${
                     pageRangeMode === 'CUSTOM' && customPageRange === 'even'
-                      ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-[#bbf451] text-[#0a120c] border-[#bbf451]'
+                      : 'bg-[#101911] text-slate-300 border-[#223525] hover:bg-[#162317]'
                   }`}
                 >
                   Even Pages (2,4,6..)
@@ -1094,8 +1105,8 @@ export const StorefrontPage: React.FC = () => {
                   }}
                   className={`text-[11px] font-bold px-3 py-1.5 rounded-xl border transition ${
                     pageRangeMode === 'CUSTOM' && !['1', '1-2', 'odd', 'even'].includes(customPageRange)
-                      ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-[#bbf451] text-[#0a120c] border-[#bbf451]'
+                      : 'bg-[#101911] text-slate-300 border-[#223525] hover:bg-[#162317]'
                   }`}
                 >
                   Custom Range...
@@ -1109,7 +1120,7 @@ export const StorefrontPage: React.FC = () => {
                     placeholder="Enter specific pages to print (e.g. 1-4, 7, 9-12)"
                     value={customPageRange}
                     onChange={(e) => setCustomPageRange(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-mono border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+                    className="w-full px-3.5 py-2.5 text-xs font-mono border border-[#273c2a] rounded-xl focus:outline-none focus:border-[#bbf451] bg-[#121c13] text-white"
                   />
                   <p className="text-[10px] text-slate-400">
                     💡 Example: "1, 3, 5-8" prints page 1, page 3, and pages 5 through 8.
@@ -1122,7 +1133,7 @@ export const StorefrontPage: React.FC = () => {
                 placeholder="Special notes for shopkeeper (e.g. Aadhaar both sides, staple top-left, spiral binding)"
                 value={customNotes}
                 onChange={(e) => setCustomNotes(e.target.value)}
-                className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50"
+                className="w-full px-3.5 py-2.5 text-xs border border-[#273c2a] rounded-xl focus:outline-none focus:border-[#bbf451] bg-[#121c13] text-white placeholder-slate-500"
               />
             </div>
 
@@ -1131,14 +1142,14 @@ export const StorefrontPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setCurrentStep(1)}
-                className="w-1/3 py-3.5 rounded-2xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-xs transition"
+                className="w-1/3 py-3.5 rounded-full border border-[#283e2c] bg-[#121c14] hover:bg-[#1a281e] text-slate-200 font-extrabold text-xs transition"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={() => setCurrentStep(3)}
-                className="flex-1 py-3.5 rounded-2xl bg-navy-950 hover:bg-brand-600 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md transition"
+                className="flex-1 py-3.5 rounded-full bg-[#bbf451] hover:bg-[#cbff5e] text-[#0a120c] font-black text-xs flex items-center justify-center gap-1.5 shadow-xl shadow-[#bbf451]/20 transition hover:scale-[1.01]"
               >
                 <span>Review Order</span>
                 <ArrowRight className="w-4 h-4" />
@@ -1149,32 +1160,32 @@ export const StorefrontPage: React.FC = () => {
 
         {/* STEP 3: Review & Submit Order */}
         {currentStep === 3 && (
-          <form onSubmit={handleSubmitOrder} className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-md space-y-5 animate-in fade-in duration-150">
+          <form onSubmit={handleSubmitOrder} className="bg-gradient-to-b from-[#142217] to-[#0c140e] rounded-3xl p-6 border border-[#243928] shadow-2xl space-y-5 animate-in fade-in duration-150">
             <div className="flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => setCurrentStep(2)}
-                className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-navy-950 transition"
+                className="inline-flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-white transition"
               >
                 <ArrowLeft className="w-4 h-4" /> Back to Settings
               </button>
-              <span className="text-[11px] font-extrabold text-brand-600 uppercase tracking-wider">
+              <span className="text-[11px] font-extrabold text-[#bbf451] uppercase tracking-wider">
                 Step 3 of 3
               </span>
             </div>
 
             <div className="space-y-1">
-              <h2 className="text-base font-black text-navy-950">Review Print Job</h2>
-              <p className="text-xs text-slate-500">
+              <h2 className="text-base font-black text-white font-syne">Review Print Job</h2>
+              <p className="text-xs text-slate-400">
                 Verify your order details before sending directly to the shop counter.
               </p>
             </div>
 
             {/* Summary Cards */}
-            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/90 space-y-3">
-              <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200">
-                <span className="font-bold text-slate-500">Documents ({queuedFiles.length}):</span>
-                <span className="font-extrabold text-navy-950">
+            <div className="bg-[#101911] rounded-2xl p-4 border border-[#213524] space-y-3">
+              <div className="flex items-center justify-between text-xs pb-2 border-b border-[#1f3122]">
+                <span className="font-bold text-slate-400">Documents ({queuedFiles.length}):</span>
+                <span className="font-extrabold text-white">
                   {queuedFiles.map((f) => f.file.name).join(', ').slice(0, 35)}
                   {queuedFiles.map((f) => f.file.name).join(', ').length > 35 ? '...' : ''}
                 </span>
@@ -1183,29 +1194,29 @@ export const StorefrontPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
                   <span className="text-[10px] text-slate-400 font-bold block">Paper Size</span>
-                  <span className="font-extrabold text-navy-950">{paperSize}</span>
+                  <span className="font-extrabold text-white">{paperSize}</span>
                 </div>
                 <div>
                   <span className="text-[10px] text-slate-400 font-bold block">Color Mode</span>
-                  <span className="font-extrabold text-navy-950">{colorMode === 'COLOR' ? 'Color' : 'Black & White'}</span>
+                  <span className="font-extrabold text-white">{colorMode === 'COLOR' ? 'Color' : 'Black & White'}</span>
                 </div>
                 <div>
                   <span className="text-[10px] text-slate-400 font-bold block">Duplex</span>
-                  <span className="font-extrabold text-navy-950">{isDuplex ? 'Double-Sided' : 'Single-Sided'}</span>
+                  <span className="font-extrabold text-white">{isDuplex ? 'Double-Sided' : 'Single-Sided'}</span>
                 </div>
                 <div>
                   <span className="text-[10px] text-slate-400 font-bold block">Copies per File</span>
-                  <span className="font-extrabold text-navy-950">{copies}</span>
+                  <span className="font-extrabold text-white">{copies}</span>
                 </div>
               </div>
 
               {/* Duplex Front / Back pairing confirmation */}
               {isDuplex && queuedFiles.length >= 2 && (
-                <div className="bg-white p-3 rounded-xl border border-brand-200 text-xs space-y-1">
-                  <span className="text-[10px] font-black text-brand-700 uppercase tracking-wider block">
+                <div className="bg-[#142318] p-3 rounded-xl border border-[#2b4431] text-xs space-y-1">
+                  <span className="text-[10px] font-black text-[#bbf451] uppercase tracking-wider block">
                     Double-Sided Page Arrangement:
                   </span>
-                  <div className="flex items-center justify-between text-[11px] text-slate-700">
+                  <div className="flex items-center justify-between text-[11px] text-slate-300">
                     <span><strong>Front (Page 1):</strong> {queuedFiles[duplexFrontIndex]?.file.name}</span>
                     <span><strong>Back (Page 2):</strong> {queuedFiles[duplexBackIndex]?.file.name}</span>
                   </div>
@@ -1213,13 +1224,13 @@ export const StorefrontPage: React.FC = () => {
               )}
 
               {customNotes && (
-                <div className="text-[11px] text-slate-600 pt-1 border-t border-slate-200">
+                <div className="text-[11px] text-slate-300 pt-1 border-t border-[#1f3122]">
                   <strong>Notes:</strong> {customNotes}
                 </div>
               )}
 
               {/* Document Preview Quick Bar in Step 3 */}
-              <div className="space-y-1.5 pt-2 border-t border-slate-200">
+              <div className="space-y-1.5 pt-2 border-t border-[#1f3122]">
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
                   Verify Documents to Print
                 </span>
@@ -1227,16 +1238,16 @@ export const StorefrontPage: React.FC = () => {
                   {queuedFiles.map((item, idx) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200 text-xs"
+                      className="flex items-center justify-between p-2 rounded-xl bg-[#142217] border border-[#243928] text-xs"
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
-                        {item.isImage ? <ImageIcon className="w-3.5 h-3.5 text-brand-500 shrink-0" /> : <FileText className="w-3.5 h-3.5 text-brand-600 shrink-0" />}
-                        <span className="truncate font-semibold text-navy-950 text-[11px]">{item.file.name}</span>
+                        {item.isImage ? <ImageIcon className="w-3.5 h-3.5 text-[#bbf451] shrink-0" /> : <FileText className="w-3.5 h-3.5 text-[#bbf451] shrink-0" />}
+                        <span className="truncate font-semibold text-white text-[11px]">{item.file.name}</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleOpenPreview(idx)}
-                        className="px-2 py-1 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-700 text-[10px] font-bold flex items-center gap-1 shrink-0 ml-2 transition"
+                        className="px-2 py-1 rounded-lg bg-[#1b2c1f] hover:bg-[#253c29] text-[#bbf451] text-[10px] font-bold flex items-center gap-1 shrink-0 ml-2 transition border border-[#2d4632]"
                       >
                         <Eye className="w-3 h-3" />
                         <span>Preview</span>
@@ -1248,40 +1259,40 @@ export const StorefrontPage: React.FC = () => {
             </div>
 
             {/* Dynamic Estimated Price Card */}
-            <div className="p-4 rounded-2xl bg-brand-50/50 border border-brand-200 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-[#172719] to-[#0e1810] border border-[#29422f] flex items-center justify-between shadow-inner">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                   Estimated Total
                 </span>
-                <span className="text-xs text-slate-600">
+                <span className="text-xs text-slate-300">
                   {queuedFiles.length} file(s) • {copies} copy each • {colorMode}
                 </span>
               </div>
               <div className="text-right">
-                <span className="text-2xl font-black text-navy-950 font-mono">
+                <span className="text-2xl font-black text-[#bbf451] font-syne">
                   ₹{estimatedPrice}
                 </span>
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full block mt-0.5">
+                <span className="text-[10px] font-bold text-[#bbf451] bg-[#1a2d1d] border border-[#2b4431] px-2 py-0.5 rounded-full block mt-0.5">
                   Pay at Counter
                 </span>
               </div>
             </div>
 
             {/* Submit Button */}
-            <div className="space-y-2 pt-1">
+            <div className="space-y-2.5 pt-1">
               <button
                 type="submit"
                 disabled={queuedFiles.length === 0 || isSubmitting}
-                className="w-full py-4 rounded-2xl bg-brand-600 hover:bg-brand-500 disabled:bg-slate-200 disabled:text-slate-400 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition transform active:scale-98"
+                className="w-full py-4 rounded-full bg-[#bbf451] hover:bg-[#cbff5e] disabled:bg-[#1a281e] disabled:text-slate-500 text-[#0a120c] font-black text-sm flex items-center justify-center gap-2 shadow-xl shadow-[#bbf451]/20 transition transform active:scale-98"
               >
                 {isSubmitting ? (
                   <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    Sending to Shop Counter ({uploadProgress}%)...
+                    <RefreshCw className="w-4 h-4 animate-spin text-[#0a120c]" />
+                    <span>Sending to Shop Counter ({uploadProgress}%)...</span>
                   </>
                 ) : (
                   <>
-                    <Printer className="w-5 h-5" />
+                    <Printer className="w-5 h-5 text-[#0a120c]" />
                     <span>Send to Shop Counter</span>
                   </>
                 )}
@@ -1291,7 +1302,7 @@ export const StorefrontPage: React.FC = () => {
                 type="button"
                 onClick={() => setCurrentStep(1)}
                 disabled={isSubmitting}
-                className="w-full py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition"
+                className="w-full py-2.5 rounded-full border border-[#263c29] text-slate-300 font-bold text-xs hover:bg-[#152317] transition"
               >
                 Modify Files or Settings
               </button>

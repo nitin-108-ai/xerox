@@ -3,18 +3,11 @@ import {
   ShieldCheck,
   Building2,
   FileCheck2,
-  AlertTriangle,
   CheckCircle2,
-  XCircle,
-  Clock,
-  Search,
-  Filter,
   RefreshCw,
-  FileText,
   Lock,
-  Layers,
   Check,
-  Ban
+  ChevronRight
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -79,358 +72,366 @@ export const AdminDashboardPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600 mb-4" />
-        <p className="text-sm text-slate-500">Loading administrative metrics...</p>
+      <div className="min-h-screen bg-[#080d09] flex flex-col items-center justify-center px-4 py-20 text-center font-outfit">
+        <div className="w-10 h-10 border-4 border-[#233827] border-t-[#bbf451] rounded-full animate-spin mb-4" />
+        <p className="text-sm font-bold text-slate-400">Loading administrative telemetry & metrics...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Header */}
-      <div className="bg-navy-900 text-white rounded-3xl p-6 sm:p-8 shadow-glass flex flex-col md:flex-row md:items-center justify-between gap-6 border border-navy-800">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-300 bg-white/10 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-brand-400" />
-              Role: System Administrator
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Smart Xerox Administrative Console
-          </h1>
-          <p className="text-xs text-slate-300">
-            Platform-wide shop verification, tenant status governance, and tamper-evident security audit logs.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={loadAdminData}
-          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 self-start md:self-auto transition-colors"
-        >
-          <RefreshCw className="w-3.5 h-3.5" /> Refresh Metrics
-        </button>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-            Registered Shops
-          </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-navy-950">
-            {metrics?.shops?.total_shops || 0}
-          </div>
-          <div className="text-[11px] text-emerald-600 font-semibold mt-1">
-            {metrics?.shops?.verified_shops || 0} verified & active
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600 block mb-1">
-            Pending Verification
-          </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-amber-700">
-            {metrics?.shops?.pending_shops || 0}
-          </div>
-          <div className="text-[11px] text-slate-500 mt-1">Awaiting admin review</div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-            Total Orders
-          </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-navy-950">
-            {metrics?.orders?.total_orders || 0}
-          </div>
-          <div className="text-[11px] text-slate-500 mt-1 font-mono">
-            ₹{parseFloat(metrics?.orders?.platform_gross_volume || '0').toFixed(2)} GMV
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-            Active Stored Files
-          </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-brand-600 font-mono">
-            {metrics?.documents?.active_stored_files || 0}
-          </div>
-          <div className="text-[11px] text-slate-500 mt-1">
-            {metrics?.documents?.purged_files || 0} files auto-purged
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs Header */}
-      <div className="flex border-b border-slate-200 space-x-4">
-        <button
-          type="button"
-          onClick={() => setActiveTab('VERIFICATION')}
-          className={`py-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'VERIFICATION'
-              ? 'border-brand-600 text-brand-600'
-              : 'border-transparent text-slate-500 hover:text-navy-900'
-          }`}
-        >
-          <FileCheck2 className="w-4 h-4" />
-          Pending Verification Queue ({pendingShops.length})
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('SHOPS')}
-          className={`py-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'SHOPS'
-              ? 'border-brand-600 text-brand-600'
-              : 'border-transparent text-slate-500 hover:text-navy-900'
-          }`}
-        >
-          <Building2 className="w-4 h-4" />
-          All Shops Directory ({shops.length})
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('AUDIT')}
-          className={`py-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'AUDIT'
-              ? 'border-brand-600 text-brand-600'
-              : 'border-transparent text-slate-500 hover:text-navy-900'
-          }`}
-        >
-          <Lock className="w-4 h-4" />
-          Platform Security Audit Logs ({auditLogs.length})
-        </button>
-      </div>
-
-      {/* Tab 1: Shop Verification Review Queue */}
-      {activeTab === 'VERIFICATION' && (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-glass overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-navy-900">
-                Pending Xerox Shop Registrations
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Review submitted documents before activating storefronts for public print jobs.
-              </p>
+    <div className="min-h-screen bg-[#080d09] text-slate-100 font-outfit py-8 sm:py-12 selection:bg-[#bbf451] selection:text-[#080d09]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Header */}
+        <div className="relative overflow-hidden rounded-3xl border border-[#233827] bg-gradient-to-br from-[#162719] via-[#0f1b12] to-[#080d09] p-6 sm:p-8 shadow-2xl backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="absolute -top-24 -right-24 w-80 h-80 bg-[#bbf451]/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="space-y-2 z-10">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#bbf451] bg-[#162719] border border-[#27452d] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#bbf451]" />
+                Role: System Administrator
+              </span>
             </div>
-            <span className="text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-full">
-              {pendingShops.length} Pending
-            </span>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
-                <tr>
-                  <th className="py-3 px-6">Shop & Owner Details</th>
-                  <th className="py-3 px-4">Verification Credentials</th>
-                  <th className="py-3 px-4">Admin Feedback Note</th>
-                  <th className="py-3 px-6 text-right">Verification Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {pendingShops.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="py-12 text-center text-slate-400">
-                      <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-                      <p className="font-semibold text-slate-700">All shops verified!</p>
-                      <p className="text-xs text-slate-400">No pending verification requests in the queue.</p>
-                    </td>
-                  </tr>
-                ) : (
-                  pendingShops.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-50/50">
-                      <td className="py-4 px-6">
-                        <div className="font-bold text-navy-900 text-sm">{s.name}</div>
-                        <div className="text-[11px] text-slate-500">{s.address}</div>
-                        <div className="text-[11px] text-slate-400 mt-0.5">
-                          Owner: <strong>{s.owner_name}</strong> ({s.owner_email})
-                        </div>
-                      </td>
-
-                      <td className="py-4 px-4 text-xs">
-                        <div>
-                          Reg No: <strong className="font-mono text-navy-900">{s.business_registration_number || 'Not provided'}</strong>
-                        </div>
-                        <div className="text-[11px] text-slate-500 mt-0.5 max-w-xs">
-                          {s.documents_note || 'Self-registered shop account'}
-                        </div>
-                      </td>
-
-                      <td className="py-4 px-4">
-                        <input
-                          type="text"
-                          placeholder="Feedback or reason..."
-                          value={feedbackMap[s.id] || ''}
-                          onChange={(e) => setFeedbackMap({ ...feedbackMap, [s.id]: e.target.value })}
-                          className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500"
-                        />
-                      </td>
-
-                      <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleReviewVerification(s.id, 'APPROVED')}
-                            className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-colors flex items-center gap-1"
-                          >
-                            <Check className="w-3.5 h-3.5" /> Approve & Activate
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleReviewVerification(s.id, 'REJECTED')}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-rose-200 text-rose-700 hover:bg-rose-50 transition-colors"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Tab 2: All Shops Directory */}
-      {activeTab === 'SHOPS' && (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-glass overflow-hidden">
-          <div className="p-6 border-b border-slate-100">
-            <h3 className="text-sm font-bold text-navy-900">
-              Platform Xerox Shop Directory
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Manage shop statuses, view order volumes, or suspend shops for policy violations.
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white font-syne">
+              Smart Xerox Administrative Console
+            </h1>
+            <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
+              Platform-wide shop verification, tenant status governance, and tamper-evident security audit logs.
             </p>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
-                <tr>
-                  <th className="py-3 px-6">Shop</th>
-                  <th className="py-3 px-4">Owner & Contact</th>
-                  <th className="py-3 px-4">Verification</th>
-                  <th className="py-3 px-4">Order Volume</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-6 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {shops.map((s) => (
-                  <tr key={s.id} className="hover:bg-slate-50/50">
-                    <td className="py-3.5 px-6">
-                      <div className="font-bold text-navy-900">{s.name}</div>
-                      <div className="text-[11px] text-slate-400 font-mono">/shop/{s.slug}</div>
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <div>{s.owner_name}</div>
-                      <div className="text-[11px] text-slate-400">{s.owner_email}</div>
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      {s.is_verified ? (
-                        <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px] font-semibold">
-                          Verified
-                        </span>
-                      ) : (
-                        <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-[11px] font-semibold">
-                          Pending
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="py-3.5 px-4 font-mono font-bold text-navy-900">
-                      {s.order_count || 0} jobs
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      {s.is_active ? (
-                        <span className="text-emerald-600 font-semibold text-xs">Active</span>
-                      ) : (
-                        <span className="text-rose-600 font-semibold text-xs">Suspended</span>
-                      )}
-                    </td>
-
-                    <td className="py-3.5 px-6 text-right">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleShopStatus(s.id, s.is_active)}
-                        className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-colors ${
-                          s.is_active
-                            ? 'border-rose-200 text-rose-700 hover:bg-rose-50'
-                            : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-                        }`}
-                      >
-                        {s.is_active ? 'Suspend' : 'Reactivate'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <button
+            type="button"
+            onClick={loadAdminData}
+            className="px-4 py-2.5 bg-[#121c14] hover:bg-[#1b2b1e] text-slate-200 border border-[#273d2c] hover:border-[#bbf451]/50 rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-2 self-start md:self-auto cursor-pointer z-10"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-[#bbf451]" /> Refresh Metrics
+          </button>
         </div>
-      )}
 
-      {/* Tab 3: Security Audit Logs */}
-      {activeTab === 'AUDIT' && (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-glass overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-navy-900 flex items-center gap-1.5">
-                <Lock className="w-4 h-4 text-brand-600" />
-                Immutable System Audit Logs
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Audit trail for all sensitive operations, file downloads, verification reviews, and order state mutations.
-              </p>
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="rounded-2xl border border-[#233827] bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] p-5 shadow-lg relative overflow-hidden group hover:border-[#bbf451]/40 transition">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#bbf451]/5 rounded-full blur-xl group-hover:bg-[#bbf451]/15 transition" />
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 block mb-1">
+              Registered Shops
+            </span>
+            <div className="text-2xl sm:text-3xl font-black text-white font-mono">
+              {metrics?.shops?.total_shops || 0}
+            </div>
+            <div className="text-[11px] text-[#bbf451] font-semibold mt-1">
+              {metrics?.shops?.verified_shops || 0} verified & active
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-sans font-bold">
-                <tr>
-                  <th className="py-3 px-6">Timestamp</th>
-                  <th className="py-3 px-4">Actor Role</th>
-                  <th className="py-3 px-4">Action</th>
-                  <th className="py-3 px-4">Target Type & ID</th>
-                  <th className="py-3 px-4">Details</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {auditLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-50/50">
-                    <td className="py-3 px-6 text-slate-400 text-[11px]">
-                      {new Date(log.created_at).toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="font-bold text-navy-900 bg-slate-100 px-1.5 py-0.5 rounded text-[11px]">
-                        {log.actor_role}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 font-bold text-brand-600">{log.action}</td>
-                    <td className="py-3 px-4 text-slate-600">
-                      {log.target_type} ({log.target_id ? log.target_id.substring(0, 12) + '...' : 'N/A'})
-                    </td>
-                    <td className="py-3 px-4 text-slate-500 truncate max-w-xs text-[11px]">
-                      {log.details_json || '{}'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="rounded-2xl border border-[#233827] bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] p-5 shadow-lg relative overflow-hidden group hover:border-amber-500/40 transition">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-xl group-hover:bg-amber-500/15 transition" />
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-400 block mb-1">
+              Pending Verification
+            </span>
+            <div className="text-2xl sm:text-3xl font-black text-amber-300 font-mono">
+              {metrics?.shops?.pending_shops || 0}
+            </div>
+            <div className="text-[11px] text-slate-400 mt-1">Awaiting admin review</div>
+          </div>
+
+          <div className="rounded-2xl border border-[#233827] bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] p-5 shadow-lg relative overflow-hidden group hover:border-[#bbf451]/40 transition">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#bbf451]/5 rounded-full blur-xl group-hover:bg-[#bbf451]/15 transition" />
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 block mb-1">
+              Total Orders
+            </span>
+            <div className="text-2xl sm:text-3xl font-black text-white font-mono">
+              {metrics?.orders?.total_orders || 0}
+            </div>
+            <div className="text-[11px] text-slate-300 mt-1 font-mono font-bold">
+              ₹{parseFloat(metrics?.orders?.platform_gross_volume || '0').toFixed(2)} GMV
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-[#233827] bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] p-5 shadow-lg relative overflow-hidden group hover:border-[#bbf451]/40 transition">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#bbf451]/5 rounded-full blur-xl group-hover:bg-[#bbf451]/15 transition" />
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 block mb-1">
+              Active Stored Files
+            </span>
+            <div className="text-2xl sm:text-3xl font-black text-[#bbf451] font-mono">
+              {metrics?.documents?.active_stored_files || 0}
+            </div>
+            <div className="text-[11px] text-slate-400 mt-1">
+              {metrics?.documents?.purged_files || 0} files auto-purged
+            </div>
           </div>
         </div>
-      )}
+
+        {/* Tabs Header */}
+        <div className="flex border-b border-[#233827] space-x-2 sm:space-x-4 overflow-x-auto pb-1">
+          <button
+            type="button"
+            onClick={() => setActiveTab('VERIFICATION')}
+            className={`py-3 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer rounded-t-xl ${
+              activeTab === 'VERIFICATION'
+                ? 'border-[#bbf451] text-[#bbf451] bg-[#142317]/60 font-black'
+                : 'border-transparent text-slate-400 hover:text-white hover:bg-[#121c14]/40'
+            }`}
+          >
+            <FileCheck2 className="w-4 h-4" />
+            Pending Verification Queue ({pendingShops.length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('SHOPS')}
+            className={`py-3 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer rounded-t-xl ${
+              activeTab === 'SHOPS'
+                ? 'border-[#bbf451] text-[#bbf451] bg-[#142317]/60 font-black'
+                : 'border-transparent text-slate-400 hover:text-white hover:bg-[#121c14]/40'
+            }`}
+          >
+            <Building2 className="w-4 h-4" />
+            All Shops Directory ({shops.length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('AUDIT')}
+            className={`py-3 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer rounded-t-xl ${
+              activeTab === 'AUDIT'
+                ? 'border-[#bbf451] text-[#bbf451] bg-[#142317]/60 font-black'
+                : 'border-transparent text-slate-400 hover:text-white hover:bg-[#121c14]/40'
+            }`}
+          >
+            <Lock className="w-4 h-4" />
+            Platform Security Audit Logs ({auditLogs.length})
+          </button>
+        </div>
+
+        {/* Tab 1: Shop Verification Review Queue */}
+        {activeTab === 'VERIFICATION' && (
+          <div className="rounded-3xl border border-[#233827] bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] shadow-2xl overflow-hidden backdrop-blur-md">
+            <div className="p-6 border-b border-[#233827] flex items-center justify-between bg-[#0e1710]/50">
+              <div>
+                <h3 className="text-base font-black text-white font-syne">
+                  Pending Xerox Shop Registrations
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Review submitted documents before activating storefronts for public print jobs.
+                </p>
+              </div>
+              <span className="text-xs font-mono font-bold bg-amber-950/40 text-amber-300 border border-amber-800/50 px-3 py-1 rounded-full shadow-xs">
+                {pendingShops.length} Pending
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#0c140e] text-slate-400 font-bold uppercase tracking-wider border-b border-[#1b2b1e]">
+                  <tr>
+                    <th className="py-3 px-6">Shop & Owner Details</th>
+                    <th className="py-3 px-4">Verification Credentials</th>
+                    <th className="py-3 px-4">Admin Feedback Note</th>
+                    <th className="py-3 px-6 text-right">Verification Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1b2b1e] font-medium text-slate-300">
+                  {pendingShops.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-14 text-center text-slate-400">
+                        <CheckCircle2 className="w-10 h-10 text-[#bbf451] mx-auto mb-3" />
+                        <p className="font-bold text-white text-sm font-syne">All shops verified!</p>
+                        <p className="text-xs text-slate-400 mt-1">No pending verification requests in the queue.</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    pendingShops.map((s) => (
+                      <tr key={s.id} className="hover:bg-[#121c14]/50 transition">
+                        <td className="py-4 px-6">
+                          <div className="font-bold text-white text-sm font-syne">{s.name}</div>
+                          <div className="text-[11px] text-slate-400">{s.address}</div>
+                          <div className="text-[11px] text-slate-400 mt-0.5">
+                            Owner: <strong className="text-slate-200">{s.owner_name}</strong> ({s.owner_email})
+                          </div>
+                        </td>
+
+                        <td className="py-4 px-4 text-xs">
+                          <div>
+                            Reg No: <strong className="font-mono text-white">{s.business_registration_number || 'Not provided'}</strong>
+                          </div>
+                          <div className="text-[11px] text-slate-400 mt-0.5 max-w-xs">
+                            {s.documents_note || 'Self-registered shop account'}
+                          </div>
+                        </td>
+
+                        <td className="py-4 px-4">
+                          <input
+                            type="text"
+                            placeholder="Feedback or reason..."
+                            value={feedbackMap[s.id] || ''}
+                            onChange={(e) => setFeedbackMap({ ...feedbackMap, [s.id]: e.target.value })}
+                            className="w-full px-3 py-1.5 text-xs border border-[#273d2c] bg-[#0c140e] text-white rounded-lg placeholder-slate-500 focus:outline-hidden focus:border-[#bbf451] transition"
+                          />
+                        </td>
+
+                        <td className="py-4 px-6 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleReviewVerification(s.id, 'APPROVED')}
+                              className="px-3.5 py-1.5 rounded-lg text-xs font-black bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] shadow-md shadow-[#bbf451]/20 transition flex items-center gap-1 cursor-pointer"
+                            >
+                              <Check className="w-3.5 h-3.5" /> Approve & Activate
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleReviewVerification(s.id, 'REJECTED')}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold border border-rose-900/50 bg-rose-950/30 text-rose-300 hover:bg-rose-900/40 transition cursor-pointer"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 2: All Shops Directory */}
+        {activeTab === 'SHOPS' && (
+          <div className="rounded-3xl border border-[#233827] bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] shadow-2xl overflow-hidden backdrop-blur-md">
+            <div className="p-6 border-b border-[#233827] bg-[#0e1710]/50">
+              <h3 className="text-base font-black text-white font-syne">
+                Platform Xerox Shop Directory
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Manage shop statuses, view order volumes, or suspend shops for policy violations.
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#0c140e] text-slate-400 font-bold uppercase tracking-wider border-b border-[#1b2b1e]">
+                  <tr>
+                    <th className="py-3 px-6">Shop</th>
+                    <th className="py-3 px-4">Owner & Contact</th>
+                    <th className="py-3 px-4">Verification</th>
+                    <th className="py-3 px-4">Order Volume</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-6 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1b2b1e] font-medium text-slate-300">
+                  {shops.map((s) => (
+                    <tr key={s.id} className="hover:bg-[#121c14]/50 transition">
+                      <td className="py-3.5 px-6">
+                        <div className="font-bold text-white font-syne">{s.name}</div>
+                        <div className="text-[11px] text-[#bbf451] font-mono">/shop/{s.slug}</div>
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <div className="text-white font-semibold">{s.owner_name}</div>
+                        <div className="text-[11px] text-slate-400">{s.owner_email}</div>
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        {s.is_verified ? (
+                          <span className="text-[#bbf451] bg-[#162719] px-2.5 py-0.5 rounded-full border border-[#233827] text-[11px] font-bold">
+                            Verified
+                          </span>
+                        ) : (
+                          <span className="text-amber-300 bg-amber-950/40 px-2.5 py-0.5 rounded-full border border-amber-800/40 text-[11px] font-bold">
+                            Pending
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="py-3.5 px-4 font-mono font-bold text-white">
+                        {s.order_count || 0} jobs
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        {s.is_active ? (
+                          <span className="text-[#bbf451] font-bold text-xs">Active</span>
+                        ) : (
+                          <span className="text-rose-400 font-bold text-xs">Suspended</span>
+                        )}
+                      </td>
+
+                      <td className="py-3.5 px-6 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleShopStatus(s.id, s.is_active)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer ${
+                            s.is_active
+                              ? 'border-rose-900/50 bg-rose-950/30 text-rose-300 hover:bg-rose-900/40'
+                              : 'border-[#23582d] bg-[#122818] text-[#bbf451] hover:bg-[#16331f]'
+                          }`}
+                        >
+                          {s.is_active ? 'Suspend' : 'Reactivate'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: Security Audit Logs */}
+        {activeTab === 'AUDIT' && (
+          <div className="rounded-3xl border border-[#233827] bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] shadow-2xl overflow-hidden backdrop-blur-md">
+            <div className="p-6 border-b border-[#233827] bg-[#0e1710]/50 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-black text-white font-syne flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-[#bbf451]" />
+                  Immutable System Audit Logs
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Audit trail for all sensitive operations, file downloads, verification reviews, and order state mutations.
+                </p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs font-mono">
+                <thead className="bg-[#0c140e] text-slate-400 uppercase tracking-wider font-sans font-bold border-b border-[#1b2b1e]">
+                  <tr>
+                    <th className="py-3 px-6">Timestamp</th>
+                    <th className="py-3 px-4">Actor Role</th>
+                    <th className="py-3 px-4">Action</th>
+                    <th className="py-3 px-4">Target Type & ID</th>
+                    <th className="py-3 px-4">Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1b2b1e] text-slate-300">
+                  {auditLogs.map((log) => (
+                    <tr key={log.id} className="hover:bg-[#121c14]/50 transition">
+                      <td className="py-3 px-6 text-slate-400 text-[11px]">
+                        {new Date(log.created_at).toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="font-bold text-slate-200 bg-[#0c140e] border border-[#273d2c] px-2 py-0.5 rounded text-[11px]">
+                          {log.actor_role}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-bold text-[#bbf451]">{log.action}</td>
+                      <td className="py-3 px-4 text-slate-300">
+                        {log.target_type} ({log.target_id ? log.target_id.substring(0, 12) + '...' : 'N/A'})
+                      </td>
+                      <td className="py-3 px-4 text-slate-400 truncate max-w-xs text-[11px]">
+                        {log.details_json || '{}'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

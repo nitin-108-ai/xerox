@@ -99,91 +99,58 @@ export const OrderTrackingPage: React.FC = () => {
         const match = stored.find(
           (o: any) => o.order_reference === activeRef || o.orderReference === activeRef || o.id === activeRef
         );
-        if (match && match.orderAccessToken) {
-          setToken(match.orderAccessToken);
-        } else if (match) {
-          setToken('sx_auto_token');
-        } else {
-          setToken('sx_guest_token');
+        if (match && (match.orderAccessToken || match.order_access_token)) {
+          const recoveredToken = match.orderAccessToken || match.order_access_token;
+          setToken(recoveredToken);
+          navigate(`/track/${activeRef}?token=${encodeURIComponent(recoveredToken)}`, { replace: true });
         }
-      } catch {
-        setToken('sx_guest_token');
-      }
+      } catch {}
     }
-  }, [activeRef, token]);
+  }, [activeRef, token, navigate]);
 
-  const loadOrder = async (ref: string, tok: string, isSilent = false) => {
-    if (!ref) {
-      if (!isSilent) setLoading(false);
+  // Load order data and poll every 3 seconds for real-time status updates
+  useEffect(() => {
+    if (!activeRef) {
+      setLoading(false);
       return;
     }
 
-    const effectiveToken = tok || 'sx_token';
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
-    try {
-      if (!isSilent) setLoading(true);
-      setError(null);
-      const data = await api.trackOrder(ref, effectiveToken);
-      
-      // Sound alert if status changed (e.g. ACCEPTED -> PRINTING -> READY_FOR_PICKUP -> COMPLETED)
-      if (data?.order?.status) {
-        if (prevStatusRef.current && prevStatusRef.current !== data.order.status) {
+    let isMounted = true;
+
+    async function fetchTracking() {
+      try {
+        const data = await api.trackOrder(activeRef, token);
+        if (!isMounted) return;
+
+        // Check if status advanced to play chime
+        const currentStatus = data?.order?.status;
+        if (prevStatusRef.current && currentStatus && prevStatusRef.current !== currentStatus) {
           playStatusChime();
         }
-        prevStatusRef.current = data.order.status;
+        prevStatusRef.current = currentStatus;
+
+        setOrderData(data);
+        setError(null);
+      } catch (err: any) {
+        if (!isMounted) return;
+        setError(err.message || 'Unable to access order tracking.');
+      } finally {
+        if (isMounted) setLoading(false);
       }
-
-      setOrderData(data);
-    } catch (err: any) {
-      if (!isSilent) {
-        setError(err.message || 'Failed to load order. Please verify your token.');
-        setOrderData(null);
-      }
-    } finally {
-      if (!isSilent) setLoading(false);
     }
-  };
 
-  useEffect(() => {
-    if (activeRef) {
-      loadOrder(activeRef, token);
+    fetchTracking();
+    const interval = setInterval(fetchTracking, 3000);
 
-      // Live auto-polling every 3 seconds for instant status feedback
-      const interval = setInterval(() => {
-        loadOrder(activeRef, token, true);
-      }, 3000);
-
-      // Listen for instant order updates via BroadcastChannel
-      let bc: BroadcastChannel | null = null;
-      try {
-        if (typeof BroadcastChannel !== 'undefined') {
-          bc = new BroadcastChannel('smart_xerox_orders_channel');
-          bc.onmessage = (ev) => {
-            if (ev.data && (ev.data.type === 'ORDER_UPDATED' || ev.data.type === 'STATUS_CHANGE')) {
-              loadOrder(activeRef, token, true);
-            }
-          };
-        }
-      } catch {}
-
-      // Listen for instant order updates via CustomEvent
-      const handleUpdate = () => {
-        loadOrder(activeRef, token, true);
-      };
-      window.addEventListener('smart_xerox_order_updated', handleUpdate);
-      window.addEventListener('storage', handleUpdate);
-
-      return () => {
-        clearInterval(interval);
-        if (bc) {
-          try { bc.close(); } catch {}
-        }
-        window.removeEventListener('smart_xerox_order_updated', handleUpdate);
-        window.removeEventListener('storage', handleUpdate);
-      };
-    } else {
-      setLoading(false);
-    }
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [activeRef, token]);
 
   const handleApproveQuote = async () => {
@@ -191,7 +158,8 @@ export const OrderTrackingPage: React.FC = () => {
     setActionLoading(true);
     try {
       await api.approveQuote(activeRef, token);
-      await loadOrder(activeRef, token);
+      const data = await api.trackOrder(activeRef, token);
+      setOrderData(data);
     } catch (err: any) {
       alert(err.message || 'Failed to approve quotation.');
     } finally {
@@ -201,13 +169,13 @@ export const OrderTrackingPage: React.FC = () => {
 
   const handleCancelOrder = async () => {
     if (!activeRef || !token) return;
-    const confirm = window.confirm('Are you sure you want to cancel this print order?');
-    if (!confirm) return;
+    if (!confirm('Are you sure you want to cancel this print order?')) return;
 
     setActionLoading(true);
     try {
-      await api.cancelOrder(activeRef, token, 'Customer requested cancellation via tracker');
-      await loadOrder(activeRef, token);
+      await api.cancelOrder(activeRef, token);
+      const data = await api.trackOrder(activeRef, token);
+      setOrderData(data);
     } catch (err: any) {
       alert(err.message || 'Failed to cancel order.');
     } finally {
@@ -221,9 +189,10 @@ export const OrderTrackingPage: React.FC = () => {
 
     setSendingMessage(true);
     try {
-      await api.sendCustomerMessage(activeRef, token, messageText.trim());
+      await api.sendOrderMessage(activeRef, token, messageText.trim());
       setMessageText('');
-      await loadOrder(activeRef, token);
+      const data = await api.trackOrder(activeRef, token);
+      setOrderData(data);
     } catch (err: any) {
       alert(err.message || 'Failed to send message.');
     } finally {
@@ -241,19 +210,19 @@ export const OrderTrackingPage: React.FC = () => {
   // If no reference in URL, show lookup form
   if (!activeRef) {
     return (
-      <div className="max-w-md mx-auto px-4 py-16 space-y-6">
-        <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-elevated text-center space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center mx-auto border border-brand-100">
-            <Printer className="w-6 h-6" />
+      <div className="bg-[#080d09] min-h-screen text-slate-100 font-outfit max-w-md mx-auto px-4 py-16 space-y-6 flex items-center justify-center">
+        <div className="bg-gradient-to-b from-[#152317] via-[#101b12] to-[#0c140e] rounded-[36px] p-8 border border-[#273d2c] shadow-2xl text-center space-y-5 w-full">
+          <div className="w-14 h-14 rounded-2xl bg-[#162719] border border-[#2f4a34] text-[#bbf451] flex items-center justify-center mx-auto shadow-md">
+            <Printer className="w-7 h-7" />
           </div>
-          <h1 className="text-xl font-bold text-navy-950">Track Your Print Order</h1>
-          <p className="text-xs text-slate-500">
+          <h1 className="text-2xl font-black text-white font-syne">Track Your Print Order</h1>
+          <p className="text-xs text-slate-300">
             Enter the Order Reference and your private Access Token from your confirmation screen.
           </p>
 
-          <form onSubmit={handleLookupSubmit} className="space-y-3 text-left pt-2">
+          <form onSubmit={handleLookupSubmit} className="space-y-3.5 text-left pt-2">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
                 Order Reference *
               </label>
               <input
@@ -262,12 +231,12 @@ export const OrderTrackingPage: React.FC = () => {
                 placeholder="e.g. SX-7K9M-2026"
                 value={inputReference}
                 onChange={(e) => setInputReference(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs font-mono border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3.5 py-2.5 text-xs font-mono border border-[#273d2c] rounded-xl focus:outline-none focus:border-[#bbf451] bg-[#101911] text-white"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
                 Private Access Token *
               </label>
               <input
@@ -276,24 +245,24 @@ export const OrderTrackingPage: React.FC = () => {
                 placeholder="Paste the secret token from your confirmation link"
                 value={inputToken}
                 onChange={(e) => setInputToken(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs font-mono border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3.5 py-2.5 text-xs font-mono border border-[#273d2c] rounded-xl focus:outline-none focus:border-[#bbf451] bg-[#101911] text-white"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-navy-900 hover:bg-brand-600 text-white font-bold text-xs transition-colors mt-2"
+              className="w-full py-3.5 rounded-full bg-[#bbf451] hover:bg-[#cbff5e] text-[#0a120c] font-black text-xs transition shadow-xl shadow-[#bbf451]/20 mt-2"
             >
-              Access Secure Order
+              Access Secure Order Tracker
             </button>
           </form>
 
           {/* Quick Demo Order Link */}
-          <div className="pt-4 border-t border-slate-100 text-center">
+          <div className="pt-4 border-t border-[#1f3122] text-center">
             <span className="text-[11px] text-slate-400 block mb-2">Want to test tracking right away?</span>
             <Link
               to="/track/SX-7K9M-2026?token=tok_secure_test_token_customer_001"
-              className="text-xs font-semibold text-brand-600 hover:text-brand-700 inline-flex items-center gap-1"
+              className="text-xs font-bold text-[#bbf451] hover:underline inline-flex items-center gap-1"
             >
               Open Seed Demo Order (SX-7K9M-2026) <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -306,13 +275,13 @@ export const OrderTrackingPage: React.FC = () => {
   // If reference provided but missing token
   if (!token) {
     return (
-      <div className="max-w-md mx-auto px-4 py-16">
-        <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-elevated text-center space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-200">
+      <div className="bg-[#080d09] min-h-screen text-slate-100 font-outfit max-w-md mx-auto px-4 py-16 flex items-center justify-center">
+        <div className="bg-gradient-to-b from-[#152317] via-[#101b12] to-[#0c140e] rounded-[36px] p-8 border border-[#273d2c] shadow-2xl text-center space-y-4 w-full">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto border border-amber-500/20">
             <Key className="w-6 h-6" />
           </div>
-          <h2 className="text-lg font-bold text-navy-950">Security Token Required</h2>
-          <p className="text-xs text-slate-600 leading-relaxed">
+          <h2 className="text-xl font-black text-white font-syne">Security Token Required</h2>
+          <p className="text-xs text-slate-300 leading-relaxed">
             Order Reference <strong>{activeRef}</strong> is protected. Knowing an order reference alone never grants access to documents or status details.
           </p>
 
@@ -327,7 +296,7 @@ export const OrderTrackingPage: React.FC = () => {
             className="space-y-3 pt-2 text-left"
           >
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
                 Enter Order Access Token:
               </label>
               <input
@@ -336,14 +305,14 @@ export const OrderTrackingPage: React.FC = () => {
                 placeholder="Paste the secret token"
                 value={inputToken}
                 onChange={(e) => setInputToken(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs font-mono border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3.5 py-2.5 text-xs font-mono border border-[#273d2c] rounded-xl focus:outline-none focus:border-[#bbf451] bg-[#101911] text-white"
               />
             </div>
             <button
               type="submit"
-              className="w-full py-2.5 rounded-xl bg-navy-900 hover:bg-brand-600 text-white text-xs font-bold transition-colors"
+              className="w-full py-3.5 rounded-full bg-[#bbf451] hover:bg-[#cbff5e] text-[#0a120c] text-xs font-black transition shadow-xl shadow-[#bbf451]/20"
             >
-              Verify Token & Unlock Order
+              Verify Token &amp; Unlock Order
             </button>
           </form>
         </div>
@@ -353,28 +322,32 @@ export const OrderTrackingPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600 mb-4" />
-        <p className="text-sm text-slate-500">Decrypting order tracking data...</p>
+      <div className="bg-[#080d09] min-h-screen text-slate-100 font-outfit flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-3 border-[#bbf451] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">Decrypting order tracking data...</p>
+        </div>
       </div>
     );
   }
 
   if (error || !orderData) {
     return (
-      <div className="max-w-md mx-auto px-4 py-20 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 border border-rose-200">
-          <AlertCircle className="w-6 h-6" />
+      <div className="bg-[#080d09] min-h-screen text-slate-100 font-outfit max-w-md mx-auto px-4 py-20 text-center flex items-center justify-center">
+        <div className="bg-[#121c14] rounded-3xl border border-[#233526] p-8 w-full shadow-2xl space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto border border-rose-500/20">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <h2 className="text-lg font-bold text-white font-syne">Access Denied or Not Found</h2>
+          <p className="text-xs text-slate-400">{error || 'Could not verify token.'}</p>
+          <button
+            type="button"
+            onClick={() => navigate('/track')}
+            className="px-5 py-2.5 bg-[#bbf451] hover:bg-[#cbff5e] text-[#0a120c] text-xs font-black rounded-full transition"
+          >
+            Try Another Order
+          </button>
         </div>
-        <h2 className="text-lg font-bold text-navy-900 mb-2">Access Denied or Not Found</h2>
-        <p className="text-xs text-slate-600 mb-6">{error || 'Could not verify token.'}</p>
-        <button
-          type="button"
-          onClick={() => navigate('/track')}
-          className="px-4 py-2 bg-navy-900 hover:bg-brand-600 text-white text-xs font-semibold rounded-lg transition-colors"
-        >
-          Try Another Order
-        </button>
       </div>
     );
   }
@@ -416,34 +389,34 @@ export const OrderTrackingPage: React.FC = () => {
   const currentIndex = getStepIndex(order?.status || 'SUBMITTED');
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="bg-[#080d09] min-h-screen text-slate-100 font-outfit max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Top Banner Header */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-glass flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-gradient-to-b from-[#152317] via-[#101b12] to-[#0c140e] rounded-[32px] p-6 sm:p-8 border border-[#273d2c] shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-bold font-mono text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-bold font-mono text-slate-400 uppercase tracking-wider">
               REF: {order?.orderReference || order?.order_reference || activeRef}
             </span>
             <StatusBadge status={order?.status || 'SUBMITTED'} size="lg" />
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-navy-950 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight font-syne">
             Order Status Tracking
           </h1>
-          <p className="text-xs text-slate-500">
-            Dispatch Center: <strong className="text-navy-900">{shop?.name || 'QuickCopy Express Xerox & Digital Print'}</strong> • {shop?.address || 'Digital Print Counter'}
+          <p className="text-xs text-slate-300">
+            Dispatch Center: <strong className="text-white">{shop?.name || 'QuickCopy Express Xerox & Digital Print'}</strong> • {shop?.address || 'Digital Print Counter'}
           </p>
         </div>
 
         {/* Counter OTP Badge */}
-        <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl text-center shrink-0 min-w-[160px]">
+        <div className="bg-[#101911] border border-[#233526] p-4 rounded-2xl text-center shrink-0 min-w-[160px]">
           <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
             Counter Pickup OTP
           </div>
-          <div className="text-2xl font-mono font-extrabold text-brand-600 tracking-wider mt-0.5">
+          <div className="text-2xl font-mono font-black text-[#bbf451] tracking-wider mt-0.5">
             {order?.pickupOtp || order?.pickup_otp || '----'}
           </div>
-          <div className="text-[10px] text-slate-500 mt-0.5">
+          <div className="text-[10px] text-slate-400 mt-0.5">
             Provide to counter staff
           </div>
         </div>
@@ -451,17 +424,17 @@ export const OrderTrackingPage: React.FC = () => {
 
       {/* Urgent Quotation Revision Alert */}
       {isAwaitingApproval && (
-        <div className="bg-amber-50 border-2 border-amber-300 rounded-3xl p-6 shadow-sm space-y-4">
+        <div className="bg-[#1f190e] border-2 border-amber-500/50 rounded-3xl p-6 shadow-2xl space-y-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
+            <AlertCircle className="w-6 h-6 text-amber-400 shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-base font-bold text-amber-950">
+              <h3 className="text-base font-bold text-amber-300 font-syne">
                 Action Required: Shop Revised Quotation to ₹{order.finalAmount}
               </h3>
-              <p className="text-xs text-amber-800 mt-1">
+              <p className="text-xs text-slate-300 mt-1">
                 <strong>Shop Reason:</strong> {order.quotationNote || 'Custom options / heavy paper option surcharge.'}
               </p>
-              <p className="text-[11px] text-amber-700 mt-1">
+              <p className="text-[11px] text-amber-400/80 mt-1">
                 Per platform security rules, the shop will NOT begin printing until you approve this revised total.
               </p>
             </div>
@@ -472,19 +445,19 @@ export const OrderTrackingPage: React.FC = () => {
               type="button"
               disabled={actionLoading}
               onClick={handleApproveQuote}
-              className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5"
+              className="px-5 py-2.5 rounded-full bg-[#bbf451] hover:bg-[#cbff5e] text-[#0a120c] font-black text-xs shadow-md transition flex items-center gap-1.5"
             >
               <CheckCircle2 className="w-4 h-4" />
-              Approve Revised Quotation (₹{order.finalAmount})
+              <span>Approve Revised Quotation (₹{order.finalAmount})</span>
             </button>
 
             <button
               type="button"
               disabled={actionLoading}
               onClick={handleCancelOrder}
-              className="px-4 py-2.5 rounded-xl border border-amber-300 bg-white hover:bg-amber-100 text-amber-900 font-semibold text-xs transition-colors"
+              className="px-4 py-2.5 rounded-full border border-amber-500/40 bg-[#16120b] hover:bg-[#20180d] text-amber-300 font-semibold text-xs transition"
             >
-              Decline & Cancel Order
+              Decline &amp; Cancel Order
             </button>
           </div>
         </div>
@@ -492,118 +465,118 @@ export const OrderTrackingPage: React.FC = () => {
 
       {/* Live Stage Status Announcement Banner */}
       {order.status === 'SUBMITTED' && (
-        <div className="bg-amber-50 border-2 border-amber-300 rounded-3xl p-5 sm:p-6 shadow-sm flex items-start sm:items-center justify-between gap-4 animate-in fade-in duration-200">
+        <div className="bg-[#151c14] border-2 border-amber-500/40 rounded-3xl p-5 sm:p-6 shadow-xl flex items-start sm:items-center justify-between gap-4 animate-in fade-in duration-200">
           <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-11 h-11 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0 shadow-xs">
               <Clock className="w-6 h-6 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                <h3 className="text-sm sm:text-base font-black text-amber-950">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                <h3 className="text-sm sm:text-base font-black text-white font-syne">
                   Order Received — Waiting for Shopkeeper to Accept
                 </h3>
               </div>
-              <p className="text-xs text-amber-800 mt-0.5">
+              <p className="text-xs text-slate-300 mt-0.5">
                 Your print job has arrived at <strong>{shop?.name || 'the shop counter'}</strong>. Counter staff is reviewing the documents. This page updates live automatically without refresh.
               </p>
             </div>
           </div>
-          <span className="hidden md:inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-200 text-amber-900 shrink-0">
+          <span className="hidden md:inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
             Live 3s Polling
           </span>
         </div>
       )}
 
       {order.status === 'ACCEPTED' && (
-        <div className="bg-blue-50 border-2 border-blue-400 rounded-3xl p-5 sm:p-6 shadow-sm flex items-start sm:items-center justify-between gap-4 animate-in fade-in duration-200">
+        <div className="bg-[#0f1d1e] border-2 border-cyan-500/40 rounded-3xl p-5 sm:p-6 shadow-xl flex items-start sm:items-center justify-between gap-4 animate-in fade-in duration-200">
           <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-11 h-11 rounded-2xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 flex items-center justify-center shrink-0 shadow-xs">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
-                <h3 className="text-sm sm:text-base font-black text-blue-950">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                <h3 className="text-sm sm:text-base font-black text-white font-syne">
                   🎉 Order Approved &amp; Accepted by Shopkeeper!
                 </h3>
               </div>
-              <p className="text-xs text-blue-800 mt-0.5">
+              <p className="text-xs text-slate-300 mt-0.5">
                 The counter staff verified your documents and approved the print job. It is queued and printing will begin shortly.
               </p>
             </div>
           </div>
-          <span className="hidden md:inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-200 text-blue-900 shrink-0">
+          <span className="hidden md:inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shrink-0">
             Approved
           </span>
         </div>
       )}
 
       {(order.status === 'PRINTING' || order.status === 'QUEUED') && (
-        <div className="bg-purple-50 border-2 border-purple-400 rounded-3xl p-5 sm:p-6 shadow-sm flex items-start sm:items-center justify-between gap-4 animate-in fade-in duration-200">
+        <div className="bg-[#151524] border-2 border-purple-500/40 rounded-3xl p-5 sm:p-6 shadow-xl flex items-start sm:items-center justify-between gap-4 animate-in fade-in duration-200">
           <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-11 h-11 rounded-2xl bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center justify-center shrink-0 shadow-xs">
               <Printer className="w-6 h-6 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping" />
-                <h3 className="text-sm sm:text-base font-black text-purple-950">
+                <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
+                <h3 className="text-sm sm:text-base font-black text-white font-syne">
                   🖨️ Printing in Hardware Spooler...
                 </h3>
               </div>
-              <p className="text-xs text-purple-800 mt-0.5">
+              <p className="text-xs text-slate-300 mt-0.5">
                 Your sheets are physically printing on the shop machine. They will be ready for pickup in a moment.
               </p>
             </div>
           </div>
-          <span className="hidden md:inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-200 text-purple-900 shrink-0">
+          <span className="hidden md:inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30 shrink-0">
             Printing
           </span>
         </div>
       )}
 
       {order.status === 'READY_FOR_PICKUP' && (
-        <div className="bg-emerald-50 border-2 border-emerald-400 rounded-3xl p-5 sm:p-6 shadow-md flex items-start sm:items-center justify-between gap-4 animate-in fade-in duration-200">
+        <div className="bg-[#0e2115] border-2 border-[#bbf451]/50 rounded-3xl p-5 sm:p-6 shadow-xl flex items-start sm:items-center justify-between gap-4 animate-in fade-in duration-200">
           <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-11 h-11 rounded-2xl bg-[#bbf451]/20 text-[#bbf451] border border-[#bbf451]/30 flex items-center justify-center shrink-0 shadow-xs">
               <PackageCheck className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                <h3 className="text-sm sm:text-base font-black text-emerald-950">
+                <span className="w-2 h-2 rounded-full bg-[#bbf451] animate-ping" />
+                <h3 className="text-sm sm:text-base font-black text-white font-syne">
                   ✨ Your Prints are Ready for Counter Pickup!
                 </h3>
               </div>
-              <p className="text-xs text-emerald-800 mt-0.5">
-                Collect your prints from counter staff. Show Security OTP: <strong className="font-mono text-emerald-950 bg-emerald-200 px-2 py-0.5 rounded-md">{order?.pickupOtp || order?.pickup_otp || '----'}</strong>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Collect your prints from counter staff. Show Security OTP: <strong className="font-mono text-[#0a120c] bg-[#bbf451] px-2.5 py-0.5 rounded-md font-bold">{order?.pickupOtp || order?.pickup_otp || '----'}</strong>
               </p>
             </div>
           </div>
           <div className="text-right shrink-0">
-            <span className="text-[10px] text-emerald-700 font-bold block uppercase">Counter OTP</span>
-            <span className="font-mono font-black text-xl text-emerald-900">{order?.pickupOtp || order?.pickup_otp || '----'}</span>
+            <span className="text-[10px] text-slate-400 font-bold block uppercase">Counter OTP</span>
+            <span className="font-mono font-black text-xl text-[#bbf451]">{order?.pickupOtp || order?.pickup_otp || '----'}</span>
           </div>
         </div>
       )}
 
       {order.status === 'COMPLETED' && (
-        <div className="bg-teal-50 border-2 border-teal-400 rounded-3xl p-5 sm:p-6 shadow-md flex items-start sm:items-center justify-between gap-4 animate-in fade-in duration-200">
+        <div className="bg-[#0d1d17] border-2 border-emerald-500/50 rounded-3xl p-5 sm:p-6 shadow-xl flex items-start sm:items-center justify-between gap-4 animate-in fade-in duration-200">
           <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-xs">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-black text-teal-950">
+              <h3 className="text-sm sm:text-base font-black text-white font-syne">
                 🎉 Handover Confirmed &amp; Completed!
               </h3>
-              <p className="text-xs text-teal-800 mt-0.5">
+              <p className="text-xs text-slate-300 mt-0.5">
                 Your printed documents have been successfully verified and handed over at the counter. Thank you for using Smart Xerox!
               </p>
             </div>
           </div>
-          <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-200 text-teal-900 shrink-0">
+          <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
             Handover Confirmed
           </span>
         </div>
@@ -611,7 +584,7 @@ export const OrderTrackingPage: React.FC = () => {
 
       {/* Stepper Progress Bar */}
       {order.status !== 'CANCELLED' ? (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs">
+        <div className="bg-[#101911] rounded-3xl p-6 sm:p-8 border border-[#213524] shadow-2xl">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {steps.map((st, idx) => {
               const Icon = st.icon;
@@ -623,10 +596,10 @@ export const OrderTrackingPage: React.FC = () => {
                   <div
                     className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border transition-all ${
                       isPast
-                        ? 'bg-emerald-500 text-white border-emerald-500'
+                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
                         : isCurrent
-                        ? 'bg-brand-600 text-white border-brand-600 shadow-md ring-4 ring-brand-100'
-                        : 'bg-slate-100 text-slate-400 border-slate-200'
+                        ? 'bg-[#bbf451] text-[#0a120c] border-[#bbf451] shadow-lg ring-4 ring-[#bbf451]/20'
+                        : 'bg-[#152218] text-slate-500 border-[#243727]'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -634,13 +607,13 @@ export const OrderTrackingPage: React.FC = () => {
                   <div>
                     <div
                       className={`text-xs font-bold ${
-                        isCurrent ? 'text-brand-600' : isPast ? 'text-navy-900' : 'text-slate-400'
+                        isCurrent ? 'text-[#bbf451]' : isPast ? 'text-white' : 'text-slate-500'
                       }`}
                     >
                       {st.label}
                     </div>
                     {isCurrent && (
-                      <span className="text-[10px] text-slate-500 font-medium">In Progress</span>
+                      <span className="text-[10px] text-slate-400 font-medium">In Progress</span>
                     )}
                   </div>
                 </div>
@@ -649,8 +622,8 @@ export const OrderTrackingPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="bg-rose-50 border border-rose-200 rounded-3xl p-6 flex items-center gap-3 text-rose-800 text-xs">
-          <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
+        <div className="bg-rose-500/10 border border-rose-500/20 rounded-3xl p-6 flex items-center gap-3 text-rose-300 text-xs">
+          <XCircle className="w-5 h-5 text-rose-400 shrink-0" />
           <div>
             <strong>Order Cancelled:</strong> {order.cancellationReason || 'This order was cancelled.'}
           </div>
@@ -662,25 +635,25 @@ export const OrderTrackingPage: React.FC = () => {
         {/* Left Col: Order Details & Document Auto-Purge Status */}
         <div className="lg:col-span-2 space-y-6">
           {/* Order Items Summary */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
-            <h3 className="text-sm font-bold text-navy-900 uppercase tracking-wider">
-              Document & Print Specifications
+          <div className="bg-[#101911] rounded-3xl p-6 border border-[#213524] shadow-2xl space-y-4">
+            <h3 className="text-xs font-bold text-[#bbf451] uppercase tracking-wider">
+              Document &amp; Print Specifications
             </h3>
 
             {items && items.map((it: any, idx: number) => (
-              <div key={idx} className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 text-xs space-y-2">
-                <div className="flex justify-between items-center font-bold text-navy-900">
+              <div key={idx} className="bg-[#142217] border border-[#253928] rounded-2xl p-4 text-xs space-y-2">
+                <div className="flex justify-between items-center font-bold text-white">
                   <span>{docMeta?.originalFilename || 'Uploaded Document'}</span>
-                  <span className="font-mono text-brand-600">₹{it.item_price}</span>
+                  <span className="font-mono text-[#bbf451]">₹{it.item_price}</span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-slate-500 text-[11px]">
-                  <div>Size: <strong className="text-navy-900">{it.paper_size}</strong></div>
-                  <div>Mode: <strong className="text-navy-900">{it.color_mode === 'BW' ? 'Black & White' : 'Color'}</strong></div>
-                  <div>Sides: <strong className="text-navy-900">{it.is_duplex ? 'Double-Sided' : 'Single'}</strong></div>
-                  <div>Copies: <strong className="text-navy-900">{it.copies}</strong></div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-slate-400 text-[11px]">
+                  <div>Size: <strong className="text-white">{it.paper_size}</strong></div>
+                  <div>Mode: <strong className="text-white">{it.color_mode === 'BW' ? 'Black & White' : 'Color'}</strong></div>
+                  <div>Sides: <strong className="text-white">{it.is_duplex ? 'Double-Sided' : 'Single'}</strong></div>
+                  <div>Copies: <strong className="text-white">{it.copies}</strong></div>
                 </div>
                 {it.custom_notes && (
-                  <div className="bg-white p-2 rounded-lg border border-slate-200 text-slate-600 text-[11px]">
+                  <div className="bg-[#0f1811] p-2.5 rounded-xl border border-[#203222] text-slate-300 text-[11px]">
                     <strong>Instructions:</strong> {it.custom_notes}
                   </div>
                 )}
@@ -688,11 +661,11 @@ export const OrderTrackingPage: React.FC = () => {
             ))}
 
             {/* Retention & Lifecycle Banner */}
-            <div className="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-4 text-xs flex items-start gap-3">
-              <Trash2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+            <div className="bg-[#0f1d14] border border-[#223928] rounded-2xl p-4 text-xs flex items-start gap-3">
+              <Trash2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
               <div>
-                <strong className="text-emerald-950">Zero Residual Storage Policy:</strong>
-                <p className="text-emerald-800 text-[11px] mt-0.5">
+                <strong className="text-white">Zero Residual Storage Policy:</strong>
+                <p className="text-slate-300 text-[11px] mt-0.5">
                   {docMeta?.isDeleted
                     ? 'This document has already been permanently wiped from disk.'
                     : `Document is queued for physical disk purge at ${safeFormatDate(docMeta?.autoDeleteAt)}.`}
@@ -707,7 +680,7 @@ export const OrderTrackingPage: React.FC = () => {
                   type="button"
                   onClick={handleCancelOrder}
                   disabled={actionLoading}
-                  className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline"
+                  className="text-xs font-semibold text-rose-400 hover:text-rose-300 hover:underline"
                 >
                   Cancel this print order
                 </button>
@@ -716,21 +689,21 @@ export const OrderTrackingPage: React.FC = () => {
           </div>
 
           {/* Status Timeline History */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+          <div className="bg-[#101911] rounded-3xl p-6 border border-[#213524] shadow-2xl space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Audit Event Timeline
             </h3>
             <div className="space-y-3">
               {history && history.map((h: any, idx: number) => (
                 <div key={idx} className="flex items-start gap-3 text-xs">
-                  <div className="w-2 h-2 rounded-full bg-brand-500 mt-1.5 shrink-0" />
+                  <div className="w-2 h-2 rounded-full bg-[#bbf451] mt-1.5 shrink-0" />
                   <div className="min-w-0">
-                    <span className="font-semibold text-navy-900">{h.new_status}</span>
+                    <span className="font-bold text-white">{h.new_status}</span>
                     <span className="text-slate-400 text-[11px] ml-2 font-mono">
                       {safeFormatTime(h.created_at)}
                     </span>
                     {h.note && (
-                      <p className="text-slate-500 text-[11px] mt-0.5">{h.note}</p>
+                      <p className="text-slate-300 text-[11px] mt-0.5">{h.note}</p>
                     )}
                   </div>
                 </div>
@@ -740,19 +713,19 @@ export const OrderTrackingPage: React.FC = () => {
         </div>
 
         {/* Right Col: Private In-Order Chat */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-glass flex flex-col h-[520px] overflow-hidden">
-          <div className="px-6 py-4 bg-navy-900 text-white flex items-center justify-between shrink-0">
+        <div className="bg-[#101911] rounded-3xl border border-[#213524] shadow-2xl flex flex-col h-[520px] overflow-hidden">
+          <div className="px-6 py-4 bg-[#142217] border-b border-[#243928] text-white flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-brand-400" />
-              <h3 className="text-xs font-bold uppercase tracking-wider">Private Order Chat</h3>
+              <MessageSquare className="w-4 h-4 text-[#bbf451]" />
+              <h3 className="text-xs font-bold uppercase tracking-wider font-syne">Private Order Chat</h3>
             </div>
-            <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-slate-300">
-              No Phone # Exchanged
+            <span className="text-[10px] bg-[#1d3021] text-slate-300 px-2.5 py-0.5 rounded-full border border-[#2c4731]">
+              Zero WhatsApp
             </span>
           </div>
 
           {/* Messages Stream */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/50">
+          <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#0c140e]">
             {messages && messages.length > 0 ? (
               messages.map((m: any) => {
                 const isCustomer = m.sender_role === 'CUSTOMER';
@@ -767,8 +740,8 @@ export const OrderTrackingPage: React.FC = () => {
                     <div
                       className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-xs leading-relaxed ${
                         isCustomer
-                          ? 'bg-brand-600 text-white rounded-br-xs'
-                          : 'bg-white border border-slate-200 text-navy-900 rounded-bl-xs shadow-2xs'
+                          ? 'bg-[#bbf451] text-[#0a120c] font-semibold rounded-br-xs'
+                          : 'bg-[#162418] border border-[#263c29] text-white rounded-bl-xs shadow-sm'
                       }`}
                     >
                       {m.message}
@@ -778,8 +751,8 @@ export const OrderTrackingPage: React.FC = () => {
               })
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
-                <MessageSquare className="w-8 h-8 text-slate-300 mb-2" />
-                <p className="text-xs font-medium text-slate-500">Need to clarify something?</p>
+                <MessageSquare className="w-8 h-8 text-slate-500 mb-2" />
+                <p className="text-xs font-bold text-white">Need to clarify something?</p>
                 <p className="text-[11px] text-slate-400 mt-1">
                   Ask the shop owner directly here without giving out your WhatsApp number.
                 </p>
@@ -788,18 +761,18 @@ export const OrderTrackingPage: React.FC = () => {
           </div>
 
           {/* Message Input Box */}
-          <form onSubmit={handleSendMessage} className="p-3 bg-white border-t border-slate-200 flex gap-2">
+          <form onSubmit={handleSendMessage} className="p-3 bg-[#101911] border-t border-[#213524] flex gap-2">
             <input
               type="text"
               placeholder="Ask a question about your print job..."
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
-              className="flex-1 px-3 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="flex-1 px-3.5 py-2.5 text-xs border border-[#253928] rounded-full focus:outline-none focus:border-[#bbf451] bg-[#0c140e] text-white placeholder-slate-500"
             />
             <button
               type="submit"
               disabled={sendingMessage || !messageText.trim()}
-              className="px-3.5 py-2 bg-navy-900 hover:bg-brand-600 disabled:bg-slate-300 text-white rounded-xl transition-colors shrink-0"
+              className="px-4 py-2.5 bg-[#bbf451] hover:bg-[#cbff5e] disabled:bg-[#1b2b1d] disabled:text-slate-500 text-[#0a120c] font-bold rounded-full transition shrink-0"
             >
               <Send className="w-3.5 h-3.5" />
             </button>

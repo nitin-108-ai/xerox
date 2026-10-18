@@ -471,8 +471,8 @@ export const OwnerProfilePage: React.FC = () => {
     return (
       <OwnerLayout shop={shopRecord} title="My Shop Profile">
         <div className="py-24 text-center">
-          <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-brand-600 mb-3" />
-          <p className="text-sm font-medium text-slate-500">Loading shop profile configuration...</p>
+          <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-[#bbf451] mb-3" />
+          <p className="text-sm font-medium text-slate-400">Loading shop profile configuration...</p>
         </div>
       </OwnerLayout>
     );
@@ -487,14 +487,14 @@ export const OwnerProfilePage: React.FC = () => {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Unsaved Changes Banner */}
         {hasUnsavedChanges && (
-          <div className="sticky top-20 z-20 bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in slide-in-from-top-2 duration-200">
+          <div className="sticky top-20 z-20 bg-amber-950/90 border border-amber-500/50 backdrop-blur-md rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in slide-in-from-top-2 duration-200">
             <div className="flex items-center gap-2.5">
-              <span className="p-1.5 rounded-xl bg-amber-100 text-amber-700">
+              <span className="p-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 <AlertCircle className="w-5 h-5" />
               </span>
               <div>
-                <p className="text-xs font-bold text-amber-900">You have unsaved profile changes</p>
-                <p className="text-[11px] text-amber-700">Remember to save before leaving this page.</p>
+                <p className="text-xs font-bold text-amber-200">You have unsaved profile changes</p>
+                <p className="text-[11px] text-amber-300/80">Remember to save before leaving this page.</p>
               </div>
             </div>
 
@@ -502,7 +502,7 @@ export const OwnerProfilePage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-3 py-1.5 rounded-xl border border-amber-300 bg-white hover:bg-amber-100/50 text-amber-900 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                className="px-3 py-1.5 rounded-xl border border-amber-500/30 bg-[#0c140e] hover:bg-amber-950/50 text-amber-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 Reset Unsaved Changes
@@ -511,10 +511,10 @@ export const OwnerProfilePage: React.FC = () => {
                 type="button"
                 onClick={() => handleSubmit()}
                 disabled={saving}
-                className="px-4 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                className="px-4 py-1.5 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] text-xs font-black shadow-md flex items-center gap-1.5 transition-colors disabled:opacity-50"
               >
                 {saving ? (
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-3.5 h-3.5 border-2 border-[#080d09] border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <Save className="w-3.5 h-3.5" />
                 )}
@@ -526,24 +526,24 @@ export const OwnerProfilePage: React.FC = () => {
 
         {/* Success / Error Alerts */}
         {successMessage && (
-          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 text-xs font-semibold flex items-center justify-between gap-2 shadow-xs">
+          <div className="p-4 bg-emerald-950/60 border border-emerald-500/40 rounded-2xl text-emerald-300 text-xs font-semibold flex items-center justify-between gap-2 shadow-lg backdrop-blur-md">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-[#bbf451] shrink-0" />
               <span>{successMessage}</span>
             </div>
-            <button onClick={() => setSuccessMessage(null)} className="text-emerald-700 hover:text-emerald-900">
+            <button onClick={() => setSuccessMessage(null)} className="text-emerald-400 hover:text-white transition">
               <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
         {errorMessage && (
-          <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 text-xs font-semibold flex items-center justify-between gap-2 shadow-xs">
+          <div className="p-4 bg-rose-950/60 border border-rose-500/40 rounded-2xl text-rose-300 text-xs font-semibold flex items-center justify-between gap-2 shadow-lg backdrop-blur-md">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
               <span>{errorMessage}</span>
             </div>
-            <button onClick={() => setErrorMessage(null)} className="text-rose-700 hover:text-rose-900">
+            <button onClick={() => setErrorMessage(null)} className="text-rose-400 hover:text-white transition">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -553,52 +553,52 @@ export const OwnerProfilePage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link
             to="/owner/dashboard"
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-2xs transition"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-[#273d2c] bg-[#121c14] hover:bg-[#1b2b1e] text-slate-200 text-xs font-bold shadow-md transition"
           >
-            <ArrowLeft className="w-4 h-4 text-brand-600" />
+            <ArrowLeft className="w-4 h-4 text-[#bbf451]" />
             <span>Back to Receiving Panel</span>
           </Link>
 
           <div className="flex items-center gap-2">
             <Link
               to="/owner/settings"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#273d2c] bg-[#121c14] hover:bg-[#1b2b1e] text-slate-300 text-xs font-semibold shadow-md transition"
             >
-              <Settings className="w-3.5 h-3.5 text-slate-500" />
+              <Settings className="w-3.5 h-3.5 text-[#bbf451]" />
               <span>Settings</span>
             </Link>
             <Link
               to="/owner/qr"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#273d2c] bg-[#121c14] hover:bg-[#1b2b1e] text-slate-300 text-xs font-semibold shadow-md transition"
             >
-              <QrCode className="w-3.5 h-3.5 text-slate-500" />
+              <QrCode className="w-3.5 h-3.5 text-[#bbf451]" />
               <span>Shop QR</span>
             </Link>
             <Link
               to="/owner/printers"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#273d2c] bg-[#121c14] hover:bg-[#1b2b1e] text-slate-300 text-xs font-semibold shadow-md transition"
             >
-              <Laptop className="w-3.5 h-3.5 text-slate-500" />
+              <Laptop className="w-3.5 h-3.5 text-[#bbf451]" />
               <span>Devices</span>
             </Link>
           </div>
         </div>
 
         {/* Permanent Shop ID & Verification Card */}
-        <div className="bg-gradient-to-r from-navy-950 via-navy-900 to-slate-900 text-white rounded-3xl p-6 sm:p-7 shadow-lg border border-navy-800">
+        <div className="bg-gradient-to-r from-[#142317] via-[#0f1a11] to-[#09110b] text-white rounded-3xl p-6 sm:p-7 shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-[#273d2c]">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-black uppercase tracking-wider bg-brand-500/20 text-brand-300 border border-brand-500/30 px-2.5 py-0.5 rounded-full">
+                <span className="text-[10px] font-black uppercase tracking-wider bg-[#bbf451]/15 text-[#bbf451] border border-[#bbf451]/30 px-2.5 py-0.5 rounded-full">
                   Permanent Shop ID
                 </span>
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-0.5 rounded-full">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#bbf451] bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-0.5 rounded-full">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#bbf451]" />
                   Verified Counter Ownership
                 </span>
               </div>
               <div className="flex items-center gap-2.5 pt-1">
-                <p className="text-xl sm:text-2xl font-mono font-black tracking-tight text-white">
+                <p className="text-xl sm:text-2xl font-mono font-black tracking-tight text-[#bbf451]">
                   {shopRecord?.id || user?.shopId || 'shp-quickcopy-001'}
                 </p>
                 <button
@@ -609,28 +609,28 @@ export const OwnerProfilePage: React.FC = () => {
                     setCopiedShopId(true);
                     setTimeout(() => setCopiedShopId(false), 2000);
                   }}
-                  className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition flex items-center gap-1 text-xs font-semibold border border-white/15"
+                  className="px-2.5 py-1.5 rounded-xl bg-[#0c140e] hover:bg-[#1b2b1e] text-white transition flex items-center gap-1 text-xs font-semibold border border-[#273d2c]"
                   title="Copy Permanent Shop ID"
                 >
-                  {copiedShopId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedShopId ? <Check className="w-3.5 h-3.5 text-[#bbf451]" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
                   <span>{copiedShopId ? 'Copied!' : 'Copy ID'}</span>
                 </button>
               </div>
-              <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
+              <p className="text-xs text-slate-400 max-w-xl leading-relaxed">
                 This Shop ID is permanent and securely anchors your customer QR code and public storefront URL.
-                Updating your shop name, logo, phone, or address will <span className="font-bold text-white underline decoration-brand-400">never change this ID</span> or invalidate your counter posters.
+                Updating your shop name, logo, phone, or address will <span className="font-bold text-white underline decoration-[#bbf451]">never change this ID</span> or invalidate your counter posters.
               </p>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-xs space-y-2 shrink-0 md:min-w-[240px]">
+            <div className="bg-[#0c140e] border border-[#273d2c] rounded-2xl p-4 text-xs space-y-2 shrink-0 md:min-w-[240px]">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Verified Recovery Status</p>
               <div className="flex items-center gap-2 text-white font-medium">
-                <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <Phone className="w-3.5 h-3.5 text-[#bbf451] shrink-0" />
                 <span className="font-mono">{shopRecord?.phone_for_verification || (user as any)?.phoneNumber || '+91 98111 22334'}</span>
-                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded font-bold">Verified</span>
+                <span className="text-[10px] bg-emerald-950/60 border border-emerald-500/40 text-[#bbf451] px-1.5 py-0.2 rounded font-bold">Verified</span>
               </div>
               <div className="flex items-center gap-2 text-slate-300 text-[11px]">
-                <Mail className="w-3.5 h-3.5 text-brand-300 shrink-0" />
+                <Mail className="w-3.5 h-3.5 text-amber-300 shrink-0" />
                 <span className="truncate max-w-[180px]">{user?.email || 'owner@smartxerox.io'}</span>
               </div>
             </div>
@@ -638,48 +638,48 @@ export const OwnerProfilePage: React.FC = () => {
         </div>
 
         {/* Top Header Card & Quick Actions */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-glass flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-6 sm:p-8 border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-16 h-16 rounded-2xl bg-[#0c140e] border border-[#273d2c] overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
               {logoUrl ? (
                 <img src={logoUrl} alt={name} className="w-full h-full object-cover" />
               ) : (
-                <Store className="w-8 h-8 text-slate-400" />
+                <Store className="w-8 h-8 text-[#bbf451]" />
               )}
             </div>
 
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-bold text-navy-950 uppercase tracking-wider bg-slate-100 px-2.5 py-0.5 rounded-full">
+                <span className="text-xs font-bold text-white uppercase tracking-wider bg-[#0c140e] border border-[#273d2c] px-2.5 py-0.5 rounded-full font-mono">
                   {category}
                 </span>
                 {shopRecord?.is_verified ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-full">
-                    <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#bbf451] bg-emerald-950/60 border border-emerald-500/40 px-2 py-0.5 rounded-full">
+                    <ShieldCheck className="w-3 h-3 text-[#bbf451]" />
                     Verified Store
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-full">
-                    <AlertCircle className="w-3 h-3 text-amber-600" />
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-300 bg-amber-950/60 border border-amber-500/40 px-2 py-0.5 rounded-full">
+                    <AlertCircle className="w-3 h-3 text-amber-400" />
                     Verification Pending
                   </span>
                 )}
                 {isStorefrontVisible ? (
-                  <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                  <span className="text-[11px] font-semibold text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-full">
                     Public Storefront Active
                   </span>
                 ) : (
-                  <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded-full">
+                  <span className="text-[11px] font-semibold text-slate-400 bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-full">
                     Storefront Hidden
                   </span>
                 )}
               </div>
 
-              <h1 className="text-xl sm:text-2xl font-black text-navy-950 tracking-tight mt-1.5">
+              <h1 className="text-xl sm:text-2xl font-black text-white font-syne tracking-tight mt-1.5">
                 {name || 'My Xerox Shop'}
               </h1>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Managed by <span className="font-semibold text-slate-700">{ownerDisplayName || user?.fullName}</span> •{' '}
+              <p className="text-xs text-slate-400 mt-0.5">
+                Managed by <span className="font-semibold text-slate-200">{ownerDisplayName || user?.fullName}</span> •{' '}
                 {city}, {state}
               </p>
             </div>
@@ -693,28 +693,28 @@ export const OwnerProfilePage: React.FC = () => {
                 if (el) el.focus();
                 setSuccessMessage('Editing mode active. Make changes to any field below and click "Save Changes".');
               }}
-              className="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs flex items-center gap-2 transition-colors"
+              className="px-4 py-2.5 rounded-xl border border-[#273d2c] bg-[#121c14] hover:bg-[#1b2b1e] text-slate-200 text-xs font-semibold shadow-md flex items-center gap-2 transition-colors"
               title="Edit Profile Details"
             >
-              <Store className="w-4 h-4 text-brand-600" />
+              <Store className="w-4 h-4 text-[#bbf451]" />
               <span>Edit Details</span>
             </button>
             <button
               type="button"
               onClick={() => setPreviewOpen(true)}
-              className="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs flex items-center gap-2 transition-colors"
+              className="px-4 py-2.5 rounded-xl border border-[#273d2c] bg-[#121c14] hover:bg-[#1b2b1e] text-slate-200 text-xs font-semibold shadow-md flex items-center gap-2 transition-colors"
             >
-              <Eye className="w-4 h-4 text-brand-600" />
+              <Eye className="w-4 h-4 text-[#bbf451]" />
               <span>Preview Public Profile</span>
             </button>
             <button
               type="button"
               onClick={() => handleSubmit()}
               disabled={saving}
-              className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold shadow-md shadow-brand-500/20 flex items-center gap-2 transition-all disabled:opacity-50"
+              className="px-5 py-2.5 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] text-xs font-black shadow-[0_0_20px_rgba(187,244,81,0.25)] flex items-center gap-2 transition-all disabled:opacity-50"
             >
               {saving ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-[#080d09] border-t-transparent rounded-full animate-spin" />
               ) : (
                 <Save className="w-4 h-4" />
               )}
@@ -726,21 +726,21 @@ export const OwnerProfilePage: React.FC = () => {
         {/* Main Form Body */}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Section 1: General Information & Brand Identity */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-glass space-y-6">
-            <div className="border-b border-slate-100 pb-4">
-              <h2 className="text-base font-extrabold text-navy-950 flex items-center gap-2">
-                <Store className="w-4 h-4 text-brand-600" />
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-6 sm:p-8 border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6">
+            <div className="border-b border-[#273d2c]/60 pb-4">
+              <h2 className="text-base font-black text-white font-syne flex items-center gap-2">
+                <Store className="w-4 h-4 text-[#bbf451]" />
                 1. General Information & Identity
               </h2>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 Configure your store name, owner representation, category, and public overview description.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Shop Name <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                  Shop Name <span className="text-rose-400">*</span>
                 </label>
                 <input
                   id="shopNameInput"
@@ -749,12 +749,12 @@ export const OwnerProfilePage: React.FC = () => {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. QuickCopy Express Xerox & Digital Print"
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-hidden font-medium text-slate-900 shadow-2xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#273d2c] text-xs focus:border-[#bbf451] outline-none font-medium text-white bg-[#0c140e] shadow-inner"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
                   Owner's Display Name
                 </label>
                 <input
@@ -762,18 +762,18 @@ export const OwnerProfilePage: React.FC = () => {
                   value={ownerDisplayName}
                   onChange={(e) => setOwnerDisplayName(e.target.value)}
                   placeholder="e.g. Rajesh Sharma"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-hidden font-medium text-slate-900 shadow-2xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#273d2c] text-xs focus:border-[#bbf451] outline-none font-medium text-white bg-[#0c140e] shadow-inner"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
                   Shop Category
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-hidden font-medium text-slate-900 bg-white shadow-2xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#273d2c] text-xs focus:border-[#bbf451] outline-none font-medium text-white bg-[#0c140e] shadow-inner"
                 >
                   {SHOP_CATEGORIES.map((c) => (
                     <option key={c} value={c}>
@@ -784,15 +784,15 @@ export const OwnerProfilePage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
                   Storefront Visibility
                 </label>
-                <div className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50/50">
+                <div className="flex items-center justify-between p-2.5 rounded-xl border border-[#273d2c] bg-[#0c140e]">
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-slate-800">
+                    <p className="text-xs font-bold text-white">
                       {isStorefrontVisible ? 'Customer Orders Enabled' : 'Storefront Hidden'}
                     </p>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-[11px] text-slate-400">
                       {isStorefrontVisible
                         ? 'Customers can scan QR and submit print jobs.'
                         : 'Store is hidden from public customers temporarily.'}
@@ -805,13 +805,13 @@ export const OwnerProfilePage: React.FC = () => {
                       onChange={(e) => setIsStorefrontVisible(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+                    <div className="w-11 h-6 bg-[#1b2b1e] peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#080d09] after:border-slate-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#bbf451]"></div>
                   </label>
                 </div>
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
                   Shop Description
                 </label>
                 <textarea
@@ -819,37 +819,37 @@ export const OwnerProfilePage: React.FC = () => {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Tell customers about your machines, print paper types (80 GSM, 100 GSM glossy), thesis binding, or turn-around speed..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-hidden font-medium text-slate-900 shadow-2xs leading-relaxed"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#273d2c] text-xs focus:border-[#bbf451] outline-none font-medium text-white bg-[#0c140e] shadow-inner leading-relaxed"
                 />
               </div>
             </div>
           </div>
 
           {/* Section 2: Logo & Gallery Photos */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-glass space-y-6">
-            <div className="border-b border-slate-100 pb-4">
-              <h2 className="text-base font-extrabold text-navy-950 flex items-center gap-2">
-                <ImageIcon className="w-4 h-4 text-brand-600" />
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-6 sm:p-8 border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6">
+            <div className="border-b border-[#273d2c]/60 pb-4">
+              <h2 className="text-base font-black text-white font-syne flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-[#bbf451]" />
                 2. Shop Logo & Photo Gallery
               </h2>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 Upload your store logo and real shop photos (counter, printing machines, binding samples) to build customer trust.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Shop Logo Card */}
-              <div className="border border-slate-200 rounded-2xl p-5 bg-slate-50/40 space-y-4">
+              <div className="border border-[#273d2c] rounded-2xl p-5 bg-[#0c140e] space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
                     Store Logo / Icon (1:1)
                   </h3>
                   <span className="text-[10px] text-slate-400">Square</span>
                 </div>
 
-                <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-white text-center">
+                <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#273d2c] rounded-2xl bg-[#121c14] text-center">
                   {logoUrl ? (
-                    <div className="relative group w-24 h-24 rounded-2xl overflow-hidden border border-slate-200 shadow-sm mb-3">
+                    <div className="relative group w-24 h-24 rounded-2xl overflow-hidden border border-[#273d2c] shadow-sm mb-3">
                       <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
                       <button
                         type="button"
@@ -857,11 +857,11 @@ export const OwnerProfilePage: React.FC = () => {
                         className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"
                         title="Remove Logo"
                       >
-                        <Trash2 className="w-5 h-5 text-rose-300" />
+                        <Trash2 className="w-5 h-5 text-rose-400" />
                       </button>
                     </div>
                   ) : (
-                    <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                    <div className="w-20 h-20 rounded-2xl bg-[#0c140e] border border-[#273d2c] flex items-center justify-center text-[#bbf451] mb-3">
                       <Store className="w-8 h-8" />
                     </div>
                   )}
@@ -878,10 +878,10 @@ export const OwnerProfilePage: React.FC = () => {
                     type="button"
                     onClick={() => logoFileInputRef.current?.click()}
                     disabled={uploadingLogo}
-                    className="px-3.5 py-2 rounded-xl bg-navy-900 hover:bg-navy-800 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50"
+                    className="px-3.5 py-2 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] text-xs font-black flex items-center gap-1.5 shadow-md transition-colors disabled:opacity-50"
                   >
                     {uploadingLogo ? (
-                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="w-3.5 h-3.5 border-2 border-[#080d09] border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <Upload className="w-3.5 h-3.5" />
                     )}
@@ -891,7 +891,7 @@ export const OwnerProfilePage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  <label className="block text-[11px] font-bold text-slate-400 mb-1">
                     Or Enter Image URL:
                   </label>
                   <input
@@ -899,23 +899,23 @@ export const OwnerProfilePage: React.FC = () => {
                     value={logoUrl}
                     onChange={(e) => setLogoUrl(e.target.value)}
                     placeholder="https://..."
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-mono"
+                    className="w-full px-3 py-1.5 rounded-lg border border-[#273d2c] bg-[#121c14] text-xs font-mono text-white focus:border-[#bbf451] outline-none"
                   />
                 </div>
               </div>
 
               {/* Shop Cover / Area Photo Card */}
-              <div className="border border-slate-200 rounded-2xl p-5 bg-slate-50/40 space-y-4">
+              <div className="border border-[#273d2c] rounded-2xl p-5 bg-[#0c140e] space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
                     Shop Cover / Area Photo (16:9)
                   </h3>
                   <span className="text-[10px] text-slate-400">Storefront Banner</span>
                 </div>
 
-                <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-white text-center">
+                <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#273d2c] rounded-2xl bg-[#121c14] text-center">
                   {coverPhotoUrl ? (
-                    <div className="relative group w-full h-24 rounded-2xl overflow-hidden border border-slate-200 shadow-sm mb-3">
+                    <div className="relative group w-full h-24 rounded-2xl overflow-hidden border border-[#273d2c] shadow-sm mb-3">
                       <img src={coverPhotoUrl} alt="Cover" className="w-full h-full object-cover" />
                       <button
                         type="button"
@@ -923,12 +923,12 @@ export const OwnerProfilePage: React.FC = () => {
                         className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"
                         title="Remove Cover Photo"
                       >
-                        <Trash2 className="w-5 h-5 text-rose-300" />
+                        <Trash2 className="w-5 h-5 text-rose-400" />
                       </button>
                     </div>
                   ) : (
-                    <div className="w-full h-24 rounded-2xl bg-slate-100 flex flex-col items-center justify-center text-slate-400 mb-3">
-                      <ImageIcon className="w-8 h-8 text-slate-300 mb-1" />
+                    <div className="w-full h-24 rounded-2xl bg-[#0c140e] border border-[#273d2c] flex flex-col items-center justify-center text-slate-400 mb-3">
+                      <ImageIcon className="w-8 h-8 text-[#bbf451] mb-1" />
                       <span className="text-[10px] text-slate-400 font-semibold">Storefront / Counter Overview</span>
                     </div>
                   )}
@@ -945,10 +945,10 @@ export const OwnerProfilePage: React.FC = () => {
                     type="button"
                     onClick={() => coverFileInputRef.current?.click()}
                     disabled={uploadingCover}
-                    className="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50"
+                    className="px-3.5 py-2 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] text-xs font-black flex items-center gap-1.5 shadow-md transition-colors disabled:opacity-50"
                   >
                     {uploadingCover ? (
-                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="w-3.5 h-3.5 border-2 border-[#080d09] border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <Upload className="w-3.5 h-3.5" />
                     )}
@@ -958,7 +958,7 @@ export const OwnerProfilePage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  <label className="block text-[11px] font-bold text-slate-400 mb-1">
                     Or Enter Cover URL:
                   </label>
                   <input
@@ -966,91 +966,91 @@ export const OwnerProfilePage: React.FC = () => {
                     value={coverPhotoUrl}
                     onChange={(e) => setCoverPhotoUrl(e.target.value)}
                     placeholder="https://..."
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-mono"
+                    className="w-full px-3 py-1.5 rounded-lg border border-[#273d2c] bg-[#121c14] text-xs font-mono text-white focus:border-[#bbf451] outline-none"
                   />
                 </div>
               </div>
             </div>
 
-              {/* Gallery Photos Card */}
-              <div className="md:col-span-2 border border-slate-200 rounded-2xl p-5 bg-slate-50/40 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                    Storefront & Machinery Gallery Photos ({galleryUrls.length})
-                  </h3>
+            {/* Gallery Photos Card */}
+            <div className="border border-[#273d2c] rounded-2xl p-5 bg-[#0c140e] space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  Storefront & Machinery Gallery Photos ({galleryUrls.length})
+                </h3>
 
-                  <input
-                    ref={galleryFileInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    onChange={handleGalleryUpload}
-                    className="hidden"
-                  />
+                <input
+                  ref={galleryFileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleGalleryUpload}
+                  className="hidden"
+                />
 
-                  <button
-                    type="button"
-                    onClick={() => galleryFileInputRef.current?.click()}
-                    disabled={uploadingGallery}
-                    className="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50"
-                  >
-                    {uploadingGallery ? (
-                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Plus className="w-3.5 h-3.5" />
-                    )}
-                    Add Gallery Photo
-                  </button>
-                </div>
-
-                {galleryUrls.length === 0 ? (
-                  <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 bg-white text-center">
-                    <ImageIcon className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                    <p className="text-xs font-bold text-slate-700">No gallery photos added yet</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      Photos of your counter, Xerox printers, or sample documents help customers identify your store.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {galleryUrls.map((url, idx) => (
-                      <div
-                        key={idx}
-                        className="relative group rounded-xl overflow-hidden border border-slate-200 bg-white aspect-video shadow-xs"
-                      >
-                        <img src={url} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveGalleryImage(idx)}
-                            className="p-1.5 rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition"
-                            title="Remove Photo"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <button
+                  type="button"
+                  onClick={() => galleryFileInputRef.current?.click()}
+                  disabled={uploadingGallery}
+                  className="px-3 py-1.5 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] text-xs font-black flex items-center gap-1.5 shadow-md transition-colors disabled:opacity-50"
+                >
+                  {uploadingGallery ? (
+                    <div className="w-3.5 h-3.5 border-2 border-[#080d09] border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Plus className="w-3.5 h-3.5" />
+                  )}
+                  Add Gallery Photo
+                </button>
               </div>
+
+              {galleryUrls.length === 0 ? (
+                <div className="border-2 border-dashed border-[#273d2c] rounded-2xl p-8 bg-[#121c14] text-center">
+                  <ImageIcon className="w-10 h-10 text-slate-500 mx-auto mb-2" />
+                  <p className="text-xs font-bold text-white">No gallery photos added yet</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Photos of your counter, Xerox printers, or sample documents help customers identify your store.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {galleryUrls.map((url, idx) => (
+                    <div
+                      key={idx}
+                      className="relative group rounded-xl overflow-hidden border border-[#273d2c] bg-[#121c14] aspect-video shadow-xs"
+                    >
+                      <img src={url} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveGalleryImage(idx)}
+                          className="p-1.5 rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition"
+                          title="Remove Photo"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Section 3: Complete Address & Business Contact */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-glass space-y-6">
-            <div className="border-b border-slate-100 pb-4">
-              <h2 className="text-base font-extrabold text-navy-950 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-brand-600" />
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-6 sm:p-8 border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6">
+            <div className="border-b border-[#273d2c]/60 pb-4">
+              <h2 className="text-base font-black text-white font-syne flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-[#bbf451]" />
                 3. Shop Address & Business Contact
               </h2>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 Help customers locate your Xerox shop easily on maps and contact you if needed.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div className="md:col-span-3">
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Complete Shop Address <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                  Complete Shop Address <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -1058,77 +1058,77 @@ export const OwnerProfilePage: React.FC = () => {
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="e.g. Shop 14, Commercial Complex, Near Gate 2 Metro Station"
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-hidden font-medium text-slate-900 shadow-2xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#273d2c] text-xs focus:border-[#bbf451] outline-none font-medium text-white bg-[#0c140e] shadow-inner"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">City</label>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">City</label>
                 <input
                   type="text"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="e.g. New Delhi"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-hidden font-medium text-slate-900 shadow-2xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#273d2c] text-xs focus:border-[#bbf451] outline-none font-medium text-white bg-[#0c140e] shadow-inner"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">State</label>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">State</label>
                 <input
                   type="text"
                   value={state}
                   onChange={(e) => setState(e.target.value)}
                   placeholder="e.g. Delhi"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-hidden font-medium text-slate-900 shadow-2xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#273d2c] text-xs focus:border-[#bbf451] outline-none font-medium text-white bg-[#0c140e] shadow-inner"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">PIN Code</label>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">PIN Code</label>
                 <input
                   type="text"
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value)}
                   placeholder="e.g. 110001"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-hidden font-medium text-slate-900 shadow-2xs font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#273d2c] text-xs focus:border-[#bbf451] outline-none font-medium text-white bg-[#0c140e] shadow-inner font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
                   Business Phone (Customer Inquiries)
                 </label>
                 <div className="relative">
-                  <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
                   <input
                     type="tel"
                     value={contactPhone}
                     onChange={(e) => setContactPhone(e.target.value)}
                     placeholder="+91 98000 00000"
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-hidden font-medium text-slate-900 shadow-2xs"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-[#273d2c] text-xs focus:border-[#bbf451] outline-none font-medium text-white bg-[#0c140e] shadow-inner font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
                   Business Email (Optional)
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
                   <input
                     type="email"
                     value={contactEmail}
                     onChange={(e) => setContactEmail(e.target.value)}
                     placeholder="contact@myshop.com"
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-hidden font-medium text-slate-900 shadow-2xs"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-[#273d2c] text-xs focus:border-[#bbf451] outline-none font-medium text-white bg-[#0c140e] shadow-inner"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
                   Estimated Completion Turnaround
                 </label>
                 <input
@@ -1136,19 +1136,19 @@ export const OwnerProfilePage: React.FC = () => {
                   value={estCompletionTime}
                   onChange={(e) => setEstCompletionTime(e.target.value)}
                   placeholder="e.g. 15-30 mins or Same Day"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-hidden font-medium text-slate-900 shadow-2xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#273d2c] text-xs focus:border-[#bbf451] outline-none font-medium text-white bg-[#0c140e] shadow-inner"
                 />
               </div>
 
               {/* Map Location & GPS Coordinates */}
-              <div className="md:col-span-3 pt-3 border-t border-slate-100">
+              <div className="md:col-span-3 pt-3 border-t border-[#273d2c]/60">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                   <div>
-                    <h4 className="text-xs font-bold text-navy-950 flex items-center gap-1.5">
-                      <Navigation className="w-3.5 h-3.5 text-brand-600" />
+                    <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <Navigation className="w-3.5 h-3.5 text-[#bbf451]" />
                       Shop Map Location &amp; GPS Coordinates
                     </h4>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-[11px] text-slate-400">
                       Pinpoint your Xerox counter so customers can navigate directly using Google Maps.
                     </p>
                   </div>
@@ -1156,10 +1156,10 @@ export const OwnerProfilePage: React.FC = () => {
                     type="button"
                     onClick={handleGetCurrentLocation}
                     disabled={isLocating}
-                    className="px-3 py-1.5 rounded-xl border border-brand-200 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-semibold flex items-center gap-1.5 transition disabled:opacity-50 self-start sm:self-auto"
+                    className="px-3.5 py-1.5 rounded-xl border border-[#273d2c] bg-[#121c14] hover:bg-[#1b2b1e] text-[#bbf451] text-xs font-semibold flex items-center gap-1.5 transition disabled:opacity-50 self-start sm:self-auto"
                   >
                     {isLocating ? (
-                      <div className="w-3.5 h-3.5 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-3.5 h-3.5 border-2 border-[#bbf451] border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <Compass className="w-3.5 h-3.5" />
                     )}
@@ -1169,7 +1169,7 @@ export const OwnerProfilePage: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">
                       Latitude
                     </label>
                     <input
@@ -1178,12 +1178,12 @@ export const OwnerProfilePage: React.FC = () => {
                       value={latitude}
                       onChange={(e) => setLatitude(e.target.value)}
                       placeholder="e.g. 28.613939"
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono"
+                      className="w-full px-3 py-2 rounded-xl border border-[#273d2c] bg-[#0c140e] text-white text-xs font-mono focus:border-[#bbf451] outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">
                       Longitude
                     </label>
                     <input
@@ -1192,7 +1192,7 @@ export const OwnerProfilePage: React.FC = () => {
                       value={longitude}
                       onChange={(e) => setLongitude(e.target.value)}
                       placeholder="e.g. 77.209021"
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono"
+                      className="w-full px-3 py-2 rounded-xl border border-[#273d2c] bg-[#0c140e] text-white text-xs font-mono focus:border-[#bbf451] outline-none"
                     />
                   </div>
 
@@ -1202,13 +1202,13 @@ export const OwnerProfilePage: React.FC = () => {
                         href={`https://www.google.com/maps?q=${latitude},${longitude}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full px-3 py-2 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                        className="w-full px-3 py-2 rounded-xl border border-emerald-500/40 bg-emerald-950/60 text-[#bbf451] hover:bg-emerald-900/50 text-xs font-bold flex items-center justify-center gap-1.5 transition"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                         <span>View on Google Maps</span>
                       </a>
                     ) : (
-                      <div className="w-full px-3 py-2 rounded-xl border border-dashed border-slate-200 text-slate-400 text-xs flex items-center justify-center text-center">
+                      <div className="w-full px-3 py-2 rounded-xl border border-dashed border-[#273d2c] text-slate-500 text-xs flex items-center justify-center text-center">
                         Coordinates not set
                       </div>
                     )}
@@ -1219,20 +1219,20 @@ export const OwnerProfilePage: React.FC = () => {
           </div>
 
           {/* Section 4: Daily Operating Schedule & Weekly Holidays */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-glass space-y-6">
-            <div className="border-b border-slate-100 pb-4">
-              <h2 className="text-base font-extrabold text-navy-950 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-brand-600" />
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-6 sm:p-8 border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6">
+            <div className="border-b border-[#273d2c]/60 pb-4">
+              <h2 className="text-base font-black text-white font-syne flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#bbf451]" />
                 4. Operating Hours & Weekly Holidays
               </h2>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 Specify opening and closing hours for every day of the week, plus designated shop holidays.
               </p>
             </div>
 
             {/* Weekly Holidays Selector Badges */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-2">
+              <label className="block text-xs font-bold text-slate-300 mb-2">
                 Weekly Holiday(s)
               </label>
               <div className="flex flex-wrap gap-2">
@@ -1245,8 +1245,8 @@ export const OwnerProfilePage: React.FC = () => {
                       onClick={() => handleHolidayToggle(day)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
                         isHoliday
-                          ? 'bg-rose-50 border-rose-300 text-rose-700 shadow-2xs'
-                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                          ? 'bg-rose-950/60 border-rose-500/40 text-rose-300 shadow-md'
+                          : 'bg-[#0c140e] border-[#273d2c] text-slate-300 hover:text-white'
                       }`}
                     >
                       {day} {isHoliday ? '• Closed' : ''}
@@ -1260,17 +1260,17 @@ export const OwnerProfilePage: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                    <th className="py-2.5 pr-4">Day</th>
+                  <tr className="border-b border-[#273d2c] text-[11px] font-extrabold uppercase tracking-wider text-slate-400 bg-[#0c140e]/90">
+                    <th className="py-2.5 pr-4 pl-3">Day</th>
                     <th className="py-2.5 px-4">Status</th>
                     <th className="py-2.5 px-4">Opening Time</th>
                     <th className="py-2.5 px-4">Closing Time</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-xs">
+                <tbody className="divide-y divide-[#273d2c]/40 text-xs">
                   {weeklySchedule.map((s, idx) => (
-                    <tr key={s.day} className={s.isClosed ? 'bg-slate-50/60 opacity-75' : ''}>
-                      <td className="py-3 pr-4 font-bold text-navy-950">{s.day}</td>
+                    <tr key={s.day} className={s.isClosed ? 'bg-[#09110b]/50 opacity-60' : 'hover:bg-[#142317]/50 transition-colors'}>
+                      <td className="py-3 pr-4 pl-3 font-bold text-white">{s.day}</td>
                       <td className="py-3 px-4">
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
@@ -1279,8 +1279,8 @@ export const OwnerProfilePage: React.FC = () => {
                             onChange={(e) => handleDayScheduleChange(idx, 'isClosed', !e.target.checked)}
                             className="sr-only peer"
                           />
-                          <div className="w-9 h-5 bg-slate-300 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-                          <span className="ml-2 text-[11px] font-medium text-slate-600">
+                          <div className="w-9 h-5 bg-[#1b2b1e] peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#080d09] after:border-slate-500 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#bbf451]"></div>
+                          <span className="ml-2 text-[11px] font-medium text-slate-300">
                             {s.isClosed ? 'Closed' : 'Open'}
                           </span>
                         </label>
@@ -1291,7 +1291,7 @@ export const OwnerProfilePage: React.FC = () => {
                           disabled={s.isClosed}
                           value={s.open}
                           onChange={(e) => handleDayScheduleChange(idx, 'open', e.target.value)}
-                          className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs disabled:bg-slate-100 disabled:text-slate-400 font-mono"
+                          className="px-2.5 py-1.5 rounded-lg border border-[#273d2c] bg-[#0c140e] text-white text-xs disabled:bg-[#09110b] disabled:text-slate-600 font-mono focus:border-[#bbf451] outline-none"
                         />
                       </td>
                       <td className="py-3 px-4">
@@ -1300,7 +1300,7 @@ export const OwnerProfilePage: React.FC = () => {
                           disabled={s.isClosed}
                           value={s.close}
                           onChange={(e) => handleDayScheduleChange(idx, 'close', e.target.value)}
-                          className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs disabled:bg-slate-100 disabled:text-slate-400 font-mono"
+                          className="px-2.5 py-1.5 rounded-lg border border-[#273d2c] bg-[#0c140e] text-white text-xs disabled:bg-[#09110b] disabled:text-slate-600 font-mono focus:border-[#bbf451] outline-none"
                         />
                       </td>
                     </tr>
@@ -1311,13 +1311,13 @@ export const OwnerProfilePage: React.FC = () => {
           </div>
 
           {/* Section 5: Available Services */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-glass space-y-6">
-            <div className="border-b border-slate-100 pb-4">
-              <h2 className="text-base font-extrabold text-navy-950 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-brand-600" />
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-6 sm:p-8 border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6">
+            <div className="border-b border-[#273d2c]/60 pb-4">
+              <h2 className="text-base font-black text-white font-syne flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#bbf451]" />
                 5. Available Document Services
               </h2>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 Toggle the Xerox and document services your counter provides to incoming customers.
               </p>
             </div>
@@ -1328,13 +1328,13 @@ export const OwnerProfilePage: React.FC = () => {
                   key={svc.serviceType}
                   className={`p-4 rounded-2xl border transition-all flex items-start justify-between gap-3 ${
                     svc.isEnabled
-                      ? 'border-brand-200 bg-brand-50/20'
-                      : 'border-slate-200 bg-slate-50/50 opacity-60'
+                      ? 'border-[#273d2c] bg-[#0c140e] shadow-md'
+                      : 'border-[#273d2c]/40 bg-[#09110b]/50 opacity-50'
                   }`}
                 >
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-navy-950">{svc.name}</p>
-                    <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{svc.description}</p>
+                    <p className="text-xs font-bold text-white">{svc.name}</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">{svc.description}</p>
                   </div>
 
                   <label className="relative inline-flex items-center cursor-pointer shrink-0">
@@ -1344,7 +1344,7 @@ export const OwnerProfilePage: React.FC = () => {
                       onChange={() => handleServiceToggle(idx)}
                       className="sr-only peer"
                     />
-                    <div className="w-9 h-5 bg-slate-300 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-600"></div>
+                    <div className="w-9 h-5 bg-[#1b2b1e] peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#080d09] after:border-slate-500 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#bbf451]"></div>
                   </label>
                 </div>
               ))}
@@ -1352,7 +1352,7 @@ export const OwnerProfilePage: React.FC = () => {
           </div>
 
           {/* Footer Actions */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-glass flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-6 border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -1361,17 +1361,17 @@ export const OwnerProfilePage: React.FC = () => {
                   if (el) el.focus();
                   setSuccessMessage('Editing mode active. Make changes to any field above and click "Save Changes".');
                 }}
-                className="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                className="px-4 py-2.5 rounded-xl border border-[#273d2c] hover:bg-[#121c14] text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
                 title="Edit Details"
               >
-                <Store className="w-3.5 h-3.5 text-brand-600" />
+                <Store className="w-3.5 h-3.5 text-[#bbf451]" />
                 <span>Edit Details</span>
               </button>
               <button
                 type="button"
                 onClick={handleReset}
                 disabled={!hasUnsavedChanges}
-                className="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-40"
+                className="px-4 py-2.5 rounded-xl border border-[#273d2c] hover:bg-[#121c14] text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-40"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 Reset Changes
@@ -1379,7 +1379,7 @@ export const OwnerProfilePage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setPreviewOpen(true)}
-                className="px-4 py-2.5 rounded-xl border border-brand-200 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                className="px-4 py-2.5 rounded-xl border border-[#bbf451]/30 bg-[#bbf451]/10 hover:bg-[#bbf451]/20 text-[#bbf451] text-xs font-semibold flex items-center gap-1.5 transition-colors"
               >
                 <Eye className="w-3.5 h-3.5" />
                 Live Preview
@@ -1389,10 +1389,10 @@ export const OwnerProfilePage: React.FC = () => {
             <button
               type="submit"
               disabled={saving}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold shadow-md shadow-brand-500/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] text-xs font-black shadow-[0_0_20px_rgba(187,244,81,0.25)] flex items-center justify-center gap-2 transition-all disabled:opacity-50"
             >
               {saving ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-[#080d09] border-t-transparent rounded-full animate-spin" />
               ) : (
                 <Save className="w-4 h-4" />
               )}
@@ -1404,19 +1404,19 @@ export const OwnerProfilePage: React.FC = () => {
 
       {/* Live Public Profile Preview Modal */}
       {previewOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-navy-950/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#080d09] rounded-3xl max-w-2xl w-full border border-[#273d2c] shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Header */}
-            <div className="bg-navy-950 text-white px-6 py-4 flex items-center justify-between">
+            <div className="bg-[#0c140e] border-b border-[#273d2c] text-white px-6 py-4 flex items-center justify-between">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-brand-400">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#bbf451]">
                   Customer View Mockup
                 </p>
-                <h3 className="text-base font-extrabold text-white">Public Storefront Preview</h3>
+                <h3 className="text-base font-black text-white font-syne">Public Storefront Preview</h3>
               </div>
               <button
                 onClick={() => setPreviewOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-navy-900 transition"
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#121c14] transition"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1424,28 +1424,28 @@ export const OwnerProfilePage: React.FC = () => {
 
             {/* Storefront Hero Preview */}
             <div className="p-6 sm:p-8 space-y-6 max-h-[75vh] overflow-y-auto">
-              <div className="flex items-start gap-4 pb-6 border-b border-slate-100">
-                <div className="w-20 h-20 rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 shadow-sm">
+              <div className="flex items-start gap-4 pb-6 border-b border-[#273d2c]/60">
+                <div className="w-20 h-20 rounded-2xl bg-[#0c140e] border border-[#273d2c] overflow-hidden flex items-center justify-center shrink-0 shadow-sm">
                   {logoUrl ? (
                     <img src={logoUrl} alt={name} className="w-full h-full object-cover" />
                   ) : (
-                    <Store className="w-10 h-10 text-slate-400" />
+                    <Store className="w-10 h-10 text-[#bbf451]" />
                   )}
                 </div>
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-50 text-brand-700 px-2.5 py-0.5 rounded-full border border-brand-200">
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-[#bbf451]/10 text-[#bbf451] px-2.5 py-0.5 rounded-full border border-[#bbf451]/30">
                       {category}
                     </span>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                      <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/40">
+                      <ShieldCheck className="w-3 h-3 text-[#bbf451]" />
                       Verified
                     </span>
                   </div>
 
-                  <h2 className="text-xl font-black text-navy-950 mt-1">{name || 'Your Shop Name'}</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <h2 className="text-xl font-black text-white font-syne mt-1">{name || 'Your Shop Name'}</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">
                     {address}, {city}, {state} - {pincode}
                   </p>
                 </div>
@@ -1453,8 +1453,8 @@ export const OwnerProfilePage: React.FC = () => {
 
               {description && (
                 <div>
-                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">About Us</h4>
-                  <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-1 font-syne">About Us</h4>
+                  <p className="text-xs text-slate-300 leading-relaxed bg-[#0c140e] p-3.5 rounded-xl border border-[#273d2c]">
                     {description}
                   </p>
                 </div>
@@ -1463,10 +1463,10 @@ export const OwnerProfilePage: React.FC = () => {
               {/* Gallery Preview */}
               {galleryUrls.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Shop Photos</h4>
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 font-syne">Shop Photos</h4>
                   <div className="grid grid-cols-3 gap-2">
                     {galleryUrls.map((url, i) => (
-                      <div key={i} className="aspect-video rounded-xl overflow-hidden border border-slate-200">
+                      <div key={i} className="aspect-video rounded-xl overflow-hidden border border-[#273d2c]">
                         <img src={url} alt={`Preview ${i}`} className="w-full h-full object-cover" />
                       </div>
                     ))}
@@ -1476,39 +1476,39 @@ export const OwnerProfilePage: React.FC = () => {
 
               {/* Services Offered */}
               <div>
-                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Available Services</h4>
+                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 font-syne">Available Services</h4>
                 <div className="grid grid-cols-2 gap-2">
                   {services
                     .filter((s) => s.isEnabled)
                     .map((s) => (
-                      <div key={s.serviceType} className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-                        <p className="font-bold text-slate-900">{s.name}</p>
-                        <p className="text-[10px] text-slate-500 truncate">{s.description}</p>
+                      <div key={s.serviceType} className="p-2.5 rounded-xl bg-[#0c140e] border border-[#273d2c] text-xs">
+                        <p className="font-bold text-white">{s.name}</p>
+                        <p className="text-[10px] text-slate-400 truncate">{s.description}</p>
                       </div>
                     ))}
                 </div>
               </div>
 
               {/* Turnaround & Minimum Order */}
-              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-navy-50/50 border border-navy-100 text-xs">
+              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-[#0c140e] border border-[#273d2c] text-xs">
                 <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-500 block">Min. Order Amount</span>
-                  <span className="font-extrabold text-navy-950 text-sm">₹{Number(minOrderAmount).toFixed(2)}</span>
+                  <span className="text-[10px] font-bold uppercase text-slate-400 block">Min. Order Amount</span>
+                  <span className="font-black text-[#bbf451] text-sm font-mono">₹{Number(minOrderAmount).toFixed(2)}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-500 block">Est. Completion</span>
-                  <span className="font-extrabold text-navy-950 text-sm">{estCompletionTime}</span>
+                  <span className="text-[10px] font-bold uppercase text-slate-400 block">Est. Completion</span>
+                  <span className="font-bold text-white text-sm">{estCompletionTime}</span>
                 </div>
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="bg-slate-50 px-6 py-3.5 border-t border-slate-200 flex items-center justify-between">
-              <span className="text-xs text-slate-500">Live preview generated from current form values</span>
+            <div className="bg-[#0c140e] px-6 py-3.5 border-t border-[#273d2c] flex items-center justify-between">
+              <span className="text-xs text-slate-400">Live preview generated from current form values</span>
               <button
                 type="button"
                 onClick={() => setPreviewOpen(false)}
-                className="px-4 py-1.5 rounded-xl bg-navy-900 text-white text-xs font-semibold"
+                className="px-4 py-1.5 rounded-xl bg-[#bbf451] text-[#080d09] text-xs font-black shadow-md"
               >
                 Close Preview
               </button>

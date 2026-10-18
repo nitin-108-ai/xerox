@@ -349,23 +349,23 @@ export const OwnerDashboardPage: React.FC = () => {
     >
       <div className="space-y-6">
         {/* Top Header / Receiving Panel Controls */}
-        <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-gradient-to-br from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-6 border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-white">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-navy-950 text-white flex items-center justify-center font-black shadow-xs">
-              <Printer className="w-6 h-6 text-brand-300" />
+            <div className="w-12 h-12 rounded-2xl bg-[#bbf451]/15 text-[#bbf451] border border-[#bbf451]/30 flex items-center justify-center font-black shadow-[0_0_20px_rgba(187,244,81,0.2)]">
+              <Printer className="w-6 h-6 text-[#bbf451]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black text-navy-950">Incoming Order Receiving Panel</h1>
+                <h1 className="text-lg font-black text-white font-syne">Incoming Order Receiving Panel</h1>
                 {incomingCount > 0 && (
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-500 text-white animate-pulse flex items-center gap-1">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-500 text-white animate-pulse flex items-center gap-1 shadow-[0_0_12px_rgba(244,63,94,0.5)]">
                     <Bell className="w-3 h-3" />
                     {incomingCount} New
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
+                <span className="w-2 h-2 rounded-full bg-[#bbf451] animate-pulse" />
                 Live Receiving Queue • Auto-refreshing every 4s
               </p>
             </div>
@@ -378,10 +378,10 @@ export const OwnerDashboardPage: React.FC = () => {
                 setSoundEnabled(!soundEnabled);
                 if (!soundEnabled) playChime();
               }}
-              className={`p-2.5 rounded-2xl border transition shadow-2xs flex items-center gap-1.5 text-xs font-bold ${
+              className={`p-2.5 rounded-2xl border transition flex items-center gap-1.5 text-xs font-bold ${
                 soundEnabled
-                  ? 'bg-brand-50 border-brand-200 text-brand-700'
-                  : 'bg-white border-slate-200 text-slate-400'
+                  ? 'bg-[#bbf451] border-[#bbf451] text-[#080d09] shadow-[0_0_15px_rgba(187,244,81,0.25)]'
+                  : 'bg-[#132015] border-[#273d2c] text-slate-400 hover:text-white'
               }`}
               title={soundEnabled ? 'Chime sound enabled' : 'Chime sound muted'}
             >
@@ -392,10 +392,10 @@ export const OwnerDashboardPage: React.FC = () => {
             <button
               onClick={() => loadData(false)}
               disabled={refreshing}
-              className="p-2.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition shadow-2xs"
+              className="p-2.5 rounded-2xl border border-[#273d2c] bg-[#132015] hover:bg-[#1a2c1d] text-slate-300 transition shadow-sm"
               title="Refresh Queue"
             >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-brand-600' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-[#bbf451]' : ''}`} />
             </button>
           </div>
         </div>
@@ -406,8 +406,8 @@ export const OwnerDashboardPage: React.FC = () => {
             onClick={() => setQueueTab('ACTIVE')}
             className={`px-4 py-2 rounded-2xl border transition whitespace-nowrap ${
               queueTab === 'ACTIVE'
-                ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                ? 'bg-[#bbf451] text-[#080d09] border-[#bbf451] shadow-[0_0_18px_rgba(187,244,81,0.25)] font-black'
+                : 'bg-[#132015] text-slate-300 border-[#233827] hover:bg-[#18271b]'
             }`}
           >
             Active Queue ({activeCount})
@@ -417,8 +417,8 @@ export const OwnerDashboardPage: React.FC = () => {
             onClick={() => setQueueTab('INCOMING')}
             className={`px-4 py-2 rounded-2xl border transition whitespace-nowrap flex items-center gap-1.5 ${
               queueTab === 'INCOMING'
-                ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                ? 'bg-[#bbf451] text-[#080d09] border-[#bbf451] shadow-[0_0_18px_rgba(187,244,81,0.25)] font-black'
+                : 'bg-[#132015] text-slate-300 border-[#233827] hover:bg-[#18271b]'
             }`}
           >
             <span>New Incoming</span>
@@ -433,8 +433,8 @@ export const OwnerDashboardPage: React.FC = () => {
             onClick={() => setQueueTab('READY')}
             className={`px-4 py-2 rounded-2xl border transition whitespace-nowrap flex items-center gap-1.5 ${
               queueTab === 'READY'
-                ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                ? 'bg-[#bbf451] text-[#080d09] border-[#bbf451] shadow-[0_0_18px_rgba(187,244,81,0.25)] font-black'
+                : 'bg-[#132015] text-slate-300 border-[#233827] hover:bg-[#18271b]'
             }`}
           >
             <span>Ready for Pickup</span>
@@ -449,8 +449,8 @@ export const OwnerDashboardPage: React.FC = () => {
             onClick={() => setQueueTab('ALL')}
             className={`px-4 py-2 rounded-2xl border transition whitespace-nowrap ${
               queueTab === 'ALL'
-                ? 'bg-navy-950 text-white border-navy-950 shadow-xs'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                ? 'bg-[#bbf451] text-[#080d09] border-[#bbf451] shadow-[0_0_18px_rgba(187,244,81,0.25)] font-black'
+                : 'bg-[#132015] text-slate-300 border-[#233827] hover:bg-[#18271b]'
             }`}
           >
             All Order History ({orders.length})
@@ -459,23 +459,23 @@ export const OwnerDashboardPage: React.FC = () => {
 
         {/* QR Code Scanned Real-Time Alert Banner */}
         {qrScanNotice && (
-          <div className="p-4 rounded-2xl bg-indigo-50 border-2 border-indigo-400 text-indigo-950 text-xs flex items-center justify-between gap-3 animate-in fade-in duration-200 shadow-sm">
+          <div className="p-4 rounded-2xl bg-indigo-950/70 border-2 border-indigo-500/50 text-indigo-200 text-xs flex items-center justify-between gap-3 animate-in fade-in duration-200 shadow-[0_0_25px_rgba(99,102,241,0.2)]">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-indigo-500 text-white flex items-center justify-center font-bold shrink-0">
                 <Bell className="w-4 h-4 animate-bounce" />
               </div>
               <div>
-                <strong className="block text-sm font-extrabold text-indigo-950">
+                <strong className="block text-sm font-extrabold text-white font-syne">
                   🔔 Counter Alert: Customer Scanned Counter QR Code!
                 </strong>
-                <span className="text-[11px] text-indigo-700">
+                <span className="text-[11px] text-indigo-300">
                   A customer just scanned your shop QR at {qrScanNotice.time}. Uploaded documents will arrive in this queue momentarily.
                 </span>
               </div>
             </div>
             <button
               onClick={() => setQrScanNotice(null)}
-              className="text-indigo-600 hover:text-indigo-900 font-bold text-xs underline shrink-0"
+              className="text-indigo-400 hover:text-white font-bold text-xs underline shrink-0"
             >
               Dismiss
             </button>
@@ -487,21 +487,21 @@ export const OwnerDashboardPage: React.FC = () => {
           <div
             className={`p-4 rounded-2xl text-xs flex items-center justify-between gap-3 animate-in fade-in duration-150 ${
               printAlert.type === 'success'
-                ? 'bg-emerald-50 text-emerald-900 border border-emerald-200'
-                : 'bg-rose-50 text-rose-900 border border-rose-200'
+                ? 'bg-emerald-950/70 text-emerald-300 border border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+                : 'bg-rose-950/70 text-rose-300 border border-rose-500/40 shadow-[0_0_20px_rgba(244,63,94,0.2)]'
             }`}
           >
             <div className="flex items-center gap-2">
               {printAlert.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-[#bbf451]" />
               ) : (
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
               )}
-              <span className="font-medium">{printAlert.message}</span>
+              <span className="font-medium text-white">{printAlert.message}</span>
             </div>
             <button
               onClick={() => setPrintAlert(null)}
-              className="text-xs font-bold underline hover:no-underline shrink-0"
+              className="text-xs font-bold underline hover:no-underline shrink-0 text-slate-300 hover:text-white"
             >
               Dismiss
             </button>
@@ -510,17 +510,17 @@ export const OwnerDashboardPage: React.FC = () => {
 
         {/* Orders List / Empty State */}
         {loading ? (
-          <div className="bg-white rounded-3xl p-16 border border-slate-200/90 text-center space-y-3 shadow-sm">
-            <div className="w-8 h-8 border-3 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-xs font-bold text-slate-500">Checking incoming print orders...</p>
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-16 border border-[#273d2c] text-center space-y-3 shadow-lg">
+            <div className="w-8 h-8 border-3 border-[#bbf451] border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-xs font-bold text-slate-400">Checking incoming print orders...</p>
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="bg-white rounded-3xl p-16 border border-slate-200/90 text-center space-y-3 shadow-sm">
-            <div className="w-14 h-14 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center mx-auto border border-slate-200">
-              <Printer className="w-7 h-7" />
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-16 border border-[#273d2c] text-center space-y-3 shadow-lg">
+            <div className="w-14 h-14 rounded-2xl bg-[#162519] text-slate-500 flex items-center justify-center mx-auto border border-[#273d2c]">
+              <Printer className="w-7 h-7 text-[#bbf451]/60" />
             </div>
-            <h3 className="text-base font-extrabold text-navy-950">No Orders in this View</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            <h3 className="text-base font-extrabold text-white font-syne">No Orders in this View</h3>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
               {queueTab === 'INCOMING'
                 ? 'No new incoming orders right now. When customers scan your QR poster, documents arrive here with real-time chime notification.'
                 : queueTab === 'READY'
@@ -548,14 +548,14 @@ export const OwnerDashboardPage: React.FC = () => {
               return (
                 <div
                   key={order.id}
-                  className={`bg-white rounded-3xl p-5 sm:p-6 border transition-all ${
+                  className={`rounded-3xl p-5 sm:p-6 border transition-all ${
                     isNew
-                      ? 'border-brand-400 shadow-md ring-2 ring-brand-500/20'
+                      ? 'bg-gradient-to-b from-[#16261a] via-[#101b12] to-[#0a120c] border-[#bbf451] ring-2 ring-[#bbf451]/30 shadow-[0_0_30px_rgba(187,244,81,0.2)]'
                       : isFailed
-                      ? 'border-rose-300 shadow-sm'
+                      ? 'bg-[#141012] border-rose-500/40 shadow-sm'
                       : isReady
-                      ? 'border-emerald-300 shadow-xs'
-                      : 'border-slate-200 shadow-2xs hover:border-slate-300'
+                      ? 'bg-gradient-to-b from-[#132216] via-[#0e1910] to-[#09110b] border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
+                      : 'bg-gradient-to-b from-[#132015] via-[#0f1911] to-[#0a110c] border border-[#233827] shadow-[0_12px_36px_rgba(0,0,0,0.5)] hover:border-[#38563e]'
                   }`}
                 >
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -563,21 +563,21 @@ export const OwnerDashboardPage: React.FC = () => {
                     <div className="space-y-2 min-w-0 flex-1">
                       {/* Top Row: Ref, Time & Lifecycle Status */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        <div className="flex items-center gap-1 font-mono font-black text-navy-950 text-sm">
+                        <div className="flex items-center gap-1 font-mono font-black text-white text-sm">
                           <span>{order.order_reference}</span>
                           <button
                             onClick={() => handleCopy(order.order_reference)}
-                            className="text-slate-400 hover:text-navy-950 p-0.5"
+                            className="text-slate-400 hover:text-[#bbf451] p-0.5 transition"
                             title="Copy Reference"
                           >
                             <Copy className="w-3 h-3" />
                           </button>
                           {copiedRef === order.order_reference && (
-                            <span className="text-[10px] text-emerald-600 font-sans font-bold">Copied!</span>
+                            <span className="text-[10px] text-[#bbf451] font-sans font-bold">Copied!</span>
                           )}
                         </div>
 
-                        <span className="text-slate-300">•</span>
+                        <span className="text-[#2a4331]">•</span>
                         <span className="text-xs text-slate-400 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {createdTime}
@@ -585,47 +585,47 @@ export const OwnerDashboardPage: React.FC = () => {
 
                         {/* Status Badges */}
                         {isNew && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-[#bbf451]/20 text-[#bbf451] border border-[#bbf451]/50 animate-pulse">
                             New Incoming
                           </span>
                         )}
                         {isAccepted && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-900 border border-blue-300">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/40">
                             Accepted
                           </span>
                         )}
                         {isQueued && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-indigo-100 text-indigo-900 border border-indigo-300">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
                             Queued in Spooler
                           </span>
                         )}
                         {isPrinting && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-purple-100 text-purple-900 border border-purple-300">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/40">
                             Printing in Hardware...
                           </span>
                         )}
                         {isReady && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                             Ready for Pickup
                           </span>
                         )}
                         {isCompleted && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#162519] text-slate-300 border border-[#273d2c]">
                             Completed &amp; Handed Over
                           </span>
                         )}
                         {isRejected && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
                             Declined
                           </span>
                         )}
                         {isCancelled && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#162519] text-slate-400 border border-[#273d2c]">
                             Cancelled
                           </span>
                         )}
                         {isFailed && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-rose-100 text-rose-900 border border-rose-300">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/50">
                             Spooler Error
                           </span>
                         )}
@@ -633,26 +633,26 @@ export const OwnerDashboardPage: React.FC = () => {
 
                       {/* Middle Row: Document details */}
                       <div className="flex items-center gap-3 flex-wrap pt-1">
-                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
-                          <FileText className="w-4 h-4 text-brand-600 shrink-0" />
-                          <span className="text-xs font-bold text-navy-950 truncate max-w-xs">
+                        <div className="flex items-center gap-2 bg-[#162519] border border-[#273d2c] px-3 py-1.5 rounded-xl">
+                          <FileText className="w-4 h-4 text-[#bbf451] shrink-0" />
+                          <span className="text-xs font-bold text-white truncate max-w-xs">
                             {order.original_filename || 'document.pdf'}
                           </span>
                           {(order.file_count > 1 || (order.documents && order.documents.length > 1)) && (
-                            <span className="px-2 py-0.5 rounded-md bg-brand-100 text-brand-800 text-[10px] font-black shrink-0">
+                            <span className="px-2 py-0.5 rounded-md bg-[#bbf451]/15 text-[#bbf451] text-[10px] font-black shrink-0 border border-[#bbf451]/30">
                               {order.file_count || order.documents.length} Files ({order.page_count} pgs)
                             </span>
                           )}
                           <button
                             onClick={() => setPreviewDoc(order)}
-                            className="p-1 rounded text-slate-400 hover:text-brand-600 transition"
+                            className="p-1 rounded text-slate-400 hover:text-white transition"
                             title="Preview Document"
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
                           <a
                             href={`/owner/orders/${order.id}`}
-                            className="text-[11px] font-bold text-brand-600 hover:text-brand-800 pl-1 hover:underline shrink-0"
+                            className="text-[11px] font-bold text-[#bbf451] hover:underline pl-1 shrink-0"
                             title="View all attached documents and order history"
                           >
                             Details &rarr;
@@ -661,23 +661,23 @@ export const OwnerDashboardPage: React.FC = () => {
 
                         {/* Setting Tags */}
                         <div className="flex items-center gap-1.5 flex-wrap text-[11px] font-extrabold">
-                          <span className="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-800">
+                          <span className="px-2.5 py-1 rounded-xl bg-[#162519] text-slate-200 border border-[#273d2c]">
                             {order.paper_size || 'A4'}
                           </span>
                           <span className={`px-2.5 py-1 rounded-xl ${
                             order.color_mode === 'COLOR'
-                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                              : 'bg-slate-100 text-slate-800'
+                              ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                              : 'bg-[#162519] text-slate-200 border border-[#273d2c]'
                           }`}>
                             {order.color_mode === 'COLOR' ? 'Colour' : 'B & W'}
                           </span>
-                          <span className="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-800">
+                          <span className="px-2.5 py-1 rounded-xl bg-[#162519] text-slate-200 border border-[#273d2c]">
                             {order.is_duplex ? 'Double-Sided' : 'Single-Sided'}
                           </span>
-                          <span className="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-800">
+                          <span className="px-2.5 py-1 rounded-xl bg-[#162519] text-slate-200 border border-[#273d2c]">
                             {order.copies || 1} {order.copies === 1 ? 'Copy' : 'Copies'}
                           </span>
-                          <span className="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono">
+                          <span className="px-2.5 py-1 rounded-xl bg-[#bbf451]/15 text-[#bbf451] border border-[#bbf451]/30 font-mono">
                             ₹{parseFloat(order.final_amount || order.estimated_amount || '0').toFixed(2)}
                           </span>
                         </div>
@@ -685,16 +685,16 @@ export const OwnerDashboardPage: React.FC = () => {
 
                       {/* Custom instructions / page range notes */}
                       {order.custom_notes && (
-                        <div className="text-[11px] text-brand-800 bg-brand-50/70 border border-brand-200 px-3 py-1 rounded-xl max-w-lg">
+                        <div className="text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl max-w-lg">
                           <strong>Note:</strong> {order.custom_notes}
                         </div>
                       )}
 
                       {/* Pickup OTP prompt when ready */}
                       {order.pickup_otp && isReady && (
-                        <div className="text-xs text-emerald-800 flex items-center gap-2 font-mono">
+                        <div className="text-xs text-emerald-300 flex items-center gap-2 font-mono">
                           <span>Expected Pickup OTP:</span>
-                          <span className="bg-emerald-100 px-2 py-0.5 rounded-lg font-black">{order.pickup_otp}</span>
+                          <span className="bg-[#bbf451] text-[#080d09] px-2 py-0.5 rounded-lg font-black">{order.pickup_otp}</span>
                         </div>
                       )}
                     </div>
@@ -716,25 +716,25 @@ export const OwnerDashboardPage: React.FC = () => {
                           <button
                             onClick={() => handleAcceptAndPrint(order)}
                             disabled={directPrintingId === order.id}
-                            className="px-4 py-2.5 rounded-2xl bg-navy-950 hover:bg-brand-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-98"
+                            className="px-4 py-2.5 rounded-2xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] font-black text-xs flex items-center gap-1.5 shadow-[0_0_20px_rgba(187,244,81,0.25)] transition active:scale-98"
                             title={defaultPrinter ? `Print directly to ${defaultPrinter.name}` : 'Print to Windows Printer'}
                           >
-                            <Printer className="w-4 h-4 text-brand-300" />
+                            <Printer className="w-4 h-4" />
                             {directPrintingId === order.id ? 'Sending...' : 'Accept & Print'}
                           </button>
 
                           <button
                             onClick={() => handleOpenManualPrint(order)}
-                            className="px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs flex items-center gap-1.5 transition"
+                            className="px-3.5 py-2.5 rounded-2xl border border-[#273d2c] bg-[#162519] hover:bg-[#203323] text-slate-200 font-bold text-xs flex items-center gap-1.5 transition"
                             title="Open browser or Windows print dialog fallback"
                           >
-                            <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+                            <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
                             Manual Print
                           </button>
 
                           <button
                             onClick={() => setRejectOrderModal(order)}
-                            className="px-3 py-2.5 rounded-2xl border border-rose-200 hover:bg-rose-50 text-rose-600 font-bold text-xs transition"
+                            className="px-3 py-2.5 rounded-2xl border border-rose-500/40 hover:bg-rose-500/10 text-rose-400 font-bold text-xs transition"
                             title="Decline order"
                           >
                             <XCircle className="w-4 h-4" />
@@ -759,17 +759,17 @@ export const OwnerDashboardPage: React.FC = () => {
                           <button
                             onClick={() => handleAcceptAndPrint(order)}
                             disabled={directPrintingId === order.id}
-                            className="px-4 py-2.5 rounded-2xl bg-navy-950 hover:bg-brand-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-98"
+                            className="px-4 py-2.5 rounded-2xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] font-black text-xs flex items-center gap-1.5 shadow-[0_0_20px_rgba(187,244,81,0.25)] transition active:scale-98"
                           >
-                            <Printer className="w-4 h-4 text-brand-300" />
+                            <Printer className="w-4 h-4" />
                             {isFailed ? 'Retry Print' : 'Send to Printer'}
                           </button>
 
                           <button
                             onClick={() => handleOpenManualPrint(order)}
-                            className="px-3.5 py-2.5 rounded-2xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs flex items-center gap-1.5 transition"
+                            className="px-3.5 py-2.5 rounded-2xl border border-[#273d2c] bg-[#162519] hover:bg-[#203323] text-slate-200 font-bold text-xs flex items-center gap-1.5 transition"
                           >
-                            <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+                            <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
                             Manual Print
                           </button>
 
@@ -787,7 +787,7 @@ export const OwnerDashboardPage: React.FC = () => {
                         <>
                           <button
                             onClick={() => handleUpdateStatus(order.id, 'READY_FOR_PICKUP', 'Physical print confirmed.')}
-                            className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition"
+                            className="px-4 py-2.5 rounded-2xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] font-black text-xs flex items-center gap-1.5 shadow-[0_0_20px_rgba(187,244,81,0.25)] transition"
                           >
                             <CheckCircle2 className="w-4 h-4" />
                             Confirm Printed
@@ -795,7 +795,7 @@ export const OwnerDashboardPage: React.FC = () => {
 
                           <button
                             onClick={() => handleOpenManualPrint(order)}
-                            className="px-3.5 py-2.5 rounded-2xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold"
+                            className="px-3.5 py-2.5 rounded-2xl border border-[#273d2c] text-slate-300 hover:bg-[#162519] text-xs font-semibold"
                           >
                             Reprint
                           </button>
@@ -806,9 +806,9 @@ export const OwnerDashboardPage: React.FC = () => {
                       {isReady && (
                         <button
                           onClick={() => setCompleteOrderModal(order)}
-                          className="px-5 py-2.5 rounded-2xl bg-navy-950 hover:bg-brand-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition"
+                          className="px-5 py-2.5 rounded-2xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] font-black text-xs flex items-center gap-1.5 shadow-[0_0_25px_rgba(187,244,81,0.3)] transition"
                         >
-                          <PackageCheck className="w-4 h-4 text-emerald-400" />
+                          <PackageCheck className="w-4 h-4" />
                           Hand Over &amp; Complete
                         </button>
                       )}
@@ -835,19 +835,19 @@ export const OwnerDashboardPage: React.FC = () => {
 
       {/* Reject Order Confirmation Dialog */}
       {rejectOrderModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-navy-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl p-6 sm:p-8 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl max-w-md w-full border border-[#273d2c] shadow-[0_25px_60px_rgba(0,0,0,0.9)] p-6 sm:p-8 space-y-4 animate-in fade-in zoom-in-95 duration-150 text-slate-100">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center">
                 <XCircle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-extrabold text-navy-950">Decline Order</h3>
-                <p className="text-xs text-slate-500">Order #{rejectOrderModal.order_reference}</p>
+                <h3 className="text-base font-extrabold text-white font-syne">Decline Order</h3>
+                <p className="text-xs text-slate-400 font-mono">Order #{rejectOrderModal.order_reference}</p>
               </div>
             </div>
 
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-slate-300">
               Provide a reason for declining this order so the customer can be notified on their tracking screen.
             </p>
 
@@ -856,19 +856,19 @@ export const OwnerDashboardPage: React.FC = () => {
               placeholder="e.g. Paper size out of stock, unreadable document"
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50"
+              className="w-full px-3.5 py-2.5 text-xs border border-[#273d2c] rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-[#0c140e] text-white"
             />
 
             <div className="flex items-center gap-2 pt-2">
               <button
                 onClick={handleRejectOrder}
-                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition"
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs transition active:scale-98"
               >
                 Confirm Decline
               </button>
               <button
                 onClick={() => setRejectOrderModal(null)}
-                className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold"
+                className="py-2.5 px-4 rounded-xl border border-[#273d2c] text-slate-300 hover:bg-[#162519] text-xs font-semibold"
               >
                 Cancel
               </button>
@@ -879,29 +879,29 @@ export const OwnerDashboardPage: React.FC = () => {
 
       {/* Handover & Complete Order Confirmation Dialog */}
       {completeOrderModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-navy-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl p-6 sm:p-8 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl max-w-md w-full border border-[#273d2c] shadow-[0_25px_60px_rgba(0,0,0,0.9)] p-6 sm:p-8 space-y-4 animate-in fade-in zoom-in-95 duration-150 text-slate-100">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-[#bbf451]/15 text-[#bbf451] border border-[#bbf451]/30 flex items-center justify-center">
                 <PackageCheck className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-extrabold text-navy-950">Confirm Counter Handover</h3>
-                <p className="text-xs text-slate-500">Order #{completeOrderModal.order_reference}</p>
+                <h3 className="text-base font-extrabold text-white font-syne">Confirm Counter Handover</h3>
+                <p className="text-xs text-slate-400 font-mono">Order #{completeOrderModal.order_reference}</p>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-2">
-              <div className="flex justify-between">
-                <span>Total Amount:</span>
-                <strong className="font-mono text-navy-950 text-sm">
+            <div className="p-4 rounded-2xl bg-[#0c140e] border border-[#273d2c] text-xs text-slate-300 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Total Amount:</span>
+                <strong className="font-mono text-[#bbf451] text-base font-black">
                   ₹{parseFloat(completeOrderModal.final_amount || completeOrderModal.estimated_amount || '0').toFixed(2)}
                 </strong>
               </div>
               {completeOrderModal.pickup_otp && (
-                <div className="flex justify-between items-center pt-1 border-t border-slate-200">
-                  <span>Customer Pickup Code:</span>
-                  <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                <div className="flex justify-between items-center pt-2 border-t border-[#233827]">
+                  <span className="text-slate-400">Customer Pickup Code:</span>
+                  <span className="font-mono font-black text-[#080d09] bg-[#bbf451] px-2.5 py-0.5 rounded-lg border border-[#bbf451] shadow-[0_0_12px_rgba(187,244,81,0.3)]">
                     {completeOrderModal.pickup_otp}
                   </span>
                 </div>
@@ -913,19 +913,19 @@ export const OwnerDashboardPage: React.FC = () => {
               placeholder="Verify customer 4-digit code (optional)"
               value={enteredOtp}
               onChange={(e) => setEnteredOtp(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-xs text-center font-mono border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full px-3.5 py-2.5 text-xs text-center font-mono border border-[#273d2c] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#bbf451] bg-[#0c140e] text-white"
             />
 
             <div className="flex items-center gap-2 pt-2">
               <button
                 onClick={handleCompleteOrder}
-                className="flex-1 py-3 rounded-xl bg-navy-950 hover:bg-brand-600 text-white font-extrabold text-xs transition"
+                className="flex-1 py-3 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] font-black text-xs shadow-[0_0_20px_rgba(187,244,81,0.25)] transition active:scale-98"
               >
                 Confirm Handover &amp; Archive
               </button>
               <button
                 onClick={() => setCompleteOrderModal(null)}
-                className="py-3 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold"
+                className="py-3 px-4 rounded-xl border border-[#273d2c] text-slate-300 hover:bg-[#162519] text-xs font-semibold"
               >
                 Back
               </button>
@@ -936,23 +936,23 @@ export const OwnerDashboardPage: React.FC = () => {
 
       {/* Manual Print Confirmation Dialog */}
       {manualPrintOrder && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-navy-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl p-6 sm:p-8 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl max-w-md w-full border border-[#273d2c] shadow-[0_25px_60px_rgba(0,0,0,0.9)] p-6 sm:p-8 space-y-5 animate-in fade-in zoom-in-95 duration-150 text-slate-100">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-[#bbf451]/15 text-[#bbf451] border border-[#bbf451]/30 flex items-center justify-center">
                 <Printer className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-extrabold text-navy-950">Manual Print Fallback</h3>
-                <p className="text-xs text-slate-500">Order #{manualPrintOrder.order_reference}</p>
+                <h3 className="text-base font-extrabold text-white font-syne">Manual Print Fallback</h3>
+                <p className="text-xs text-slate-400 font-mono">Order #{manualPrintOrder.order_reference}</p>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1.5">
+            <div className="p-4 rounded-2xl bg-[#0c140e] border border-[#273d2c] text-xs text-slate-300 space-y-1.5">
               <p>
                 The document was opened in a new tab for printing using your browser / Windows print dialog.
               </p>
-              <p className="text-slate-500 text-[11px]">
+              <p className="text-slate-400 text-[11px]">
                 Once printed on your shop printer, update the order status:
               </p>
             </div>
@@ -960,7 +960,7 @@ export const OwnerDashboardPage: React.FC = () => {
             <div className="space-y-2 pt-1">
               <button
                 onClick={() => handleConfirmManualPrint('READY_FOR_PICKUP')}
-                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs transition"
+                className="w-full py-2.5 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] font-black text-xs flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(187,244,81,0.25)] transition active:scale-98"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 Mark as "Ready for Pickup"
@@ -968,14 +968,14 @@ export const OwnerDashboardPage: React.FC = () => {
 
               <button
                 onClick={() => handleConfirmManualPrint('COMPLETED')}
-                className="w-full py-2.5 rounded-xl bg-navy-950 hover:bg-brand-600 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs transition"
+                className="w-full py-2.5 rounded-xl bg-[#162519] hover:bg-[#203323] text-white border border-[#273d2c] font-black text-xs flex items-center justify-center gap-1.5 transition active:scale-98"
               >
                 Mark as "Completed"
               </button>
 
               <button
                 onClick={() => setManualPrintOrder(null)}
-                className="w-full py-2 rounded-xl text-slate-500 hover:bg-slate-100 font-semibold text-xs"
+                className="w-full py-2 rounded-xl text-slate-400 hover:bg-[#162519] font-semibold text-xs"
               >
                 Keep Current Status
               </button>

@@ -129,32 +129,32 @@ export const OwnerQrPage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link
             to="/owner/dashboard"
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-2xs transition"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-[#273d2c] bg-[#132015] hover:bg-[#1a2c1d] text-slate-200 text-xs font-bold transition"
           >
-            <ArrowLeft className="w-4 h-4 text-brand-600" />
+            <ArrowLeft className="w-4 h-4 text-[#bbf451]" />
             <span>Back to Receiving Panel</span>
           </Link>
 
           <div className="flex items-center gap-2">
             <Link
               to="/owner/profile"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#273d2c] bg-[#132015] hover:bg-[#1a2c1d] text-slate-300 text-xs font-semibold transition"
             >
-              <Building2 className="w-3.5 h-3.5 text-slate-500" />
+              <Building2 className="w-3.5 h-3.5 text-slate-400" />
               <span>Shop Profile</span>
             </Link>
             <Link
               to="/owner/settings"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#273d2c] bg-[#132015] hover:bg-[#1a2c1d] text-slate-300 text-xs font-semibold transition"
             >
-              <Settings className="w-3.5 h-3.5 text-slate-500" />
+              <Settings className="w-3.5 h-3.5 text-slate-400" />
               <span>Settings</span>
             </Link>
             <Link
               to="/owner/printers"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#273d2c] bg-[#132015] hover:bg-[#1a2c1d] text-slate-300 text-xs font-semibold transition"
             >
-              <Laptop className="w-3.5 h-3.5 text-slate-500" />
+              <Laptop className="w-3.5 h-3.5 text-slate-400" />
               <span>Connected Devices</span>
             </Link>
           </div>
@@ -162,25 +162,25 @@ export const OwnerQrPage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           {/* Left Column: QR Card Display */}
-          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-glass text-center space-y-6">
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-8 border border-[#273d2c] shadow-[0_20px_50px_rgba(0,0,0,0.6)] text-center space-y-6 text-white">
             <div className="space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-brand-600 bg-brand-50 border border-brand-200 px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#bbf451] bg-[#bbf451]/10 border border-[#bbf451]/30 px-2.5 py-0.5 rounded-full">
                 Permanent Counter Anchor
               </span>
-              <h3 className="text-xl font-black text-navy-950 mt-1">{qrData?.shopName || 'Smart Xerox Shop'}</h3>
+              <h3 className="text-xl font-black text-white font-syne mt-1">{qrData?.shopName || 'Smart Xerox Shop'}</h3>
               
               <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-800 border border-brand-200">
-                  <Mail className="w-3.5 h-3.5 text-brand-600" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#162519] text-[#bbf451] border border-[#273d2c]">
+                  <Mail className="w-3.5 h-3.5 text-[#bbf451]" />
                   <span>Anchored to: <strong>{qrData?.email || 'owner1@smartxerox.io'}</strong></span>
                 </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono text-slate-500 bg-slate-100 border border-slate-200">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono text-slate-400 bg-[#0c140e] border border-[#273d2c]">
                   Token: {qrData?.qrToken || 'qr-live-verified'}
                 </span>
               </div>
             </div>
 
-            <div className="p-4 bg-white rounded-2xl border-2 border-slate-100 shadow-inner inline-block">
+            <div className="p-4 bg-white rounded-2xl border-4 border-[#273d2c] shadow-[0_0_30px_rgba(0,0,0,0.8)] inline-block">
               {qrData?.qrDataUrl ? (
                 <img
                   src={qrData.qrDataUrl}
@@ -189,7 +189,7 @@ export const OwnerQrPage: React.FC = () => {
                 />
               ) : (
                 <div className="w-64 h-64 flex flex-col items-center justify-center text-slate-400 gap-2">
-                  <div className="w-7 h-7 rounded-full border-2 border-brand-600 border-t-transparent animate-spin" />
+                  <div className="w-7 h-7 rounded-full border-2 border-[#bbf451] border-t-transparent animate-spin" />
                   <span className="text-xs font-medium">Generating QR...</span>
                 </div>
               )}
@@ -199,14 +199,14 @@ export const OwnerQrPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleDownloadPng}
-                className="flex-1 py-3 px-4 rounded-xl text-xs font-bold bg-navy-950 hover:bg-brand-600 text-white shadow-xs flex items-center justify-center gap-1.5 transition-colors"
+                className="flex-1 py-3 px-4 rounded-xl text-xs font-bold bg-[#162519] hover:bg-[#203323] text-slate-200 border border-[#273d2c] flex items-center justify-center gap-1.5 transition-colors"
               >
                 <Download className="w-4 h-4" /> Download High-Res PNG
               </button>
               <button
                 type="button"
                 onClick={() => setPosterModalOpen(true)}
-                className="flex-1 py-3 px-4 rounded-xl text-xs font-bold bg-brand-600 hover:bg-brand-500 text-white shadow-xs flex items-center justify-center gap-1.5 transition-colors"
+                className="flex-1 py-3 px-4 rounded-xl text-xs font-black bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] shadow-[0_0_20px_rgba(187,244,81,0.25)] flex items-center justify-center gap-1.5 transition-colors active:scale-98"
               >
                 <Printer className="w-4 h-4" /> Print Counter Poster
               </button>
@@ -216,27 +216,27 @@ export const OwnerQrPage: React.FC = () => {
           {/* Right Column: Storefront URL & Security Controls */}
           <div className="space-y-6">
             {/* Public Storefront URL Box */}
-            <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-glass space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-navy-900">
+            <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl p-6 sm:p-7 border border-[#273d2c] shadow-glass space-y-3 text-white">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#bbf451] font-syne">
                 Canonical Public Storefront URL
               </h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-xs text-slate-400 leading-relaxed">
                 This permanent link is encoded directly into your counter QR code. Customers can scan it with their default camera app to open your private upload portal immediately.
               </p>
 
-              <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+              <div className="flex items-center gap-2 bg-[#0c140e] p-2.5 rounded-xl border border-[#273d2c]">
                 <input
                   type="text"
                   readOnly
                   value={qrData?.storefrontUrl || ''}
-                  className="flex-1 bg-transparent text-xs text-navy-900 font-mono focus:outline-none truncate"
+                  className="flex-1 bg-transparent text-xs text-slate-200 font-mono focus:outline-none truncate"
                 />
                 <button
                   type="button"
                   onClick={handleCopyUrl}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 flex items-center gap-1 shrink-0 shadow-2xs"
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#162519] border border-[#273d2c] hover:bg-[#203323] text-slate-200 flex items-center gap-1 shrink-0"
                 >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? <Check className="w-3.5 h-3.5 text-[#bbf451]" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copied ? 'Copied' : 'Copy'}</span>
                 </button>
               </div>
@@ -246,7 +246,7 @@ export const OwnerQrPage: React.FC = () => {
                   href={qrData.storefrontUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 pt-1"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#bbf451] hover:underline pt-1"
                 >
                   <span>Test Open Customer Storefront in New Tab</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -255,30 +255,30 @@ export const OwnerQrPage: React.FC = () => {
             </div>
 
             {/* Anti-Tamper & Privacy Guarantee */}
-            <div className="bg-emerald-50/70 border border-emerald-200 rounded-3xl p-6 space-y-2 text-xs">
-              <div className="flex items-center gap-2 font-bold text-emerald-950">
-                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-3xl p-6 space-y-2 text-xs">
+              <div className="flex items-center gap-2 font-bold text-emerald-300">
+                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
                 Anti-Tamper &amp; Privacy Standards
               </div>
-              <p className="text-emerald-800 leading-relaxed text-[11px]">
+              <p className="text-emerald-200/80 leading-relaxed text-[11px]">
                 This QR code strictly points to your canonical shop storefront. It never exposes your personal phone number, owner credentials, or unapproved documents.
               </p>
             </div>
 
             {/* QR Token Regeneration */}
-            <div className="bg-rose-50/50 border border-rose-200 rounded-3xl p-6 space-y-3">
-              <div className="flex items-center gap-2 font-bold text-rose-950 text-xs">
-                <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
+            <div className="bg-rose-950/30 border border-rose-500/30 rounded-3xl p-6 space-y-3">
+              <div className="flex items-center gap-2 font-bold text-rose-300 text-xs">
+                <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
                 Compromised or Damaged Counter Poster?
               </div>
-              <p className="text-rose-800 text-xs leading-relaxed">
+              <p className="text-rose-200/80 text-xs leading-relaxed">
                 If your physical QR poster is photographed inappropriately or misused, you can regenerate your QR token immediately. Old physical codes will immediately cease routing.
               </p>
               <button
                 type="button"
                 disabled={isRegenerating}
                 onClick={handleRegenerate}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-white border border-rose-300 text-rose-700 hover:bg-rose-100 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#162519] border border-rose-500/40 text-rose-300 hover:bg-rose-500/10 flex items-center gap-1.5 transition-colors disabled:opacity-50"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isRegenerating ? 'animate-spin' : ''}`} />
                 <span>{isRegenerating ? 'Regenerating...' : 'Regenerate Shop QR Token'}</span>

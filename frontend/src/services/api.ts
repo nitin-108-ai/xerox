@@ -338,6 +338,27 @@ export const api = {
     }
   },
 
+  async requestOwnerOtp(data: { phoneNumber?: string; email?: string; shopName?: string }) {
+    return this.sendOtp(data);
+  },
+
+  async verifyOwnerOtpAndRegister(data: any): Promise<{ token: string; user: any; shop: any; message: string }> {
+    const res = await this.verifyOtp(data);
+    const shop = {
+      id: res.user?.shopId || 'shp-quickcopy-001',
+      slug: res.user?.slug || 'quickcopy-express',
+      name: data.shopName || res.user?.shopName || 'Smart Xerox Shop',
+      address: data.shopAddress || 'Counter Address',
+      phone: data.phoneNumber || '+91 99999 99999'
+    };
+    return {
+      token: res.token,
+      user: res.user,
+      shop: (res as any).shop || shop,
+      message: res.message
+    };
+  },
+
   async registerOwner(data: any) {
     try {
       const res = await fetch(`${API_BASE}/auth/register`, {
@@ -816,6 +837,10 @@ export const api = {
     } catch {
       return { message: 'Message sent.' };
     }
+  },
+
+  async sendOrderMessage(orderRef: string, token: string, message: string) {
+    return this.sendCustomerMessage(orderRef, token, message);
   },
 
   // Shop Owner

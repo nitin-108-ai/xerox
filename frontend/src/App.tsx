@@ -69,10 +69,9 @@ function AppContent() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const location = useLocation();
   const isDedicatedView = location.pathname.startsWith('/shop/') || location.pathname.startsWith('/s/') || location.pathname.startsWith('/owner');
-  const isHomePage = location.pathname === '/';
 
   return (
-    <div className={`min-h-screen flex flex-col ${isHomePage ? 'bg-[#080d09] text-slate-100' : 'bg-slate-50/40 text-slate-900'} font-sans antialiased selection:bg-[#bbf451] selection:text-[#0b120c]`}>
+    <div className="min-h-screen flex flex-col bg-[#080d09] text-slate-100 font-outfit antialiased selection:bg-[#bbf451] selection:text-[#0b120c]">
       {!isDedicatedView && <Navbar onOpenScanner={() => setScannerOpen(true)} />}
 
       <main className="flex-1">
@@ -239,27 +238,27 @@ class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-2xl shadow-elevated border border-slate-200 p-8 text-center space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-brand-50 border border-brand-200 text-brand-600 flex items-center justify-center mx-auto text-xl font-bold">
+        <div className="min-h-screen bg-[#080d09] text-slate-100 flex items-center justify-center p-4 font-outfit">
+          <div className="max-w-md w-full rounded-3xl border border-[#233827] bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] shadow-2xl p-8 text-center space-y-4 backdrop-blur-md">
+            <div className="w-14 h-14 rounded-2xl bg-[#bbf451] text-[#080d09] flex items-center justify-center mx-auto text-xl font-black font-syne shadow-lg shadow-[#bbf451]/20">
               SX
             </div>
-            <h1 className="text-xl font-bold text-navy-950">Smart Xerox</h1>
-            <p className="text-sm text-slate-600">
+            <h1 className="text-xl font-black text-white font-syne">Smart Xerox</h1>
+            <p className="text-xs text-slate-400">
               The page encountered an unexpected state. Click below to reload cleanly.
             </p>
-            <div className="flex flex-col sm:flex-row gap-2 pt-2 justify-center">
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-2 justify-center">
               <button
                 type="button"
                 onClick={() => window.location.reload()}
-                className="px-4 py-2.5 rounded-xl bg-navy-900 hover:bg-brand-600 text-white font-semibold text-xs transition-colors"
+                className="px-5 py-2.5 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] font-black text-xs transition-colors shadow-lg shadow-[#bbf451]/20 cursor-pointer"
               >
                 Reload Page
               </button>
               <button
                 type="button"
                 onClick={this.handleReset}
-                className="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors"
+                className="px-5 py-2.5 rounded-xl border border-[#273d2c] bg-[#121c14] hover:bg-[#1b2b1e] text-slate-300 font-bold text-xs transition-colors cursor-pointer"
               >
                 Clear Cache &amp; Reload
               </button>
