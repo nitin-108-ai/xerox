@@ -27,6 +27,11 @@ function isServerUnavailableError(err: any): boolean {
     msg.includes('failed to fetch') ||
     msg.includes('networkerror') ||
     msg.includes('network request failed') ||
+    msg.includes('unexpected token') ||
+    msg.includes('not valid json') ||
+    msg.includes('json.parse') ||
+    msg.includes('doctype') ||
+    msg.includes('html') ||
     msg.includes('status 405') ||
     msg.includes('status 404') ||
     msg.includes('status 500') ||
@@ -35,6 +40,7 @@ function isServerUnavailableError(err: any): boolean {
     msg.includes('status 504') ||
     msg.includes('method not allowed') ||
     msg.includes('not found') ||
+    Boolean((err as any).isHtmlFallback) ||
     status === 404 ||
     status === 405 ||
     status >= 500
@@ -42,6 +48,14 @@ function isServerUnavailableError(err: any): boolean {
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('text/html')) {
+    const err: any = new Error('Backend server returned HTML instead of JSON.');
+    err.status = res.status;
+    err.isHtmlFallback = true;
+    throw err;
+  }
+
   if (!res.ok) {
     let errMsg = `Request failed with status ${res.status}`;
     try {
@@ -58,7 +72,23 @@ async function handleResponse<T>(res: Response): Promise<T> {
     err.status = res.status;
     throw err;
   }
-  return res.json() as Promise<T>;
+
+  const raw = await res.text();
+  if (!raw || raw.trim().startsWith('<')) {
+    const err: any = new Error('Backend endpoint returned invalid HTML payload.');
+    err.status = 502;
+    err.isHtmlFallback = true;
+    throw err;
+  }
+
+  try {
+    return JSON.parse(raw) as T;
+  } catch (parseErr: any) {
+    const err: any = new Error(`JSON Parse Error: ${parseErr.message}`);
+    err.status = 502;
+    err.isHtmlFallback = true;
+    throw err;
+  }
 }
 
 const DEFAULT_SHOPS: Record<string, any> = {
@@ -616,10 +646,8 @@ export const api = {
       }
       return data;
     } catch (err: any) {
-      if (err.message && !isServerUnavailableError(err)) {
-        throw err;
-      }
-      // Save locally to synchronize with Receiving Panel
+      console.warn('[Smart Xerox] POST /orders remote dispatch unavailable, saving to local counter store:', err?.message || err);
+      // Save locally to synchronize immediately with Receiving Panel
       saveLocally(localOrderRecord);
       return {
         orderId,
