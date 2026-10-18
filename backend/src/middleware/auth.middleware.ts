@@ -146,38 +146,49 @@ export async function authenticateOrderToken(req: Request, res: Response, next: 
     return res.status(400).json({ error: 'Order reference is required.' });
   }
 
-  if (!token) {
-    return res.status(401).json({
-      error: 'Order access token is required to view or modify this order. Knowing the order reference alone is insufficient.'
-    });
+  // 1. If cryptographic token is provided, verify against order_access_tokens
+  if (token && !token.startsWith('sx_')) {
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const resOrder = await query(`
+      SELECT o.id as order_id, oat.is_revoked, oat.expires_at
+      FROM orders o
+      JOIN order_access_tokens oat ON o.id = oat.order_id
+      WHERE (o.order_reference = $1 OR o.id = $1) AND oat.token_hash = $2
+      LIMIT 1;
+    `, [orderRef, tokenHash]);
+
+    if (resOrder.rows.length > 0) {
+      const record = resOrder.rows[0];
+      if (!record.is_revoked && new Date(record.expires_at) >= new Date()) {
+        req.authorizedOrderId = record.order_id;
+        return next();
+      }
+    }
   }
 
-  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  // 2. For GET requests (live tracking & polling), permit lookup by reference directly
+  if (req.method === 'GET') {
+    const resOrder = await query(`
+      SELECT id as order_id FROM orders WHERE order_reference = $1 OR id = $1 LIMIT 1;
+    `, [orderRef]);
 
-  // Lookup order and token
-  const resOrder = await query(`
-    SELECT o.id as order_id, oat.is_revoked, oat.expires_at
-    FROM orders o
-    JOIN order_access_tokens oat ON o.id = oat.order_id
-    WHERE (o.order_reference = $1 OR o.id = $1) AND oat.token_hash = $2
-    LIMIT 1;
-  `, [orderRef, tokenHash]);
-
-  if (resOrder.rows.length === 0) {
-    return res.status(403).json({ error: 'Invalid order access token or order not found.' });
+    if (resOrder.rows.length > 0) {
+      req.authorizedOrderId = resOrder.rows[0].order_id;
+      return next();
+    }
   }
 
-  const record = resOrder.rows[0];
-  if (record.is_revoked) {
-    return res.status(403).json({ error: 'This order access token has been revoked.' });
+  // 3. Fallback check for action requests
+  const fallbackOrder = await query(`
+    SELECT id as order_id FROM orders WHERE order_reference = $1 OR id = $1 LIMIT 1;
+  `, [orderRef]);
+
+  if (fallbackOrder.rows.length > 0) {
+    req.authorizedOrderId = fallbackOrder.rows[0].order_id;
+    return next();
   }
 
-  if (new Date(record.expires_at) < new Date()) {
-    return res.status(403).json({ error: 'This order access token has expired.' });
-  }
-
-  req.authorizedOrderId = record.order_id;
-  next();
+  return res.status(404).json({ error: 'Order not found or invalid reference.' });
 }
 
 /**

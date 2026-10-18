@@ -175,7 +175,7 @@ export async function registerOwner(req: Request, res: Response) {
       action: 'OWNER_REGISTERED',
       targetType: 'SHOP',
       targetId: shopId,
-      ipAddress: req.ip,
+      ipAddress: ((req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket?.remoteAddress || '127.0.0.1'),
       details: { shopName: validated.shopName, slug }
     });
 
@@ -249,7 +249,7 @@ export async function login(req: Request, res: Response) {
       action: 'USER_LOGGED_IN',
       targetType: 'USER',
       targetId: user.id,
-      ipAddress: req.ip
+      ipAddress: ((req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket?.remoteAddress || '127.0.0.1')
     });
 
     res.json({

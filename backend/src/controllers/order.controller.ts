@@ -274,7 +274,7 @@ export async function createOrder(req: Request, res: Response) {
       action: 'ORDER_SUBMITTED',
       targetType: 'ORDER',
       targetId: orderId,
-      ipAddress: req.ip,
+      ipAddress: ((req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket?.remoteAddress || '127.0.0.1'),
       details: {
         orderReference,
         shopId,
@@ -908,7 +908,7 @@ export async function previewDocument(req: Request, res: Response) {
       action: 'DOCUMENT_PREVIEWED',
       targetType: 'DOCUMENT',
       targetId: docId || orderId,
-      ipAddress: req.ip,
+      ipAddress: ((req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket?.remoteAddress || '127.0.0.1'),
       details: { orderId, filename: doc.original_filename }
     });
 
@@ -971,7 +971,7 @@ export async function downloadDocument(req: Request, res: Response) {
       action: 'DOCUMENT_DOWNLOADED_FOR_PRINTING',
       targetType: 'DOCUMENT',
       targetId: docId || orderId,
-      ipAddress: req.ip,
+      ipAddress: ((req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket?.remoteAddress || '127.0.0.1'),
       details: { orderId, filename: doc.original_filename }
     });
 

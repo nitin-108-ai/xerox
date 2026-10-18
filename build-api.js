@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+
 let esbuild;
 try {
   esbuild = await import('esbuild');
@@ -11,16 +14,49 @@ try {
 
 console.log('Bundling serverless functions with esbuild JS API...');
 try {
+  if (!fs.existsSync('api')) {
+    fs.mkdirSync('api', { recursive: true });
+  }
+
   await esbuild.build({
     entryPoints: ['api_src/index.ts'],
     bundle: true,
     platform: 'node',
     format: 'esm',
-    packages: 'external',
     target: 'node20',
     outfile: 'api/index.js',
+    nodePaths: ['./backend/node_modules', './frontend/node_modules', './node_modules'],
+    banner: {
+      js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);"
+    },
   });
   console.log('Successfully bundled api/index.js!');
+
+  // Create Vercel catch-all API route handler
+  fs.writeFileSync('api/[...path].js', "export { default } from './index.js';\n");
+  console.log('Successfully created api/[...path].js!');
+
+  // Copy PGlite binaries to api folder if available
+  const possiblePgliteDirs = [
+    './node_modules/@electric-sql/pglite/dist',
+    './backend/node_modules/@electric-sql/pglite/dist',
+    './frontend/node_modules/@electric-sql/pglite/dist'
+  ];
+
+  for (const dir of possiblePgliteDirs) {
+    const dataFile = path.join(dir, 'pglite.data');
+    const wasmFile = path.join(dir, 'pglite.wasm');
+    if (fs.existsSync(dataFile) && fs.existsSync(wasmFile)) {
+      try {
+        fs.copyFileSync(dataFile, 'api/pglite.data');
+        fs.copyFileSync(wasmFile, 'api/pglite.wasm');
+        console.log(`Copied pglite binaries from ${dir} to api/`);
+        break;
+      } catch (copyErr) {
+        console.warn('Could not copy pglite binaries:', copyErr);
+      }
+    }
+  }
 } catch (err) {
   console.error('Failed to bundle serverless API:', err);
   process.exit(1);

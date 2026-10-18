@@ -10,6 +10,16 @@ import { config } from './config/index.js';
 
 export const app = express();
 
+// Ensure req.socket is safe in serverless environments
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  if (!req.socket) {
+    (req as any).socket = { remoteAddress: '127.0.0.1' };
+  } else if (!req.socket.remoteAddress) {
+    (req.socket as any).remoteAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || '127.0.0.1';
+  }
+  next();
+});
+
 // Security middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },

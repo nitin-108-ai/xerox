@@ -27,6 +27,12 @@ async function ensureDb() {
 }
 
 export default async function handler(req: Request, res: Response) {
+  if (!req.socket) {
+    (req as any).socket = { remoteAddress: '127.0.0.1' };
+  } else if (!req.socket.remoteAddress) {
+    (req.socket as any).remoteAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || '127.0.0.1';
+  }
+
   await ensureDb();
 
   // Normalize req.url for Express router
@@ -39,8 +45,15 @@ export default async function handler(req: Request, res: Response) {
     existingParams.delete('path');
     const qs = existingParams.toString();
     req.url = `/api/${cleanSubpath}${qs ? '?' + qs : ''}`;
-  } else if ((req as any).headers?.['x-matched-path'] && (req as any).headers['x-matched-path'] !== '/api' && (req as any).headers['x-matched-path'] !== '/api/') {
+  } else if ((req as any).headers?.['x-forwarded-uri'] && (req as any).headers['x-forwarded-uri'].startsWith('/api')) {
+    req.url = (req as any).headers['x-forwarded-uri'];
+  } else if ((req as any).headers?.['x-matched-path'] && (req as any).headers['x-matched-path'] !== '/api' && (req as any).headers['x-matched-path'] !== '/api/' && !((req as any).headers['x-matched-path'].includes('index.js'))) {
     req.url = (req as any).headers['x-matched-path'];
+  } else if (req.url && (req.url.startsWith('/api/index.js') || req.url.startsWith('/api/[...path]') || req.url === '/api/index')) {
+    const orig = (req as any).originalUrl;
+    if (orig && orig.startsWith('/api') && !orig.includes('index.js')) {
+      req.url = orig;
+    }
   } else if (!req.url.startsWith('/api')) {
     req.url = `/api${req.url.startsWith('/') ? req.url : '/' + req.url}`;
   }

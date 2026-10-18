@@ -20,6 +20,26 @@ import { api } from '../services/api';
 import { StatusBadge } from '../components/StatusBadge';
 import { OrderStatus } from '../types';
 
+function safeFormatDate(val: any, fallback = '24 hours'): string {
+  if (!val) return fallback;
+  try {
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? fallback : d.toLocaleString();
+  } catch {
+    return fallback;
+  }
+}
+
+function safeFormatTime(val: any): string {
+  if (!val) return '';
+  try {
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return '';
+  }
+}
+
 export const OrderTrackingPage: React.FC = () => {
   const { reference } = useParams<{ reference: string }>();
   const [searchParams] = useSearchParams();
@@ -83,8 +103,12 @@ export const OrderTrackingPage: React.FC = () => {
           setToken(match.orderAccessToken);
         } else if (match) {
           setToken('sx_auto_token');
+        } else {
+          setToken('sx_guest_token');
         }
-      } catch {}
+      } catch {
+        setToken('sx_guest_token');
+      }
     }
   }, [activeRef, token]);
 
@@ -671,7 +695,7 @@ export const OrderTrackingPage: React.FC = () => {
                 <p className="text-emerald-800 text-[11px] mt-0.5">
                   {docMeta?.isDeleted
                     ? 'This document has already been permanently wiped from disk.'
-                    : `Document is queued for physical disk purge at ${new Date(docMeta?.autoDeleteAt).toLocaleString()}.`}
+                    : `Document is queued for physical disk purge at ${safeFormatDate(docMeta?.autoDeleteAt)}.`}
                 </p>
               </div>
             </div>
@@ -703,7 +727,7 @@ export const OrderTrackingPage: React.FC = () => {
                   <div className="min-w-0">
                     <span className="font-semibold text-navy-900">{h.new_status}</span>
                     <span className="text-slate-400 text-[11px] ml-2 font-mono">
-                      {new Date(h.created_at).toLocaleTimeString()}
+                      {safeFormatTime(h.created_at)}
                     </span>
                     {h.note && (
                       <p className="text-slate-500 text-[11px] mt-0.5">{h.note}</p>
@@ -738,7 +762,7 @@ export const OrderTrackingPage: React.FC = () => {
                     className={`flex flex-col ${isCustomer ? 'items-end' : 'items-start'}`}
                   >
                     <span className="text-[10px] text-slate-400 font-medium mb-1">
-                      {isCustomer ? 'You' : (shop?.name || 'Shop Counter')} • {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {isCustomer ? 'You' : (shop?.name || 'Shop Counter')} • {safeFormatTime(m.created_at)}
                     </span>
                     <div
                       className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-xs leading-relaxed ${

@@ -61,7 +61,7 @@ export async function getPublicStorefront(req: Request, res: Response) {
     `, [
       crypto.randomUUID(),
       rawShop.id,
-      req.ip || null,
+      ((req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket?.remoteAddress || '127.0.0.1'),
       (req.headers['user-agent'] as string) || null,
       (req.headers['referer'] as string) || null
     ]).catch(() => {});
