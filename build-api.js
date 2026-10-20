@@ -1,14 +1,28 @@
 import fs from 'fs';
 import path from 'path';
 
-let esbuild;
+let esbuild = null;
 try {
   esbuild = await import('esbuild');
 } catch {
   try {
     esbuild = await import('./backend/node_modules/esbuild/lib/main.js');
   } catch {
-    esbuild = await import('./frontend/node_modules/esbuild/lib/main.js');
+    try {
+      esbuild = await import('./frontend/node_modules/esbuild/lib/main.js');
+    } catch {
+      esbuild = null;
+    }
+  }
+}
+
+if (!esbuild) {
+  if (fs.existsSync('api/index.js') && fs.statSync('api/index.js').size > 1000) {
+    console.log('[build-api] esbuild not available, using existing pre-bundled api/index.js.');
+    process.exit(0);
+  } else {
+    console.error('[build-api] esbuild not available and no pre-bundled api/index.js found.');
+    process.exit(1);
   }
 }
 

@@ -70,6 +70,13 @@ export async function initDb() {
     }
   }
   if (pgliteInstance) {
+    if (typeof pgliteInstance.waitReady !== 'undefined') {
+      try {
+        await pgliteInstance.waitReady;
+      } catch (wrErr: any) {
+        console.warn('PGlite waitReady warning:', wrErr.message);
+      }
+    }
     console.log('PGlite engine initialized successfully.');
   } else {
     console.log('In-memory zero-dependency database fallback ready.');

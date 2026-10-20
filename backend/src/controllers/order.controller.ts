@@ -7,6 +7,7 @@ import { query, transaction } from '../db/connection.js';
 import { storageService } from '../storage/storage.service.js';
 import { pricingService } from '../services/pricing.service.js';
 import { logAuditEvent } from '../services/audit.service.js';
+import { liveEvents } from '../services/liveEvents.service.js';
 
 function generateOrderReference(): string {
   // Format: SX-XXXX-2026 (non-sequential high entropy alphanumeric)
@@ -283,6 +284,37 @@ export async function createOrder(req: Request, res: Response) {
         copies: numCopies,
         totalAmount: pricing.total
       }
+    });
+
+    // Record cross-device live event for instant receiving panel synchronization
+    liveEvents.recordOrder({
+      id: orderId,
+      order_reference: orderReference,
+      orderReference,
+      shop_id: shopId,
+      customer_alias: customerAlias || 'Guest Customer',
+      status: initialStatus,
+      estimated_amount: pricing.total,
+      final_amount: pricing.total,
+      pickup_otp: pickupOtp,
+      file_count: validatedFiles.length,
+      original_filename: validatedFiles[0]?.file?.originalname || 'document.pdf',
+      documents: validatedFiles.map((v) => ({
+        id: v.saved.storedFilename,
+        original_filename: v.file.originalname,
+        file_size: v.saved.fileSize,
+        mime_type: v.validation.detectedMime,
+        page_count: v.pageCount
+      })),
+      items: [{
+        paper_size: paperSize,
+        color_mode: colorMode,
+        is_duplex: duplexBool,
+        copies: numCopies,
+        page_count: totalPagesAllFiles,
+        item_price: pricing.total
+      }],
+      created_at: new Date().toISOString()
     });
 
     res.status(201).json({
@@ -613,7 +645,27 @@ export async function listOwnerOrders(req: Request, res: Response) {
       };
     });
 
-    res.json({ orders: formattedOrders });
+    // Check for recent customer QR scans and uncommitted live orders
+    const recentScan = liveEvents.getRecentScan(req.user.shopId, 30000);
+    const liveOrders = liveEvents.getRecentOrders(req.user.shopId);
+
+    const seenIds = new Set<string>();
+    const finalOrders: any[] = [];
+    for (const o of formattedOrders) {
+      if (o.id) seenIds.add(o.id);
+      if (o.order_reference) seenIds.add(o.order_reference);
+      finalOrders.push(o);
+    }
+
+    for (const lo of liveOrders) {
+      if (!seenIds.has(lo.id) && !seenIds.has(lo.order_reference)) {
+        seenIds.add(lo.id);
+        if (lo.order_reference) seenIds.add(lo.order_reference);
+        finalOrders.unshift(lo);
+      }
+    }
+
+    res.json({ orders: finalOrders, recentScan: recentScan || null });
   } catch (err: any) {
     console.error('List owner orders failed:', err);
     res.status(500).json({ error: 'Failed to load shop orders.' });

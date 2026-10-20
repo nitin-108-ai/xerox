@@ -23,38 +23,96 @@ import { OwnerLayout } from '../components/OwnerLayout';
 import { api } from '../services/api';
 import { DocumentPreviewModal } from '../components/DocumentPreviewModal';
 
-// Audio chime generator using browser Web Audio API
-function playChime() {
+// Shared AudioContext for cross-browser compliance and autoplay-policy unlocking
+let sharedAudioCtx: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
   try {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
-    
-    // Note 1: 880 Hz (A5)
-    const osc1 = ctx.createOscillator();
-    const gain1 = ctx.createGain();
-    osc1.connect(gain1);
-    gain1.connect(ctx.destination);
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(880, ctx.currentTime);
-    gain1.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-    osc1.start(ctx.currentTime);
-    osc1.stop(ctx.currentTime + 0.2);
-
-    // Note 2: 1320 Hz (E6)
-    const osc2 = ctx.createOscillator();
-    const gain2 = ctx.createGain();
-    osc2.connect(gain2);
-    gain2.connect(ctx.destination);
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(1320, ctx.currentTime + 0.12);
-    gain2.gain.setValueAtTime(0.18, ctx.currentTime + 0.12);
-    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.38);
-    osc2.start(ctx.currentTime + 0.12);
-    osc2.stop(ctx.currentTime + 0.38);
+    if (!AudioContextClass) return null;
+    if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+      sharedAudioCtx = new AudioContextClass();
+    }
+    if (sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume().catch(() => {});
+    }
+    return sharedAudioCtx;
   } catch {
-    // Audio might be prevented until first user gesture
+    return null;
+  }
+}
+
+// Audio chime generator using browser Web Audio API
+export function playChime(type: 'scan' | 'order' = 'order') {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    const now = ctx.currentTime;
+
+    if (type === 'scan') {
+      // Crisp 2-tone ping: 880 Hz (A5) -> 1320 Hz (E6)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(880, now);
+      gain1.gain.setValueAtTime(0.3, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      osc1.start(now);
+      osc1.stop(now + 0.18);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(1320, now + 0.1);
+      gain2.gain.setValueAtTime(0.35, now + 0.1);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc2.start(now + 0.1);
+      osc2.stop(now + 0.35);
+    } else {
+      // Full 3-tone melodious order chime: 587 Hz (D5) -> 880 Hz (A5) -> 1175 Hz (D6)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(587.33, now);
+      gain1.gain.setValueAtTime(0.35, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+      osc1.start(now);
+      osc1.stop(now + 0.22);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(880, now + 0.12);
+      gain2.gain.setValueAtTime(0.4, now + 0.12);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+      osc2.start(now + 0.12);
+      osc2.stop(now + 0.38);
+
+      const osc3 = ctx.createOscillator();
+      const gain3 = ctx.createGain();
+      osc3.connect(gain3);
+      gain3.connect(ctx.destination);
+      osc3.type = 'triangle';
+      osc3.frequency.setValueAtTime(1174.66, now + 0.26);
+      gain3.gain.setValueAtTime(0.45, now + 0.26);
+      gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+      osc3.start(now + 0.26);
+      osc3.stop(now + 0.65);
+    }
+  } catch (err) {
+    console.warn('Audio chime playback warning:', err);
   }
 }
 
@@ -66,6 +124,7 @@ export const OwnerDashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
 
   // Printing & Action states
   const [directPrintingId, setDirectPrintingId] = useState<string | null>(null);
@@ -78,14 +137,16 @@ export const OwnerDashboardPage: React.FC = () => {
   const [previewDoc, setPreviewDoc] = useState<any | null>(null);
   const [copiedRef, setCopiedRef] = useState<string | null>(null);
 
-  // Audio and QR scan notification states
-  const [qrScanNotice, setQrScanNotice] = useState<{ slug?: string; time: string } | null>(null);
+  // Audio, QR scan, and Live Incoming Order notifications
+  const [qrScanNotice, setQrScanNotice] = useState<{ slug?: string; shopName?: string; time: string } | null>(null);
+  const [newOrderNotice, setNewOrderNotice] = useState<{ id: string; ref: string; time: string; files: number } | null>(null);
 
-  // Queue Tab: 'INCOMING' | 'ACTIVE' | 'READY' | 'ALL'
-  const [queueTab, setQueueTab] = useState<'INCOMING' | 'ACTIVE' | 'READY' | 'ALL'>('ACTIVE');
+  // Queue Tab: 'INCOMING' | 'ACTIVE' | 'READY' | 'ALL' (default to INCOMING so new orders are immediately visible)
+  const [queueTab, setQueueTab] = useState<'INCOMING' | 'ACTIVE' | 'READY' | 'ALL'>('INCOMING');
 
-  // Track previous count for sound/visual notification
-  const prevSubmittedCount = useRef<number>(0);
+  // Track known orders and scans to detect new items across devices
+  const seenOrderIds = useRef<Set<string>>(new Set());
+  const lastProcessedScanTime = useRef<number>(Date.now() - 10000);
   const initialLoadDone = useRef<boolean>(false);
 
   const loadData = async (isSilent = false) => {
@@ -105,25 +166,68 @@ export const OwnerDashboardPage: React.FC = () => {
       const seenIds = new Set<string>();
       const deduped: any[] = [];
       for (const o of rawOrders) {
-        if (!seenIds.has(o.id)) {
-          seenIds.add(o.id);
+        const k = o.id || o.order_reference;
+        if (k && !seenIds.has(k)) {
+          seenIds.add(k);
           deduped.push(o);
         }
+      }
+
+      // 1. Cross-device QR Scan detection from server
+      if (ordersRes.recentScan && ordersRes.recentScan.timestamp) {
+        if (ordersRes.recentScan.timestamp > lastProcessedScanTime.current) {
+          lastProcessedScanTime.current = ordersRes.recentScan.timestamp;
+          if (soundEnabled) {
+            playChime('scan');
+          }
+          setQrScanNotice({
+            slug: ordersRes.recentScan.slug,
+            shopName: ordersRes.recentScan.shopName,
+            time: new Date(ordersRes.recentScan.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+          });
+          setTimeout(() => setQrScanNotice(null), 10000);
+        }
+      }
+
+      // 2. Cross-device Live Incoming Order arrival detection
+      if (initialLoadDone.current) {
+        let hasNewOrder = false;
+        let latestNewOrder: any = null;
+        for (const o of deduped) {
+          const key = o.id || o.order_reference;
+          if (key && !seenOrderIds.current.has(key)) {
+            hasNewOrder = true;
+            latestNewOrder = o;
+            seenOrderIds.current.add(key);
+          }
+        }
+
+        if (hasNewOrder && latestNewOrder) {
+          if (soundEnabled) {
+            playChime('order');
+          }
+          setNewOrderNotice({
+            id: latestNewOrder.id,
+            ref: latestNewOrder.order_reference || latestNewOrder.orderReference || 'New Order',
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            files: latestNewOrder.file_count || latestNewOrder.documents?.length || 1
+          });
+          // Auto-switch to INCOMING tab so owner sees the new arrival immediately
+          setQueueTab('INCOMING');
+          setTimeout(() => setNewOrderNotice(null), 12000);
+        }
+      } else {
+        // Initial load: populate seenOrderIds with all existing orders
+        for (const o of deduped) {
+          if (o.id) seenOrderIds.current.add(o.id);
+          if (o.order_reference) seenOrderIds.current.add(o.order_reference);
+        }
+        initialLoadDone.current = true;
       }
 
       setOrders(deduped);
       setPrinters(printersRes?.printers || []);
       setConnector(printersRes?.connector || { isPaired: false, isOnline: false });
-
-      // Audio notification chime when new orders arrive
-      const currentSubmitted = deduped.filter((o: any) => o.status === 'SUBMITTED' || o.status === 'RECEIVED').length;
-      if (initialLoadDone.current && currentSubmitted > prevSubmittedCount.current) {
-        if (soundEnabled) {
-          playChime();
-        }
-      }
-      prevSubmittedCount.current = currentSubmitted;
-      initialLoadDone.current = true;
     } catch (err: any) {
       console.warn('Dashboard fetch warning:', err);
     } finally {
@@ -135,26 +239,37 @@ export const OwnerDashboardPage: React.FC = () => {
   useEffect(() => {
     loadData();
 
-    // Auto-refresh every 4 seconds for real-time live receiving
+    // Unlock Web Audio API on first user interaction anywhere on the page
+    const handleUserInteraction = () => {
+      const ctx = getAudioContext();
+      if (ctx && ctx.state !== 'suspended') {
+        setAudioUnlocked(true);
+      }
+    };
+    window.addEventListener('pointerdown', handleUserInteraction, { passive: true });
+    window.addEventListener('keydown', handleUserInteraction, { passive: true });
+
+    // Auto-refresh every 3 seconds for real-time live receiving
     const interval = setInterval(() => {
       loadData(true);
-    }, 4000);
+    }, 3000);
 
-    // Instant real-time notification listener via BroadcastChannel
+    // Instant real-time notification listener via BroadcastChannel (same browser tabs)
     let bc: BroadcastChannel | null = null;
     try {
       if (typeof BroadcastChannel !== 'undefined') {
         bc = new BroadcastChannel('smart_xerox_orders_channel');
         bc.onmessage = (ev) => {
           if (ev.data?.type === 'QR_SCANNED') {
-            if (soundEnabled) playChime();
+            if (soundEnabled) playChime('scan');
             setQrScanNotice({
               slug: ev.data.slug,
               time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
             });
-            setTimeout(() => setQrScanNotice(null), 8000);
+            setTimeout(() => setQrScanNotice(null), 10000);
           } else if (ev.data?.type === 'NEW_ORDER') {
-            if (soundEnabled) playChime();
+            if (soundEnabled) playChime('order');
+            setQueueTab('INCOMING');
             loadData(true);
           } else {
             loadData(true);
@@ -168,15 +283,16 @@ export const OwnerDashboardPage: React.FC = () => {
       if (e.key === 'smart_xerox_last_qr_scan') {
         try {
           const scanData = JSON.parse(e.newValue || '{}');
-          if (soundEnabled) playChime();
+          if (soundEnabled) playChime('scan');
           setQrScanNotice({
             slug: scanData.slug,
             time: new Date(scanData.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
           });
-          setTimeout(() => setQrScanNotice(null), 8000);
+          setTimeout(() => setQrScanNotice(null), 10000);
         } catch {}
       } else if (e.key === 'smart_xerox_last_order_received' || e.key === 'smart_xerox_offline_orders') {
-        if (soundEnabled) playChime();
+        if (soundEnabled) playChime('order');
+        setQueueTab('INCOMING');
         loadData(true);
       } else {
         loadData(true);
@@ -184,7 +300,8 @@ export const OwnerDashboardPage: React.FC = () => {
     };
 
     const handleNewOrder = () => {
-      if (soundEnabled) playChime();
+      if (soundEnabled) playChime('order');
+      setQueueTab('INCOMING');
       loadData(true);
     };
 
@@ -201,6 +318,8 @@ export const OwnerDashboardPage: React.FC = () => {
       if (bc) {
         try { bc.close(); } catch {}
       }
+      window.removeEventListener('pointerdown', handleUserInteraction);
+      window.removeEventListener('keydown', handleUserInteraction);
       window.removeEventListener('smart_xerox_new_order', handleNewOrder);
       window.removeEventListener('smart_xerox_order_updated', handleOrderUpdate);
       window.removeEventListener('storage', handleStorageEvent);
@@ -321,15 +440,18 @@ export const OwnerDashboardPage: React.FC = () => {
     setTimeout(() => setCopiedRef(null), 2000);
   };
 
+  // Statuses considered "INCOMING" (includes auto-accepted and queued jobs)
+  const INCOMING_STATUSES = ['SUBMITTED', 'RECEIVED', 'ACCEPTED', 'QUEUED'];
+
   // Counts by category
-  const incomingCount = orders.filter((o) => o.status === 'SUBMITTED' || o.status === 'RECEIVED').length;
+  const incomingCount = orders.filter((o) => INCOMING_STATUSES.includes(o.status)).length;
   const readyCount = orders.filter((o) => o.status === 'READY_FOR_PICKUP').length;
   const activeCount = orders.filter((o) => !['COMPLETED', 'CANCELLED', 'REJECTED'].includes(o.status)).length;
 
   // Filter orders based on active tab
   const filteredOrders = orders.filter((o) => {
     if (queueTab === 'INCOMING') {
-      return o.status === 'SUBMITTED' || o.status === 'RECEIVED';
+      return INCOMING_STATUSES.includes(o.status);
     }
     if (queueTab === 'READY') {
       return o.status === 'READY_FOR_PICKUP';
@@ -366,28 +488,46 @@ export const OwnerDashboardPage: React.FC = () => {
               </div>
               <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
                 <span className="w-2 h-2 rounded-full bg-[#bbf451] animate-pulse" />
-                Live Receiving Queue • Auto-refreshing every 4s
+                Live Receiving Queue • Auto-refreshing every 3s
               </p>
             </div>
           </div>
 
-          {/* Sound Toggle & Refresh */}
+          {/* Sound Toggle, Test Chime & Refresh */}
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => {
-                setSoundEnabled(!soundEnabled);
-                if (!soundEnabled) playChime();
+                const nextState = !soundEnabled;
+                setSoundEnabled(nextState);
+                if (nextState) {
+                  playChime('order');
+                  setAudioUnlocked(true);
+                }
               }}
               className={`p-2.5 rounded-2xl border transition flex items-center gap-1.5 text-xs font-bold ${
                 soundEnabled
                   ? 'bg-[#bbf451] border-[#bbf451] text-[#080d09] shadow-[0_0_15px_rgba(187,244,81,0.25)]'
                   : 'bg-[#132015] border-[#273d2c] text-slate-400 hover:text-white'
               }`}
-              title={soundEnabled ? 'Chime sound enabled' : 'Chime sound muted'}
+              title={soundEnabled ? 'Click to mute sound alerts' : 'Click to enable audio chime'}
             >
               {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
               <span className="hidden sm:inline">{soundEnabled ? 'Sound On' : 'Muted'}</span>
             </button>
+
+            {soundEnabled && (
+              <button
+                onClick={() => {
+                  playChime('order');
+                  setAudioUnlocked(true);
+                }}
+                className="px-3 py-2.5 rounded-2xl border border-[#273d2c] bg-[#142317] hover:bg-[#1a2e1e] text-[#bbf451] text-xs font-bold transition flex items-center gap-1 shadow-sm"
+                title="Test audio chime on this computer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#bbf451]" />
+                <span>Test Chime 🔔</span>
+              </button>
+            )}
 
             <button
               onClick={() => loadData(false)}
@@ -403,17 +543,6 @@ export const OwnerDashboardPage: React.FC = () => {
         {/* Tabbed Queue Switcher */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-bold">
           <button
-            onClick={() => setQueueTab('ACTIVE')}
-            className={`px-4 py-2 rounded-2xl border transition whitespace-nowrap ${
-              queueTab === 'ACTIVE'
-                ? 'bg-[#bbf451] text-[#080d09] border-[#bbf451] shadow-[0_0_18px_rgba(187,244,81,0.25)] font-black'
-                : 'bg-[#132015] text-slate-300 border-[#233827] hover:bg-[#18271b]'
-            }`}
-          >
-            Active Queue ({activeCount})
-          </button>
-
-          <button
             onClick={() => setQueueTab('INCOMING')}
             className={`px-4 py-2 rounded-2xl border transition whitespace-nowrap flex items-center gap-1.5 ${
               queueTab === 'INCOMING'
@@ -427,6 +556,17 @@ export const OwnerDashboardPage: React.FC = () => {
                 {incomingCount}
               </span>
             )}
+          </button>
+
+          <button
+            onClick={() => setQueueTab('ACTIVE')}
+            className={`px-4 py-2 rounded-2xl border transition whitespace-nowrap ${
+              queueTab === 'ACTIVE'
+                ? 'bg-[#bbf451] text-[#080d09] border-[#bbf451] shadow-[0_0_18px_rgba(187,244,81,0.25)] font-black'
+                : 'bg-[#132015] text-slate-300 border-[#233827] hover:bg-[#18271b]'
+            }`}
+          >
+            Active Queue ({activeCount})
           </button>
 
           <button
@@ -457,6 +597,39 @@ export const OwnerDashboardPage: React.FC = () => {
           </button>
         </div>
 
+        {/* Real-Time Live Order Alert Banner */}
+        {newOrderNotice && (
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/90 to-[#0e1d11] border-2 border-[#bbf451]/60 text-emerald-200 text-xs flex items-center justify-between gap-3 animate-in fade-in duration-200 shadow-[0_0_30px_rgba(187,244,81,0.25)]">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#bbf451] text-[#080d09] flex items-center justify-center font-black shrink-0 shadow-[0_0_15px_rgba(187,244,81,0.4)]">
+                <Sparkles className="w-5 h-5 animate-spin" />
+              </div>
+              <div>
+                <strong className="block text-sm font-extrabold text-[#bbf451] font-syne">
+                  🎉 New Print Order Arrived Live! Reference #{newOrderNotice.ref}
+                </strong>
+                <span className="text-[11px] text-slate-300">
+                  Customer submitted {newOrderNotice.files} document(s) at {newOrderNotice.time}. Order has been automatically brought to your Incoming Queue!
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setQueueTab('INCOMING')}
+                className="px-3.5 py-1.5 rounded-xl bg-[#bbf451] text-[#080d09] font-black text-xs hover:bg-[#a6db42] transition shadow-md"
+              >
+                View Now
+              </button>
+              <button
+                onClick={() => setNewOrderNotice(null)}
+                className="text-slate-400 hover:text-white font-bold text-xs underline"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* QR Code Scanned Real-Time Alert Banner */}
         {qrScanNotice && (
           <div className="p-4 rounded-2xl bg-indigo-950/70 border-2 border-indigo-500/50 text-indigo-200 text-xs flex items-center justify-between gap-3 animate-in fade-in duration-200 shadow-[0_0_25px_rgba(99,102,241,0.2)]">
@@ -469,7 +642,7 @@ export const OwnerDashboardPage: React.FC = () => {
                   🔔 Counter Alert: Customer Scanned Counter QR Code!
                 </strong>
                 <span className="text-[11px] text-indigo-300">
-                  A customer just scanned your shop QR at {qrScanNotice.time}. Uploaded documents will arrive in this queue momentarily.
+                  A customer just scanned your shop QR {qrScanNotice.shopName ? `(${qrScanNotice.shopName}) ` : ''}at {qrScanNotice.time}. Uploaded documents will arrive in this queue momentarily.
                 </span>
               </div>
             </div>

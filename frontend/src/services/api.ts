@@ -488,7 +488,19 @@ export const api = {
         services: [],
         pricingRules: []
       };
+    } finally {
+      // Fire-and-forget scan ping to server so owner's counter station plays chime
+      this.notifyQrScan(slugOrToken).catch(() => {});
     }
+  },
+
+  async notifyQrScan(slugOrToken: string) {
+    if (!slugOrToken) return;
+    try {
+      await fetch(`${API_BASE}/shops/public/${encodeURIComponent(slugOrToken)}/scan`, {
+        method: 'POST',
+      });
+    } catch {}
   },
 
   // Customer Order
@@ -1187,6 +1199,7 @@ export const api = {
     } catch {}
 
     let serverOrders: any[] = [];
+    let serverRecentScan: any = null;
     try {
       const params = new URLSearchParams();
       if (status) params.append('status', status);
@@ -1195,9 +1208,12 @@ export const api = {
       const res = await fetch(`${API_BASE}/orders/owner?${params.toString()}`, {
         headers: { ...getAuthHeader() },
       });
-      const data = await handleResponse<{ orders: any[] }>(res);
+      const data = await handleResponse<{ orders: any[]; recentScan?: any }>(res);
       if (data && Array.isArray(data.orders)) {
         serverOrders = data.orders;
+      }
+      if (data?.recentScan) {
+        serverRecentScan = data.recentScan;
       }
     } catch {}
 
@@ -1214,8 +1230,8 @@ export const api = {
     const seen = new Set<string>();
     const merged: any[] = [];
 
-    // Local orders take precedence for instant updates
-    for (const o of localOrders) {
+    // Server orders take precedence for cross-device incoming orders
+    for (const o of serverOrders) {
       const key = o.id || o.order_reference;
       if (key && !seen.has(key)) {
         seen.add(key);
@@ -1223,7 +1239,8 @@ export const api = {
       }
     }
 
-    for (const o of serverOrders) {
+    // Local orders fallback
+    for (const o of localOrders) {
       const key = o.id || o.order_reference;
       if (key && !seen.has(key)) {
         seen.add(key);
@@ -1244,7 +1261,7 @@ export const api = {
       );
     }
 
-    return { orders: result };
+    return { orders: result, recentScan: serverRecentScan };
   },
 
   async getOwnerOrderDetail(orderId: string) {

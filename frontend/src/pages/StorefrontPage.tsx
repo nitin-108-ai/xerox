@@ -107,7 +107,9 @@ export const StorefrontPage: React.FC = () => {
       if (!slug) return;
       try {
         setLoading(true);
-        setError(null);
+        // Instant fire-and-forget cross-device ping to server so shopkeeper hears the chime
+        api.notifyQrScan(slug).catch(() => {});
+
         const data = await api.getStorefront(slug);
         setShopData(data);
 
@@ -340,6 +342,9 @@ export const StorefrontPage: React.FC = () => {
       const response = await api.createOrder(formData);
       setUploadProgress(100);
       setSubmittedOrder(response);
+
+      // Trigger immediate cross-device counter chime
+      api.notifyQrScan(shopData?.shop?.slug || slug || 'quickcopy-express').catch(() => {});
     } catch (err: any) {
       setSubmitError(err.message || 'Failed to send print request. Please try again.');
       setUploadProgress(0);

@@ -6,15 +6,17 @@ import {
   updatePricingRules,
   getShopQr,
   regenerateQrCode,
-  uploadShopImage
+  uploadShopImage,
+  notifyShopQrScan
 } from '../controllers/shop.controller.js';
 import { authenticateUser, requireRole } from '../middleware/auth.middleware.js';
 import { upload } from '../middleware/upload.middleware.js';
 
 const router = Router();
 
-// Public storefront route
+// Public storefront routes
 router.get('/public/:slug', getPublicStorefront);
+router.post('/public/:slug/scan', notifyShopQrScan);
 
 // Protected shop owner routes
 router.use('/owner', authenticateUser, requireRole('SHOP_OWNER'));

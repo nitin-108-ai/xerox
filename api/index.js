@@ -81676,6 +81676,13 @@ async function initDb() {
     }
   }
   if (pgliteInstance) {
+    if (typeof pgliteInstance.waitReady !== "undefined") {
+      try {
+        await pgliteInstance.waitReady;
+      } catch (wrErr) {
+        console.warn("PGlite waitReady warning:", wrErr.message);
+      }
+    }
     console.log("PGlite engine initialized successfully.");
   } else {
     console.log("In-memory zero-dependency database fallback ready.");
@@ -82573,6 +82580,79 @@ var StorageService = class {
 };
 var storageService = new StorageService();
 
+// backend/src/services/liveEvents.service.ts
+var LiveEventsService = class {
+  scansByShop = /* @__PURE__ */ new Map();
+  scansBySlug = /* @__PURE__ */ new Map();
+  lastScan = null;
+  recentOrdersRing = [];
+  recordScan(shopId, slug, shopName = "Smart Xerox Counter") {
+    const event = {
+      shopId,
+      slug,
+      shopName,
+      timestamp: Date.now()
+    };
+    this.lastScan = event;
+    if (shopId) {
+      this.scansByShop.set(shopId, event);
+    }
+    if (slug) {
+      this.scansBySlug.set(slug.toLowerCase(), event);
+    }
+    return event;
+  }
+  getRecentScan(shopIdOrSlug, maxAgeMs = 3e4) {
+    if (!shopIdOrSlug) {
+      return this.lastScan && Date.now() - this.lastScan.timestamp <= maxAgeMs ? this.lastScan : null;
+    }
+    let event = this.scansByShop.get(shopIdOrSlug);
+    if (!event) {
+      event = this.scansBySlug.get(shopIdOrSlug.toLowerCase());
+    }
+    if (!event && this.lastScan && Date.now() - this.lastScan.timestamp <= maxAgeMs) {
+      event = this.lastScan;
+    }
+    if (!event) return null;
+    if (Date.now() - event.timestamp > maxAgeMs) {
+      return null;
+    }
+    return event;
+  }
+  recordOrder(order) {
+    if (!order) return;
+    const item = {
+      id: order.id,
+      order_reference: order.order_reference || order.orderReference || order.reference,
+      shop_id: order.shop_id || order.shopId || "shp-quickcopy-001",
+      customer_alias: order.customer_alias || order.customerAlias || "Customer",
+      status: order.status || "SUBMITTED",
+      estimated_amount: String(order.estimated_amount || order.total_amount || order.final_amount || "10.00"),
+      pickup_otp: order.pickup_otp || order.pickupOtp || "",
+      file_count: order.file_count || order.documents?.length || 1,
+      original_filename: order.original_filename || order.documents?.[0]?.original_filename || "document.pdf",
+      timestamp: Date.now(),
+      documents: order.documents || [],
+      items: order.items || [],
+      created_at: order.created_at || (/* @__PURE__ */ new Date()).toISOString()
+    };
+    this.recentOrdersRing = this.recentOrdersRing.filter(
+      (o5) => o5.id !== item.id && o5.order_reference !== item.order_reference
+    );
+    this.recentOrdersRing.unshift(item);
+    if (this.recentOrdersRing.length > 60) {
+      this.recentOrdersRing.pop();
+    }
+  }
+  getRecentOrders(shopId) {
+    if (!shopId) return this.recentOrdersRing;
+    return this.recentOrdersRing.filter(
+      (o5) => o5.shop_id === shopId || o5.shop_id === "shp-quickcopy-001"
+    );
+  }
+};
+var liveEvents = new LiveEventsService();
+
 // backend/src/controllers/shop.controller.ts
 function safeParseJson(val, fallback = []) {
   if (!val) return fallback;
@@ -82599,6 +82679,7 @@ async function getPublicStorefront(req, res) {
       return res.status(404).json({ error: "Shop not found or invalid QR code." });
     }
     const rawShop = shopRes.rows[0];
+    liveEvents.recordScan(rawShop.id, rawShop.slug, rawShop.name);
     if (!rawShop.is_verified) {
       return res.status(403).json({
         error: "This shop is pending administrative verification and cannot accept print jobs yet.",
@@ -83089,6 +83170,24 @@ async function regenerateQrCode(req, res) {
     res.status(500).json({ error: "Failed to regenerate QR code." });
   }
 }
+async function notifyShopQrScan(req, res) {
+  const identifier = req.params.slug;
+  try {
+    const shopRes = await query(`
+      SELECT id, slug, name FROM shops WHERE (id = $1 OR slug = $1 OR qr_code_token = $1) LIMIT 1;
+    `, [identifier]);
+    if (shopRes.rows.length > 0) {
+      const s5 = shopRes.rows[0];
+      const scan2 = liveEvents.recordScan(s5.id, s5.slug, s5.name);
+      return res.json({ success: true, scan: scan2 });
+    }
+    const scan = liveEvents.recordScan(identifier, identifier, "Smart Xerox Counter");
+    return res.json({ success: true, scan });
+  } catch {
+    const scan = liveEvents.recordScan(identifier, identifier, "Smart Xerox Counter");
+    return res.json({ success: true, scan });
+  }
+}
 
 // backend/src/middleware/upload.middleware.ts
 var import_multer = __toESM(require_multer(), 1);
@@ -83111,6 +83210,7 @@ var upload = (0, import_multer.default)({
 // backend/src/routes/shop.routes.ts
 var router2 = (0, import_express2.Router)();
 router2.get("/public/:slug", getPublicStorefront);
+router2.post("/public/:slug/scan", notifyShopQrScan);
 router2.use("/owner", authenticateUser, requireRole("SHOP_OWNER"));
 router2.get("/owner/profile", getOwnerShop);
 router2.put("/owner/profile", updateShopProfile);
@@ -83448,6 +83548,35 @@ async function createOrder(req, res) {
         totalAmount: pricing.total
       }
     });
+    liveEvents.recordOrder({
+      id: orderId,
+      order_reference: orderReference,
+      orderReference,
+      shop_id: shopId,
+      customer_alias: customerAlias || "Guest Customer",
+      status: initialStatus,
+      estimated_amount: pricing.total,
+      final_amount: pricing.total,
+      pickup_otp: pickupOtp,
+      file_count: validatedFiles.length,
+      original_filename: validatedFiles[0]?.file?.originalname || "document.pdf",
+      documents: validatedFiles.map((v6) => ({
+        id: v6.saved.storedFilename,
+        original_filename: v6.file.originalname,
+        file_size: v6.saved.fileSize,
+        mime_type: v6.validation.detectedMime,
+        page_count: v6.pageCount
+      })),
+      items: [{
+        paper_size: paperSize,
+        color_mode: colorMode,
+        is_duplex: duplexBool,
+        copies: numCopies,
+        page_count: totalPagesAllFiles,
+        item_price: pricing.total
+      }],
+      created_at: (/* @__PURE__ */ new Date()).toISOString()
+    });
     res.status(201).json({
       message: "Print job submitted successfully.",
       orderReference,
@@ -83724,7 +83853,23 @@ async function listOwnerOrders(req, res) {
         auto_delete_at: firstDoc ? firstDoc.auto_delete_at : null
       };
     });
-    res.json({ orders: formattedOrders });
+    const recentScan = liveEvents.getRecentScan(req.user.shopId, 3e4);
+    const liveOrders = liveEvents.getRecentOrders(req.user.shopId);
+    const seenIds = /* @__PURE__ */ new Set();
+    const finalOrders = [];
+    for (const o5 of formattedOrders) {
+      if (o5.id) seenIds.add(o5.id);
+      if (o5.order_reference) seenIds.add(o5.order_reference);
+      finalOrders.push(o5);
+    }
+    for (const lo of liveOrders) {
+      if (!seenIds.has(lo.id) && !seenIds.has(lo.order_reference)) {
+        seenIds.add(lo.id);
+        if (lo.order_reference) seenIds.add(lo.order_reference);
+        finalOrders.unshift(lo);
+      }
+    }
+    res.json({ orders: finalOrders, recentScan: recentScan || null });
   } catch (err2) {
     console.error("List owner orders failed:", err2);
     res.status(500).json({ error: "Failed to load shop orders." });

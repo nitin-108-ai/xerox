@@ -8,6 +8,7 @@ import { query } from '../db/connection.js';
 import { config } from '../config/index.js';
 import { logAuditEvent } from '../services/audit.service.js';
 import { storageService } from '../storage/storage.service.js';
+import { liveEvents } from '../services/liveEvents.service.js';
 
 function safeParseJson(val: any, fallback: any = []) {
   if (!val) return fallback;
@@ -38,6 +39,9 @@ export async function getPublicStorefront(req: Request, res: Response) {
     }
 
     const rawShop = shopRes.rows[0];
+
+    // Record real-time cross-device scan event
+    liveEvents.recordScan(rawShop.id, rawShop.slug, rawShop.name);
 
     if (!rawShop.is_verified) {
       return res.status(403).json({
@@ -612,3 +616,24 @@ export async function regenerateQrCode(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to regenerate QR code.' });
   }
 }
+
+export async function notifyShopQrScan(req: Request, res: Response) {
+  const identifier = req.params.slug;
+  try {
+    const shopRes = await query(`
+      SELECT id, slug, name FROM shops WHERE (id = $1 OR slug = $1 OR qr_code_token = $1) LIMIT 1;
+    `, [identifier]);
+
+    if (shopRes.rows.length > 0) {
+      const s = shopRes.rows[0];
+      const scan = liveEvents.recordScan(s.id, s.slug, s.name);
+      return res.json({ success: true, scan });
+    }
+    const scan = liveEvents.recordScan(identifier, identifier, 'Smart Xerox Counter');
+    return res.json({ success: true, scan });
+  } catch {
+    const scan = liveEvents.recordScan(identifier, identifier, 'Smart Xerox Counter');
+    return res.json({ success: true, scan });
+  }
+}
+
