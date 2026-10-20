@@ -39,11 +39,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api"
+      "destination": "/api/index.js?path=$1"
     },
     {
       "source": "/api",
-      "destination": "/api"
+      "destination": "/api/index.js"
     },
     {
       "source": "/((?!api|assets|favicon|manifest|sw\\.js|offline\\.html).*)",
