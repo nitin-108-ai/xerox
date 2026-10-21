@@ -16,9 +16,27 @@ try {
   }
 }
 
+function mirrorToDist() {
+  const distApi = 'frontend/dist/api';
+  if (fs.existsSync('frontend/dist')) {
+    if (!fs.existsSync(distApi)) fs.mkdirSync(distApi, { recursive: true });
+    if (fs.existsSync('api/index.js')) fs.copyFileSync('api/index.js', path.join(distApi, 'index.js'));
+    if (fs.existsSync('api/[...path].js')) fs.copyFileSync('api/[...path].js', path.join(distApi, '[...path].js'));
+    fs.writeFileSync(path.join(distApi, 'orders.js'), "export { default } from './index.js';\n");
+    fs.writeFileSync(path.join(distApi, 'health.js'), "export { default } from './index.js';\n");
+    fs.writeFileSync(path.join(distApi, 'shops.js'), "export { default } from './index.js';\n");
+    fs.writeFileSync(path.join(distApi, 'auth.js'), "export { default } from './index.js';\n");
+    fs.writeFileSync(path.join(distApi, 'printers.js'), "export { default } from './index.js';\n");
+    if (fs.existsSync('api/pglite.data')) fs.copyFileSync('api/pglite.data', path.join(distApi, 'pglite.data'));
+    if (fs.existsSync('api/pglite.wasm')) fs.copyFileSync('api/pglite.wasm', path.join(distApi, 'pglite.wasm'));
+    console.log('[build-api] Successfully mirrored API bundle to frontend/dist/api/');
+  }
+}
+
 if (!esbuild) {
   if (fs.existsSync('api/index.js') && fs.statSync('api/index.js').size > 1000) {
     console.log('[build-api] esbuild not available, using existing pre-bundled api/index.js.');
+    mirrorToDist();
     process.exit(0);
   } else {
     console.error('[build-api] esbuild not available and no pre-bundled api/index.js found.');
@@ -46,9 +64,14 @@ try {
   });
   console.log('Successfully bundled api/index.js!');
 
-  // Create Vercel catch-all API route handler
+  // Create Vercel catch-all API route handler and explicit endpoint shims
   fs.writeFileSync('api/[...path].js', "export { default } from './index.js';\n");
-  console.log('Successfully created api/[...path].js!');
+  fs.writeFileSync('api/orders.js', "export { default } from './index.js';\n");
+  fs.writeFileSync('api/health.js', "export { default } from './index.js';\n");
+  fs.writeFileSync('api/shops.js', "export { default } from './index.js';\n");
+  fs.writeFileSync('api/auth.js', "export { default } from './index.js';\n");
+  fs.writeFileSync('api/printers.js', "export { default } from './index.js';\n");
+  console.log('Successfully created api route shims!');
 
   // Copy PGlite binaries to api folder if available
   const possiblePgliteDirs = [
@@ -71,6 +94,9 @@ try {
       }
     }
   }
+
+  // Mirror everything to frontend/dist/api
+  mirrorToDist();
 } catch (err) {
   console.error('Failed to bundle serverless API:', err);
   process.exit(1);

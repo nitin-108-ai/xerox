@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Printer,
@@ -13,11 +13,15 @@ import {
   Laptop,
   Clock,
   User,
-  ChevronDown,
   Menu,
   ChevronRight,
   Sparkles,
-  Smartphone
+  Smartphone,
+  CreditCard,
+  FileText,
+  Shield,
+  Layers,
+  RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
@@ -47,29 +51,17 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Navigation Dropdown & Mobile Menu state
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Mobile sidebar drawer state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pairingModalOpen, setPairingModalOpen] = useState(false);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [pairingLoading, setPairingLoading] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const mobileDropdownRef = useRef<HTMLDivElement | null>(null);
 
-  // Close dropdown on outside click
+  // Close mobile sidebar on route change
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as Node;
-      const insideDesktop = dropdownRef.current && dropdownRef.current.contains(target);
-      const insideMobile = mobileDropdownRef.current && mobileDropdownRef.current.contains(target);
-      if (!insideDesktop && !insideMobile) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -82,7 +74,6 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
       const res = await api.generatePairingCode();
       setPairingCode(res.pairingCode);
       setPairingModalOpen(true);
-      setDropdownOpen(false);
     } catch (err: any) {
       alert(err.message || 'Failed to generate pairing code.');
     } finally {
@@ -103,402 +94,365 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
   const shopId = shop?.id || user?.shopId || 'shp-quickcopy-001';
   const storefrontUrl = `${window.location.origin}/shop/${shopSlug}`;
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path === '/owner/dashboard') {
+      return location.pathname === '/owner/dashboard' || location.pathname === '/owner' || location.pathname === '/owner/orders';
+    }
+    return location.pathname.startsWith(path);
+  };
 
-  // Reusable QR & Settings Dropdown Menu
-  const renderDropdownMenu = () => (
-    <div className="absolute right-0 mt-2 w-64 bg-[#101911] rounded-2xl border border-[#233526] shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
-      <div className="px-3.5 py-2 border-b border-[#1d2d20]">
-        <p className="text-xs font-extrabold text-white truncate font-syne">{shopName}</p>
-        <p className="text-[10px] text-slate-400 font-mono mt-0.5">Permanent ID: {shopId}</p>
+  const navGroups = [
+    {
+      title: 'LIVE QUEUE & COUNTER',
+      items: [
+        {
+          label: 'Receiving Panel',
+          path: '/owner/dashboard',
+          icon: Printer,
+          badge: 'Live',
+          badgeColor: 'bg-[#bbf451] text-[#080d09]',
+        },
+        {
+          label: 'Counter QR & Poster',
+          path: '/owner/qr',
+          icon: QrCode,
+        },
+        {
+          label: 'Pricing & Rates',
+          path: '/owner/pricing',
+          icon: CreditCard,
+        },
+      ],
+    },
+    {
+      title: 'SHOP MANAGEMENT',
+      items: [
+        {
+          label: 'Shop Profile & Timings',
+          path: '/owner/profile',
+          icon: User,
+        },
+        {
+          label: 'Connected Printers',
+          path: '/owner/printers',
+          icon: Laptop,
+          statusDot: connector?.isOnline ? 'bg-[#bbf451]' : 'bg-amber-400',
+        },
+        {
+          label: 'Reports & Analytics',
+          path: '/owner/reports',
+          icon: Sparkles,
+        },
+        {
+          label: 'Store Settings',
+          path: '/owner/settings',
+          icon: Settings,
+        },
+      ],
+    },
+    {
+      title: 'TOOLS & POLICIES',
+      items: [
+        {
+          label: 'Privacy Policy',
+          path: '/privacy',
+          icon: Shield,
+        },
+        {
+          label: 'Terms of Service',
+          path: '/terms',
+          icon: FileText,
+        },
+      ],
+    },
+  ];
+
+  const sidebarContent = (
+    <div className="flex flex-col h-full bg-gradient-to-b from-[#0a110c] via-[#080d09] to-[#050806] text-slate-200">
+      {/* Brand Header */}
+      <div className="p-5 border-b border-[#1b2b1e]">
+        <Link to="/owner/dashboard" className="flex items-center gap-3 group">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#1b2e20] to-[#0e1911] border border-[#2e4c34] text-[#bbf451] flex items-center justify-center font-black shadow-[0_0_20px_rgba(187,244,81,0.2)] group-hover:scale-105 transition-transform shrink-0">
+            <Printer className="w-5 h-5 text-[#bbf451]" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="font-black text-sm text-white tracking-tight font-syne">
+                Smart Xerox
+              </span>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#bbf451] block font-mono">
+              Counter Station
+            </span>
+          </div>
+        </Link>
+
+        {/* Active Shop Badge Card */}
+        <div className="mt-4 p-3 rounded-2xl bg-[#0e1610] border border-[#203324] shadow-inner">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex items-center gap-1.5">
+              <span className="text-xs font-black text-white truncate font-syne" title={shopName}>
+                {shopName}
+              </span>
+              <span title="Verified Counter" className="inline-flex items-center">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#bbf451] shrink-0" />
+              </span>
+            </div>
+          </div>
+          <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+            <span className="truncate">ID: {shopId}</span>
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-bold ${
+              connector?.isOnline ? 'bg-[#bbf451]/15 text-[#bbf451] border border-[#bbf451]/30' : 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${connector?.isOnline ? 'bg-[#bbf451] animate-pulse' : 'bg-amber-400'}`} />
+              {connector?.isOnline ? 'Printer Online' : 'Manual'}
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div className="py-1">
-        <Link
-          to="/owner/qr"
-          onClick={() => setDropdownOpen(false)}
-          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-[#18261b] hover:text-[#bbf451] flex items-center gap-2.5 transition"
-        >
-          <QrCode className="w-4 h-4 text-[#bbf451] shrink-0" />
-          <span>View / Download Shop QR</span>
-        </Link>
+      {/* Scrollable Navigation */}
+      <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-6 scrollbar-thin scrollbar-thumb-[#1c2e20]">
+        {navGroups.map((group) => (
+          <div key={group.title} className="space-y-1">
+            <p className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 font-mono">
+              {group.title}
+            </p>
+            <div className="space-y-0.5">
+              {group.items.map((item: any) => {
+                const active = isActive(item.path);
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all group ${
+                      active
+                        ? 'bg-gradient-to-r from-[#192b1d] to-[#121f15] text-[#bbf451] border border-[#2f5035] shadow-[0_4px_20px_rgba(0,0,0,0.5)]'
+                        : 'text-slate-300 hover:text-white hover:bg-[#111c13] border border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Icon className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${
+                        active ? 'text-[#bbf451]' : 'text-slate-400'
+                      }`} />
+                      <span className="truncate font-syne">{item.label}</span>
+                    </div>
 
-        <Link
-          to="/owner/profile"
-          onClick={() => setDropdownOpen(false)}
-          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-[#18261b] hover:text-[#bbf451] flex items-center gap-2.5 transition"
-        >
-          <User className="w-4 h-4 text-[#bbf451] shrink-0" />
-          <span>Shop Profile</span>
-        </Link>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {item.statusDot && (
+                        <span className={`w-2 h-2 rounded-full ${item.statusDot}`} />
+                      )}
+                      {item.badge && (
+                        <span className={`px-2 py-0.5 text-[9px] font-black rounded-full uppercase tracking-wider ${item.badgeColor}`}>
+                          {item.badge}
+                        </span>
+                      )}
+                      {active && (
+                        <ChevronRight className="w-3.5 h-3.5 text-[#bbf451]" />
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
 
-        <Link
-          to="/owner/settings"
-          onClick={() => setDropdownOpen(false)}
-          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-[#18261b] hover:text-[#bbf451] flex items-center gap-2.5 transition"
-        >
-          <Settings className="w-4 h-4 text-[#bbf451] shrink-0" />
-          <span>Settings</span>
-        </Link>
+        {/* Quick Action: Pair Windows PC Button */}
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={handleGeneratePairingCode}
+            disabled={pairingLoading}
+            className="w-full px-3.5 py-2.5 rounded-2xl border border-[#27402c] bg-gradient-to-r from-[#132216] to-[#0e1810] hover:from-[#192c1d] hover:to-[#132216] text-[#bbf451] text-xs font-bold flex items-center justify-between shadow-sm transition active:scale-98"
+          >
+            <div className="flex items-center gap-2.5">
+              <Smartphone className="w-4 h-4 text-[#bbf451]" />
+              <span className="font-syne">Pair Windows PC</span>
+            </div>
+            <span className="text-[10px] text-slate-400 font-mono">Code</span>
+          </button>
+        </div>
 
-        <Link
-          to="/owner/printers"
-          onClick={() => setDropdownOpen(false)}
-          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-[#18261b] hover:text-[#bbf451] flex items-center gap-2.5 transition"
-        >
-          <Laptop className="w-4 h-4 text-[#bbf451] shrink-0" />
-          <span>Connected Devices</span>
-        </Link>
-
-        <Link
-          to="/owner/reports"
-          onClick={() => setDropdownOpen(false)}
-          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-[#18261b] hover:text-[#bbf451] flex items-center gap-2.5 transition"
-        >
-          <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
-          <span>Sales &amp; Volume Reports</span>
-        </Link>
+        {/* Live Customer Storefront Link */}
+        <div>
+          <a
+            href={storefrontUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full px-3.5 py-2.5 rounded-2xl border border-[#213524] bg-[#0c140e] hover:bg-[#121c13] text-slate-300 hover:text-white text-xs font-semibold flex items-center justify-between transition group"
+          >
+            <div className="flex items-center gap-2.5 truncate">
+              <ExternalLink className="w-4 h-4 text-[#bbf451] shrink-0 group-hover:scale-110 transition-transform" />
+              <span className="truncate font-syne">Live Customer View</span>
+            </div>
+            <span className="text-[10px] font-bold text-[#bbf451] font-mono">Open ↗</span>
+          </a>
+        </div>
       </div>
 
-      <div className="pt-1 border-t border-[#1d2d20]">
-        <button
-          type="button"
-          onClick={() => {
-            setDropdownOpen(false);
-            handleGeneratePairingCode();
-          }}
-          className="w-full px-3.5 py-2 text-xs font-semibold text-[#bbf451] hover:bg-[#18261b] flex items-center gap-2.5 transition text-left"
-        >
-          <Smartphone className="w-4 h-4 shrink-0" />
-          <span>Pair Windows PC (Code)</span>
-        </button>
+      {/* Sidebar Footer / User Account */}
+      <div className="p-4 border-t border-[#1b2b1e] bg-[#070c08] space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#152317] border border-[#273d2c] text-[#bbf451] flex items-center justify-center font-bold text-xs shrink-0">
+              {user?.fullName?.charAt(0) || 'O'}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-white truncate font-syne">
+                {user?.fullName || shop?.owner_display_name || 'Counter Operator'}
+              </p>
+              <p className="text-[10px] text-slate-400 truncate font-mono">
+                {user?.email || 'owner@smartxerox.io'}
+              </p>
+            </div>
+          </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setDropdownOpen(false);
-            handleLogout();
-          }}
-          className="w-full px-3.5 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 transition text-left"
-        >
-          <LogOut className="w-4 h-4 shrink-0" />
-          <span>Logout</span>
-        </button>
+          <button
+            onClick={handleLogout}
+            className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition border border-transparent hover:border-rose-500/20 shrink-0"
+            title="Sign Out"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#080d09] text-slate-100 font-outfit flex flex-col">
-      {/* Top Header Navigation */}
-      <header className="sticky top-0 z-40 bg-[#0b120c]/90 backdrop-blur-md border-b border-[#1b2b1e] shadow-2xl">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
-          {/* Brand & Shop Info */}
-          <div className="flex items-center gap-3 min-w-0">
-            <Link to="/owner/dashboard" className="flex items-center gap-2.5 shrink-0" title="Back to Receiving Panel">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#162719] to-[#25422b] border border-[#3b6243] text-white flex items-center justify-center font-black shadow-md">
-                <Printer className="w-5 h-5 text-[#bbf451]" />
-              </div>
-              <div className="hidden sm:block">
-                <span className="font-extrabold text-sm text-white tracking-tight block font-syne">
-                  Smart Xerox
-                </span>
-                <span className="text-[10px] text-[#bbf451] font-bold uppercase tracking-wider block -mt-0.5">
-                  Counter Station
-                </span>
-              </div>
-            </Link>
+    <div className="min-h-screen bg-[#080d09] text-slate-100 font-outfit flex">
+      {/* 1. Desktop Fixed Left Sidebar */}
+      <aside className="hidden md:flex md:w-64 lg:w-72 flex-col fixed inset-y-0 left-0 z-40 border-r border-[#1a2d1e] shadow-[8px_0_35px_rgba(0,0,0,0.85)]">
+        {sidebarContent}
+      </aside>
 
-            <span className="hidden sm:inline text-slate-300">|</span>
+      {/* 2. Mobile Responsive Drawer Backdrop */}
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-white truncate max-w-[130px] sm:max-w-xs font-syne" title={shopName}>
-                  {shopName}
-                </span>
-                <span title="Verified Shop" className="inline-flex items-center">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#bbf451] shrink-0" />
-                </span>
-              </div>
+      {/* 3. Mobile Slide-in Drawer */}
+      <div
+        className={`md:hidden fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] transform transition-transform duration-300 ease-in-out border-r border-[#1a2d1e] shadow-2xl ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="relative h-full">
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="absolute top-4 right-4 p-2 rounded-xl bg-[#142017] text-slate-300 border border-[#273d2c] z-10"
+            aria-label="Close Sidebar"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          {sidebarContent}
+        </div>
+      </div>
+
+      {/* 4. Main Content Area */}
+      <div className="md:pl-64 lg:pl-72 flex-1 flex flex-col min-w-0">
+        {/* Mobile Top Header */}
+        <header className="md:hidden sticky top-0 z-30 bg-[#09110b]/95 backdrop-blur-md border-b border-[#1b2b1e] px-4 h-14 flex items-center justify-between gap-3 shadow-md">
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 rounded-xl bg-[#132015] border border-[#273d2c] text-[#bbf451] hover:bg-[#1a2b1d] transition"
+              aria-label="Open Sidebar"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-2">
+              <Printer className="w-4 h-4 text-[#bbf451]" />
+              <span className="font-extrabold text-sm text-white font-syne truncate max-w-[150px]">
+                {shopName}
+              </span>
             </div>
           </div>
 
-          {/* Desktop Navigation Items: Profile, Settings, QR Code, Connected Devices, QR & Settings, Logout */}
-          <div className="hidden md:flex items-center gap-2 shrink-0">
-            {/* Live Printer Connection Pill */}
-            <Link
-              to="/owner/printers"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition ${
-                connector?.isOnline
-                  ? 'bg-[#152719] text-[#bbf451] border-[#2e4c33] hover:bg-[#1e3422]'
-                  : 'bg-[#221c10] text-amber-300 border-amber-500/30 hover:bg-[#2b2314]'
-              }`}
-              title="Click to manage connected printers & PC spoolers"
-            >
-              <Printer className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate max-w-[120px]">
-                {defaultPrinter?.name || 'Default Printer'}
-              </span>
-              <span className={`w-2 h-2 rounded-full shrink-0 ${connector?.isOnline ? 'bg-[#bbf451] animate-pulse' : 'bg-amber-400'}`} />
-              <span className="text-[10px] font-semibold">
-                {connector?.isOnline ? 'Online' : 'Manual'}
-              </span>
-            </Link>
-
-            {/* Profile Button */}
-            <Link
-              to="/owner/profile"
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition ${
-                isActive('/owner/profile')
-                  ? 'bg-[#223626] text-[#bbf451] border border-[#3b593f] shadow-sm'
-                  : 'border border-[#223525] bg-[#121c14] hover:bg-[#19271c] text-slate-300 hover:text-white'
-              }`}
-              title="Shop Profile"
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Profile</span>
-            </Link>
-
-            {/* Settings Button */}
-            <Link
-              to="/owner/settings"
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition ${
-                isActive('/owner/settings')
-                  ? 'bg-[#223626] text-[#bbf451] border border-[#3b593f] shadow-sm'
-                  : 'border border-[#223525] bg-[#121c14] hover:bg-[#19271c] text-slate-300 hover:text-white'
-              }`}
-              title="Settings"
-            >
-              <Settings className="w-3.5 h-3.5" />
-              <span>Settings</span>
-            </Link>
-
-            {/* QR Code Button */}
-            <Link
-              to="/owner/qr"
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition ${
-                isActive('/owner/qr')
-                  ? 'bg-[#223626] text-[#bbf451] border border-[#3b593f] shadow-sm'
-                  : 'border border-[#223525] bg-[#121c14] hover:bg-[#19271c] text-slate-300 hover:text-white'
-              }`}
-              title="Counter QR Code"
-            >
-              <QrCode className="w-3.5 h-3.5" />
-              <span>QR Code</span>
-            </Link>
-
-            {/* Connected Devices Button */}
-            <Link
-              to="/owner/printers"
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition ${
-                isActive('/owner/printers')
-                  ? 'bg-[#223626] text-[#bbf451] border border-[#3b593f] shadow-sm'
-                  : 'border border-[#223525] bg-[#121c14] hover:bg-[#19271c] text-slate-300 hover:text-white'
-              }`}
-              title="Connected Devices & Printers"
-            >
-              <Laptop className="w-3.5 h-3.5" />
-              <span>Devices</span>
-            </Link>
-
-            {/* QR & Settings Dropdown Menu Button */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                type="button"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="px-3.5 py-1.5 rounded-full border border-[#223525] bg-[#121c14] hover:bg-[#19271c] text-slate-300 hover:text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
-                title="Quick Menu"
-              >
-                <QrCode className="w-3.5 h-3.5 text-[#bbf451]" />
-                <span>QR &amp; Settings</span>
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {dropdownOpen && renderDropdownMenu()}
-            </div>
-
-            {/* Logout Button */}
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${connector?.isOnline ? 'bg-[#bbf451] animate-pulse' : 'bg-amber-400'}`} />
             <button
               onClick={handleLogout}
-              className="p-2 rounded-full text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition border border-transparent hover:border-rose-500/20"
-              title="Sign Out"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 transition"
+              title="Logout"
             >
               <LogOut className="w-4 h-4" />
             </button>
           </div>
+        </header>
 
-          {/* Mobile Right Controls: Accessible Profile, Settings, QR & Settings, Menu Drawer */}
-          <div className="flex md:hidden items-center gap-1.5" ref={mobileDropdownRef}>
+        {/* Desktop Slim Top Bar */}
+        <div className="hidden md:flex h-14 border-b border-[#18271a] bg-[#09110b]/80 backdrop-blur-md px-6 items-center justify-between text-xs sticky top-0 z-30">
+          <div className="flex items-center gap-2 font-bold text-slate-300">
+            <span className="text-slate-400">Counter Station</span>
+            <span className="text-slate-400">/</span>
+            <span className="text-[#bbf451] font-syne">{title || 'Receiving Panel'}</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Live Printer Connection Pill */}
             <Link
-              to="/owner/profile"
-              className={`p-2 rounded-xl border text-xs font-bold transition flex items-center gap-1 ${
-                isActive('/owner/profile')
-                  ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]'
-                  : 'bg-[#121c14] text-slate-300 border-[#223525]'
+              to="/owner/printers"
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition ${
+                connector?.isOnline
+                  ? 'bg-[#152719] text-[#bbf451] border-[#2e4c33] hover:bg-[#1e3422]'
+                  : 'bg-[#221c10] text-amber-300 border-amber-500/30 hover:bg-[#2b2314]'
               }`}
-              title="Profile"
+              title="Click to view connected printers"
             >
-              <User className="w-4 h-4" />
+              <Printer className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate max-w-[130px]">{defaultPrinter?.name || 'Default Printer'}</span>
+              <span className={`w-1.5 h-1.5 rounded-full ${connector?.isOnline ? 'bg-[#bbf451] animate-pulse' : 'bg-amber-400'}`} />
             </Link>
 
-            <Link
-              to="/owner/settings"
-              className={`p-2 rounded-xl border text-xs font-bold transition flex items-center gap-1 ${
-                isActive('/owner/settings')
-                  ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]'
-                  : 'bg-[#121c14] text-slate-300 border-[#223525]'
-              }`}
-              title="Settings"
-            >
-              <Settings className="w-4 h-4" />
-            </Link>
-
-            <div className="relative">
+            {onRefresh && (
               <button
-                type="button"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="px-2.5 py-2 rounded-xl border border-[#223525] bg-[#121c14] text-xs font-bold flex items-center gap-1 text-slate-300"
-                title="QR & Settings Menu"
+                onClick={() => onRefresh()}
+                className="p-1.5 rounded-xl border border-[#233526] bg-[#121c14] hover:bg-[#18271b] text-slate-300 hover:text-white transition"
+                title="Refresh View"
               >
-                <QrCode className="w-3.5 h-3.5 text-[#bbf451]" />
-                <span className="hidden xs:inline">QR</span>
-                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                <RefreshCw className="w-3.5 h-3.5" />
               </button>
+            )}
 
-              {dropdownOpen && renderDropdownMenu()}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen(!mobileMenuOpen);
-                if (dropdownOpen) setDropdownOpen(false);
-              }}
-              className="p-2 rounded-xl border border-[#223525] bg-[#121c14] text-slate-300"
-              aria-label="Open navigation menu"
+            <a
+              href={storefrontUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1 rounded-full border border-[#233827] bg-[#121c14] hover:bg-[#1a2c1d] text-slate-300 hover:text-white text-xs font-bold inline-flex items-center gap-1.5 transition"
             >
-              {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            </button>
+              <ExternalLink className="w-3.5 h-3.5 text-[#bbf451]" />
+              <span>Customer Storefront</span>
+            </a>
           </div>
         </div>
 
-        {/* Mobile Dropdown Menu when toggled */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-[#1f3123] bg-[#0f1711] px-4 py-3 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
-            <div className="px-2 py-1 pb-2 border-b border-[#1f3123] flex items-center justify-between">
-              <div>
-                <p className="text-xs font-bold text-white font-syne">{shopName}</p>
-                <p className="text-[10px] text-slate-400 font-mono">ID: {shopId}</p>
-              </div>
-              <span className="text-[10px] font-bold text-[#bbf451] bg-[#1a2d1d] px-2.5 py-0.5 rounded-full border border-[#2b4431]">
-                Verified
-              </span>
+        {/* Page Content Body */}
+        <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          {title && (
+            <div className="border-b border-[#1e3021] pb-4">
+              <h1 className="text-xl sm:text-2xl font-black text-white font-syne tracking-tight">
+                {title}
+              </h1>
+              {subtitle && (
+                <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>
+              )}
             </div>
-
-            <div className="grid grid-cols-2 gap-2 pt-1 text-xs font-bold">
-              <Link
-                to="/owner/dashboard"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`p-2.5 rounded-xl border flex items-center gap-2 ${
-                  isActive('/owner/dashboard') ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]' : 'bg-[#142017] text-slate-300 border-[#223525]'
-                }`}
-              >
-                <Printer className="w-4 h-4" />
-                <span>Receiving Panel</span>
-              </Link>
-
-              <Link
-                to="/owner/profile"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`p-2.5 rounded-xl border flex items-center gap-2 ${
-                  isActive('/owner/profile') ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]' : 'bg-[#142017] text-slate-300 border-[#223525]'
-                }`}
-              >
-                <User className="w-4 h-4" />
-                <span>Profile</span>
-              </Link>
-
-              <Link
-                to="/owner/settings"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`p-2.5 rounded-xl border flex items-center gap-2 ${
-                  isActive('/owner/settings') ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]' : 'bg-[#142017] text-slate-300 border-[#223525]'
-                }`}
-              >
-                <Settings className="w-4 h-4" />
-                <span>Settings</span>
-              </Link>
-
-              <Link
-                to="/owner/qr"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`p-2.5 rounded-xl border flex items-center gap-2 ${
-                  isActive('/owner/qr') ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]' : 'bg-[#142017] text-slate-300 border-[#223525]'
-                }`}
-              >
-                <QrCode className="w-4 h-4" />
-                <span>QR Code</span>
-              </Link>
-
-              <Link
-                to="/owner/printers"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`p-2.5 rounded-xl border flex items-center gap-2 ${
-                  isActive('/owner/printers') ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]' : 'bg-[#142017] text-slate-300 border-[#223525]'
-                }`}
-              >
-                <Laptop className="w-4 h-4" />
-                <span>Connected Devices</span>
-              </Link>
-
-              <Link
-                to="/owner/reports"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`p-2.5 rounded-xl border flex items-center gap-2 ${
-                  isActive('/owner/reports') ? 'bg-[#223626] text-[#bbf451] border-[#3b593f]' : 'bg-[#142017] text-slate-300 border-[#223525]'
-                }`}
-              >
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <span>Reports</span>
-              </Link>
-            </div>
-
-            <div className="pt-2 border-t border-[#1f3123] flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  handleGeneratePairingCode();
-                }}
-                className="text-xs font-bold text-[#bbf451] flex items-center gap-1.5"
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span>Pair Windows PC</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="text-xs font-bold text-rose-400 flex items-center gap-1"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Logout</span>
-              </button>
-            </div>
-          </div>
-        )}
-      </header>
-
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {children}
-      </main>
+          )}
+          {children}
+        </main>
+      </div>
 
       {/* 6-Digit Pairing Code Modal */}
       {pairingModalOpen && pairingCode && (
-        <div className="fixed inset-0 z-60 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#121c14] rounded-3xl max-w-sm w-full border border-[#233526] shadow-2xl p-6 space-y-4 text-center animate-in fade-in zoom-in-95 duration-150">
-            <div className="w-12 h-12 rounded-2xl bg-[#1b2b1d] text-[#bbf451] flex items-center justify-center mx-auto border border-[#2e4732]">
+        <div className="fixed inset-0 z-60 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-[#121c14] rounded-3xl max-w-sm w-full border border-[#233526] shadow-2xl p-6 space-y-4 text-center animate-in zoom-in-95 duration-150">
+            <div className="w-12 h-12 rounded-2xl bg-[#1b2b1d] text-[#bbf451] flex items-center justify-center mx-auto border border-[#2e4732] shadow-[0_0_20px_rgba(187,244,81,0.2)]">
               <Laptop className="w-6 h-6" />
             </div>
             <div>
@@ -521,15 +475,15 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
             <div className="space-y-2">
               <button
                 onClick={handleCopyCode}
-                className="w-full py-2.5 rounded-xl bg-navy-950 hover:bg-brand-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition"
+                className="w-full py-2.5 rounded-xl bg-[#bbf451] hover:bg-[#cbff5e] text-[#080d09] font-black text-xs flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(187,244,81,0.25)] transition active:scale-98"
               >
-                {copiedCode ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                {copiedCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 {copiedCode ? 'Code Copied!' : 'Copy Code'}
               </button>
 
               <button
                 onClick={() => setPairingModalOpen(false)}
-                className="w-full py-2 text-slate-500 hover:text-slate-700 text-xs font-semibold"
+                className="w-full py-2 text-slate-400 hover:text-white text-xs font-semibold"
               >
                 Close
               </button>
