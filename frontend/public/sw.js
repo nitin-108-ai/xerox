@@ -1,5 +1,5 @@
 // Smart Xerox PWA Service Worker
-const CACHE_NAME = 'smart-xerox-shell-v2';
+const CACHE_NAME = 'smart-xerox-shell-v3';
 const STATIC_ASSETS = [
   '/manifest.json',
   '/favicon.svg',

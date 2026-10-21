@@ -7,7 +7,9 @@ import './index.css';
 // Register PWA service worker
 if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
+    navigator.serviceWorker.register('/sw.js').then((reg) => {
+      reg.update().catch(() => {});
+    }).catch((err) => {
       console.log('PWA Service Worker registration:', err);
     });
   });
