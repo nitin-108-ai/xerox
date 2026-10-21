@@ -66,6 +66,27 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'md' })
       border: 'border-rose-500/30',
       icon: XCircle,
     },
+    REJECTED: {
+      label: 'Rejected',
+      bg: 'bg-rose-500/15',
+      text: 'text-rose-400',
+      border: 'border-rose-500/30',
+      icon: XCircle,
+    },
+    RECEIVED: {
+      label: 'Received',
+      bg: 'bg-cyan-500/15',
+      text: 'text-cyan-400',
+      border: 'border-cyan-500/30',
+      icon: Clock,
+    },
+    QUEUED: {
+      label: 'Queued to Print',
+      bg: 'bg-teal-500/15',
+      text: 'text-teal-300',
+      border: 'border-teal-500/30',
+      icon: Printer,
+    },
   };
 
   const current = configMap[status] || {

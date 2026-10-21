@@ -296,7 +296,7 @@ export async function runMigrations() {
         download_token_expires_at TIMESTAMP WITH TIME ZONE,
         submitted_at TIMESTAMP WITH TIME ZONE,
         completed_at TIMESTAMP WITH TIME ZONE,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );`,
     `CREATE INDEX IF NOT EXISTS idx_print_jobs_shop ON print_jobs(shop_id);`,
     `CREATE INDEX IF NOT EXISTS idx_print_jobs_order ON print_jobs(order_id);`,

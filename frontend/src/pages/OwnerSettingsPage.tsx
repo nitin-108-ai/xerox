@@ -32,41 +32,7 @@ import {
 import { OwnerLayout } from '../components/OwnerLayout';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-
-// Audio chime generator using browser Web Audio API
-function playChime() {
-  try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
-
-    // Note 1: 880 Hz (A5)
-    const osc1 = ctx.createOscillator();
-    const gain1 = ctx.createGain();
-    osc1.connect(gain1);
-    gain1.connect(ctx.destination);
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(880, ctx.currentTime);
-    gain1.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-    osc1.start(ctx.currentTime);
-    osc1.stop(ctx.currentTime + 0.2);
-
-    // Note 2: 1320 Hz (E6)
-    const osc2 = ctx.createOscillator();
-    const gain2 = ctx.createGain();
-    osc2.connect(gain2);
-    gain2.connect(ctx.destination);
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(1320, ctx.currentTime + 0.12);
-    gain2.gain.setValueAtTime(0.18, ctx.currentTime + 0.12);
-    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.38);
-    osc2.start(ctx.currentTime + 0.12);
-    osc2.stop(ctx.currentTime + 0.38);
-  } catch {
-    // Audio might require user interaction first
-  }
-}
+import { playChime } from './OwnerDashboardPage';
 
 export const OwnerSettingsPage: React.FC = () => {
   const { user } = useAuth();
@@ -746,7 +712,7 @@ export const OwnerSettingsPage: React.FC = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={playChime}
+                  onClick={() => playChime('order')}
                   className="px-3.5 py-2 rounded-xl border border-[#273d2c] bg-[#121c14] hover:bg-[#1b2b1e] text-[#bbf451] text-xs font-bold flex items-center gap-1.5 shadow-md transition"
                 >
                   <Volume2 className="w-3.5 h-3.5" />

@@ -47,7 +47,10 @@ export type OrderStatus =
   | 'PRINTING'
   | 'READY_FOR_PICKUP'
   | 'COMPLETED'
-  | 'CANCELLED';
+  | 'CANCELLED'
+  | 'REJECTED'
+  | 'RECEIVED'
+  | 'QUEUED';
 
 export interface OrderItem {
   paper_size: 'A4' | 'A3' | 'LEGAL' | 'LETTER';
