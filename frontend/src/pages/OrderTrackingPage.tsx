@@ -90,6 +90,7 @@ export const OrderTrackingPage: React.FC = () => {
   };
 
   const prevStatusRef = React.useRef<string | null>(null);
+  const prevMessageCount = React.useRef<number>(0);
 
   // Auto-recover token if user navigated directly without token query param
   useEffect(() => {
@@ -133,6 +134,16 @@ export const OrderTrackingPage: React.FC = () => {
           playStatusChime();
         }
         prevStatusRef.current = currentStatus;
+
+        // Play chime if new message from shopkeeper
+        const currentMsgCount = data?.messages?.length || 0;
+        if (prevMessageCount.current > 0 && currentMsgCount > prevMessageCount.current) {
+          const lastMsg = data.messages[data.messages.length - 1];
+          if (lastMsg && (lastMsg.sender_role === 'SHOP_OWNER' || lastMsg.senderRole === 'SHOP_OWNER')) {
+            playStatusChime();
+          }
+        }
+        prevMessageCount.current = currentMsgCount;
 
         setOrderData(data);
         setError(null);
@@ -366,12 +377,12 @@ export const OrderTrackingPage: React.FC = () => {
   const isAwaitingApproval = order?.status === 'AWAITING_APPROVAL';
 
   // Status Stepper Steps
-  const steps: Array<{ status: OrderStatus; label: string; icon: any }> = [
-    { status: 'SUBMITTED', label: 'Order Submitted', icon: Clock },
-    { status: 'ACCEPTED', label: 'Accepted by Shop', icon: CheckCircle2 },
-    { status: 'PRINTING', label: 'Printing in Progress', icon: Printer },
-    { status: 'READY_FOR_PICKUP', label: 'Ready for Pickup', icon: PackageCheck },
-    { status: 'COMPLETED', label: 'Completed', icon: CheckCircle2 },
+  const steps: Array<{ status: OrderStatus; label: string; sublabel: string; icon: any }> = [
+    { status: 'SUBMITTED', label: 'Order Placed', sublabel: 'Arrived at Counter (Live)', icon: Clock },
+    { status: 'ACCEPTED', label: 'Shop Accepted', sublabel: 'Approved by Staff', icon: CheckCircle2 },
+    { status: 'PRINTING', label: 'Printing', sublabel: 'Processing on Machine', icon: Printer },
+    { status: 'READY_FOR_PICKUP', label: 'Ready for Pickup', sublabel: 'At Dispatch Counter', icon: PackageCheck },
+    { status: 'COMPLETED', label: 'Completed', sublabel: 'Handed Over', icon: CheckCircle2 },
   ];
 
   const getStepIndex = (st: OrderStatus) => {
@@ -408,16 +419,31 @@ export const OrderTrackingPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Counter OTP Badge */}
-        <div className="bg-[#101911] border border-[#233526] p-4 rounded-2xl text-center shrink-0 min-w-[160px]">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            Counter Pickup OTP
-          </div>
-          <div className="text-2xl font-mono font-black text-[#bbf451] tracking-wider mt-0.5">
-            {order?.pickupOtp || order?.pickup_otp || '----'}
-          </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">
-            Provide to counter staff
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          {isCancellable && (
+            <button
+              type="button"
+              disabled={actionLoading}
+              onClick={handleCancelOrder}
+              className="px-4 py-3 rounded-2xl border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+              title="Cancel this order before printing starts"
+            >
+              <XCircle className="w-4 h-4 text-rose-400" />
+              <span>Cancel Order</span>
+            </button>
+          )}
+
+          {/* Counter OTP Badge */}
+          <div className="bg-[#101911] border border-[#233526] p-4 rounded-2xl text-center shrink-0 min-w-[160px]">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Counter Pickup OTP
+            </div>
+            <div className="text-2xl font-mono font-black text-[#bbf451] tracking-wider mt-0.5">
+              {order?.pickupOtp || order?.pickup_otp || '----'}
+            </div>
+            <div className="text-[10px] text-slate-400 mt-0.5">
+              Provide to counter staff
+            </div>
           </div>
         </div>
       </div>
@@ -482,9 +508,22 @@ export const OrderTrackingPage: React.FC = () => {
               </p>
             </div>
           </div>
-          <span className="hidden md:inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
-            Live 3s Polling
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            {isCancellable && (
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={handleCancelOrder}
+                className="px-3 py-1.5 rounded-xl border border-rose-500/40 bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
+              >
+                <XCircle className="w-3.5 h-3.5 text-rose-400" />
+                <span>Cancel</span>
+              </button>
+            )}
+            <span className="hidden md:inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              Live 3s Polling
+            </span>
+          </div>
         </div>
       )}
 
@@ -612,9 +651,13 @@ export const OrderTrackingPage: React.FC = () => {
                     >
                       {st.label}
                     </div>
-                    {isCurrent && (
-                      <span className="text-[10px] text-slate-400 font-medium">In Progress</span>
-                    )}
+                    <span
+                      className={`text-[10px] font-medium block mt-0.5 ${
+                        isCurrent ? 'text-[#bbf451]' : isPast ? 'text-emerald-400' : 'text-slate-500'
+                      }`}
+                    >
+                      {st.sublabel}
+                    </span>
                   </div>
                 </div>
               );

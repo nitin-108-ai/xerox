@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Printer,
   FileText,
@@ -17,7 +18,9 @@ import {
   Volume2,
   VolumeX,
   ShieldCheck,
-  PackageCheck
+  PackageCheck,
+  MessageSquare,
+  Send
 } from 'lucide-react';
 import { OwnerLayout } from '../components/OwnerLayout';
 import { api } from '../services/api';
@@ -141,8 +144,32 @@ export const OwnerDashboardPage: React.FC = () => {
   const [qrScanNotice, setQrScanNotice] = useState<{ slug?: string; shopName?: string; time: string } | null>(null);
   const [newOrderNotice, setNewOrderNotice] = useState<{ id: string; ref: string; time: string; files: number } | null>(null);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlTab = searchParams.get('tab') as 'INCOMING' | 'ACTIVE' | 'READY' | 'ALL' | null;
+
   // Queue Tab: 'INCOMING' | 'ACTIVE' | 'READY' | 'ALL' (default to INCOMING so new orders are immediately visible)
-  const [queueTab, setQueueTab] = useState<'INCOMING' | 'ACTIVE' | 'READY' | 'ALL'>('INCOMING');
+  const [queueTab, setQueueTab] = useState<'INCOMING' | 'ACTIVE' | 'READY' | 'ALL'>(
+    urlTab && ['INCOMING', 'ACTIVE', 'READY', 'ALL'].includes(urlTab) ? urlTab : 'INCOMING'
+  );
+
+  useEffect(() => {
+    if (urlTab && ['INCOMING', 'ACTIVE', 'READY', 'ALL'].includes(urlTab)) {
+      setQueueTab(urlTab);
+    }
+  }, [urlTab]);
+
+  // Chat message notification and modal state
+  const [chatNotice, setChatNotice] = useState<{
+    orderId: string;
+    orderRef: string;
+    message: string;
+    customerAlias?: string;
+    time: string;
+  } | null>(null);
+  const [chatOrderModal, setChatOrderModal] = useState<any | null>(null);
+  const [chatReplyText, setChatReplyText] = useState('');
+  const [sendingChatReply, setSendingChatReply] = useState(false);
+  const seenMessageIds = useRef<Set<string>>(new Set());
 
   // Track known orders and scans to detect new items across devices
   const seenOrderIds = useRef<Set<string>>(new Set());
@@ -223,6 +250,37 @@ export const OwnerDashboardPage: React.FC = () => {
           if (o.order_reference) seenOrderIds.current.add(o.order_reference);
         }
         initialLoadDone.current = true;
+      }
+
+      // 3. Cross-device Live Customer Chat detection
+      if (ordersRes.recentMessages && Array.isArray(ordersRes.recentMessages)) {
+        for (const msg of ordersRes.recentMessages) {
+          const mId = msg.id || `${msg.orderId}_${msg.timestamp}`;
+          if (!seenMessageIds.current.has(mId)) {
+            seenMessageIds.current.add(mId);
+            if (initialLoadDone.current && (msg.senderRole === 'CUSTOMER' || msg.sender_role === 'CUSTOMER')) {
+              if (soundEnabled) {
+                playChime('order');
+              }
+              setChatNotice({
+                orderId: msg.orderId,
+                orderRef: msg.orderReference || msg.orderRef || 'Order',
+                message: msg.message,
+                customerAlias: msg.customerAlias,
+                time: new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              });
+              setTimeout(() => setChatNotice(null), 12000);
+            }
+          }
+        }
+      }
+
+      // Sync active chat modal if open
+      if (chatOrderModal) {
+        const fresh = deduped.find((o) => o.id === chatOrderModal.id || o.order_reference === chatOrderModal.order_reference);
+        if (fresh && fresh.messages) {
+          setChatOrderModal((prev: any) => prev ? { ...prev, messages: fresh.messages } : null);
+        }
       }
 
       setOrders(deduped);
@@ -448,6 +506,42 @@ export const OwnerDashboardPage: React.FC = () => {
   const readyCount = orders.filter((o) => o.status === 'READY_FOR_PICKUP').length;
   const activeCount = orders.filter((o) => !['COMPLETED', 'CANCELLED', 'REJECTED'].includes(o.status)).length;
 
+  // Send Owner Reply in dedicated Chat Modal
+  const handleSendOwnerReply = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!chatOrderModal || !chatReplyText.trim() || sendingChatReply) return;
+
+    try {
+      setSendingChatReply(true);
+      const text = chatReplyText.trim();
+      await api.sendOwnerMessage(chatOrderModal.id, text);
+
+      // Optimistic update
+      const newMsg = {
+        id: `msg-${Date.now()}`,
+        order_id: chatOrderModal.id,
+        sender_role: 'SHOP_OWNER',
+        message: text,
+        created_at: new Date().toISOString()
+      };
+
+      setChatOrderModal((prev: any) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          messages: [...(prev.messages || []), newMsg]
+        };
+      });
+
+      setChatReplyText('');
+      await loadData(true);
+    } catch (err: any) {
+      alert(err.message || 'Failed to send reply to customer.');
+    } finally {
+      setSendingChatReply(false);
+    }
+  };
+
   // Filter orders based on active tab
   const filteredOrders = orders.filter((o) => {
     if (queueTab === 'INCOMING') {
@@ -623,6 +717,51 @@ export const OwnerDashboardPage: React.FC = () => {
               <button
                 onClick={() => setNewOrderNotice(null)}
                 className="text-slate-400 hover:text-white font-bold text-xs underline"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Customer Message Real-Time Alert Banner */}
+        {chatNotice && (
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-950/90 to-[#0c1a24] border-2 border-blue-400/60 text-blue-200 text-xs flex items-center justify-between gap-3 animate-in fade-in duration-200 shadow-[0_0_30px_rgba(59,130,246,0.3)]">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-500 text-white flex items-center justify-center font-black shrink-0 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                <MessageSquare className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <strong className="block text-sm font-extrabold text-white font-syne">
+                  💬 New Customer Message on #{chatNotice.orderRef}
+                </strong>
+                <span className="text-[11px] text-blue-200">
+                  {chatNotice.customerAlias ? `${chatNotice.customerAlias}: ` : ''}"{chatNotice.message}" • {chatNotice.time}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => {
+                  const target = orders.find((o) => o.id === chatNotice.orderId || o.order_reference === chatNotice.orderRef);
+                  if (target) {
+                    setChatOrderModal(target);
+                  } else {
+                    setChatOrderModal({
+                      id: chatNotice.orderId,
+                      order_reference: chatNotice.orderRef,
+                      messages: [{ sender_role: 'CUSTOMER', message: chatNotice.message, created_at: new Date().toISOString() }]
+                    });
+                  }
+                  setChatNotice(null);
+                }}
+                className="px-3.5 py-1.5 rounded-xl bg-blue-500 text-white font-black text-xs hover:bg-blue-400 transition shadow-md"
+              >
+                Reply Now
+              </button>
+              <button
+                onClick={() => setChatNotice(null)}
+                className="text-blue-300 hover:text-white font-bold text-xs underline"
               >
                 Dismiss
               </button>
@@ -874,6 +1013,17 @@ export const OwnerDashboardPage: React.FC = () => {
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-2 shrink-0 pt-2 lg:pt-0 flex-wrap">
+                      <button
+                        onClick={() => {
+                          setChatOrderModal(order);
+                          setChatReplyText('');
+                        }}
+                        className="px-3 py-2.5 rounded-2xl border border-[#273d2c] bg-[#162519] hover:bg-[#203323] text-slate-200 font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+                        title="Chat with Customer"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5 text-[#bbf451]" />
+                        <span>Chat{order.messages && order.messages.length > 0 ? ` (${order.messages.length})` : ''}</span>
+                      </button>
                       {/* NEW / SUBMITTED / RECEIVED */}
                       {isNew && (
                         <>
@@ -1004,6 +1154,96 @@ export const OwnerDashboardPage: React.FC = () => {
           originalFilename={previewDoc.original_filename || 'document.pdf'}
           mimeType={previewDoc.mime_type || 'application/pdf'}
         />
+      )}
+
+      {/* Customer Private Chat Modal */}
+      {chatOrderModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-gradient-to-b from-[#142317] via-[#0f1a11] to-[#09110b] rounded-3xl max-w-lg w-full border border-[#273d2c] shadow-[0_25px_60px_rgba(0,0,0,0.9)] p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150 text-slate-100 flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between pb-3 border-b border-[#233827]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#bbf451]/15 text-[#bbf451] border border-[#bbf451]/30 flex items-center justify-center">
+                  <MessageSquare className="w-5 h-5 text-[#bbf451]" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-white font-syne">
+                    Customer Chat — #{chatOrderModal.order_reference || chatOrderModal.orderReference}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {chatOrderModal.customer_alias || 'Guest Customer'} • ₹{parseFloat(chatOrderModal.final_amount || chatOrderModal.estimated_amount || '0').toFixed(2)}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setChatOrderModal(null)}
+                className="p-1.5 rounded-xl border border-[#273d2c] text-slate-400 hover:text-white hover:bg-[#162519] transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Messages Thread */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-[#0c140e] rounded-2xl border border-[#203324] min-h-[220px] max-h-[360px]">
+              {chatOrderModal.messages && chatOrderModal.messages.length > 0 ? (
+                chatOrderModal.messages.map((m: any, idx: number) => {
+                  const isOwner = m.sender_role === 'SHOP_OWNER';
+                  return (
+                    <div
+                      key={m.id || idx}
+                      className={`flex flex-col ${isOwner ? 'items-end' : 'items-start'}`}
+                    >
+                      <span className="text-[10px] text-slate-400 font-medium mb-1">
+                        {isOwner ? 'You (Shopkeeper)' : (chatOrderModal.customer_alias || 'Customer')} • {m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                      </span>
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-xs leading-relaxed ${
+                          isOwner
+                            ? 'bg-[#1b3320] border border-[#2d5635] text-white rounded-br-xs shadow-sm'
+                            : 'bg-[#bbf451] text-[#080d09] font-semibold rounded-bl-xs'
+                        }`}
+                      >
+                        {m.message}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
+                  <MessageSquare className="w-8 h-8 text-slate-500 mb-2" />
+                  <p className="text-xs font-bold text-white">No messages yet on this order</p>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Send a direct update or answer any customer questions without WhatsApp.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Reply Input Form */}
+            <form onSubmit={handleSendOwnerReply} className="flex gap-2 pt-1">
+              <input
+                type="text"
+                placeholder="Type reply to customer..."
+                value={chatReplyText}
+                onChange={(e) => setChatReplyText(e.target.value)}
+                className="flex-1 px-4 py-2.5 text-xs border border-[#273d2c] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#bbf451] bg-[#0c140e] text-white placeholder-slate-500"
+              />
+              <button
+                type="submit"
+                disabled={sendingChatReply || !chatReplyText.trim()}
+                className="px-5 py-2.5 rounded-2xl bg-[#bbf451] hover:bg-[#cbff5e] disabled:bg-[#1b2b1d] disabled:text-slate-500 text-[#080d09] font-black text-xs transition shadow-[0_0_15px_rgba(187,244,81,0.25)] flex items-center gap-1.5 shrink-0"
+              >
+                {sendingChatReply ? (
+                  <span>Sending...</span>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Send</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Reject Order Confirmation Dialog */}

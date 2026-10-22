@@ -21,6 +21,17 @@ export interface LiveOrderEvent {
   created_at: string;
 }
 
+export interface LiveMessageEvent {
+  id: string;
+  orderId: string;
+  orderReference: string;
+  shopId: string;
+  senderRole: 'CUSTOMER' | 'SHOP_OWNER';
+  customerAlias?: string;
+  message: string;
+  timestamp: number;
+}
+
 class LiveEventsService {
   private scansByShop = new Map<string, LiveScanEvent>();
   private scansBySlug = new Map<string, LiveScanEvent>();
@@ -97,6 +108,24 @@ class LiveEventsService {
     return this.recentOrdersRing.filter(
       (o) => o.shop_id === shopId || o.shop_id === 'shp-quickcopy-001'
     );
+  }
+
+  private recentMessagesRing: LiveMessageEvent[] = [];
+
+  recordMessage(msg: LiveMessageEvent): void {
+    if (!msg) return;
+    this.recentMessagesRing.unshift(msg);
+    if (this.recentMessagesRing.length > 50) {
+      this.recentMessagesRing.pop();
+    }
+  }
+
+  getRecentMessages(shopId: string, maxAgeMs = 45000): LiveMessageEvent[] {
+    const now = Date.now();
+    return this.recentMessagesRing.filter((m) => {
+      const matchShop = !shopId || m.shopId === shopId || m.shopId === 'shp-quickcopy-001';
+      return matchShop && (now - m.timestamp <= maxAgeMs);
+    });
   }
 }
 

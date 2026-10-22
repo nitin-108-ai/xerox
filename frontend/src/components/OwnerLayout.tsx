@@ -21,7 +21,9 @@ import {
   FileText,
   Shield,
   Layers,
-  RefreshCw
+  RefreshCw,
+  Bell,
+  PackageCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
@@ -95,8 +97,14 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
   const storefrontUrl = `${window.location.origin}/shop/${shopSlug}`;
 
   const isActive = (path: string) => {
+    if (path.includes('?tab=')) {
+      const searchTab = new URLSearchParams(location.search).get('tab');
+      const targetTab = new URLSearchParams(path.split('?')[1]).get('tab');
+      return location.pathname === '/owner/dashboard' && searchTab === targetTab;
+    }
     if (path === '/owner/dashboard') {
-      return location.pathname === '/owner/dashboard' || location.pathname === '/owner' || location.pathname === '/owner/orders';
+      const searchTab = new URLSearchParams(location.search).get('tab');
+      return (location.pathname === '/owner/dashboard' || location.pathname === '/owner' || location.pathname === '/owner/orders') && !searchTab;
     }
     return location.pathname.startsWith(path);
   };
@@ -111,6 +119,23 @@ export const OwnerLayout: React.FC<OwnerLayoutProps> = ({
           icon: Printer,
           badge: 'Live',
           badgeColor: 'bg-[#bbf451] text-[#080d09]',
+        },
+        {
+          label: 'New Incoming',
+          path: '/owner/dashboard?tab=INCOMING',
+          icon: Bell,
+          badge: 'New',
+          badgeColor: 'bg-rose-500 text-white',
+        },
+        {
+          label: 'Ready for Pickup',
+          path: '/owner/dashboard?tab=READY',
+          icon: PackageCheck,
+        },
+        {
+          label: 'All Order History',
+          path: '/owner/dashboard?tab=ALL',
+          icon: Layers,
         },
         {
           label: 'Counter QR & Poster',

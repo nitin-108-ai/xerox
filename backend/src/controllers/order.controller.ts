@@ -528,14 +528,15 @@ export async function sendOrderMessage(req: Request, res: Response) {
 
   try {
     const orderRes = await query(`
-      SELECT id FROM orders WHERE order_reference = $1 OR id = $1 LIMIT 1;
+      SELECT id, order_reference, shop_id, customer_alias FROM orders WHERE order_reference = $1 OR id = $1 LIMIT 1;
     `, [orderRef]);
 
     if (orderRes.rows.length === 0) {
       return res.status(404).json({ error: 'Order not found.' });
     }
 
-    const orderId = orderRes.rows[0].id;
+    const orderRow = orderRes.rows[0];
+    const orderId = orderRow.id;
     const role = senderRole === 'SHOP_OWNER' ? 'SHOP_OWNER' : 'CUSTOMER';
     const messageId = uuidv4();
 
@@ -543,6 +544,18 @@ export async function sendOrderMessage(req: Request, res: Response) {
       INSERT INTO order_messages (id, order_id, sender_role, message)
       VALUES ($1, $2, $3, $4);
     `, [messageId, orderId, role, message.trim()]);
+
+    // Record cross-device live event for instant notifications on counter station
+    liveEvents.recordMessage({
+      id: messageId,
+      orderId,
+      orderReference: orderRow.order_reference,
+      shopId: orderRow.shop_id,
+      senderRole: role,
+      customerAlias: orderRow.customer_alias,
+      message: message.trim(),
+      timestamp: Date.now()
+    });
 
     res.status(201).json({
       message: 'Message sent successfully.',
@@ -597,7 +610,16 @@ export async function listOwnerOrders(req: Request, res: Response) {
                  'item_price', oi.item_price
                )) FROM order_items oi WHERE oi.order_id = o.id),
                '[]'::json
-             ) AS items
+             ) AS items,
+             COALESCE(
+               (SELECT json_agg(json_build_object(
+                 'id', om.id,
+                 'sender_role', om.sender_role,
+                 'message', om.message,
+                 'created_at', om.created_at
+               ) ORDER BY om.created_at ASC) FROM order_messages om WHERE om.order_id = o.id),
+               '[]'::json
+             ) AS messages
       FROM orders o
       WHERE o.shop_id = $1
     `;
@@ -622,12 +644,14 @@ export async function listOwnerOrders(req: Request, res: Response) {
       const docs = Array.isArray(row.documents) ? row.documents : (typeof row.documents === 'string' ? JSON.parse(row.documents || '[]') : []);
       const items = Array.isArray(row.items) ? row.items : (typeof row.items === 'string' ? JSON.parse(row.items || '[]') : []);
       const firstDoc = docs[0];
+      const msgs = Array.isArray(row.messages) ? row.messages : (typeof row.messages === 'string' ? JSON.parse(row.messages || '[]') : []);
       const firstItem = items[0];
 
       return {
         ...row,
         documents: docs,
         items,
+        messages: msgs,
         file_count: docs.length || 1,
         document_id: firstDoc ? firstDoc.id : null,
         original_filename: firstDoc
@@ -647,6 +671,7 @@ export async function listOwnerOrders(req: Request, res: Response) {
 
     // Check for recent customer QR scans and uncommitted live orders
     const recentScan = liveEvents.getRecentScan(req.user.shopId, 30000);
+    const recentMessages = liveEvents.getRecentMessages(req.user.shopId, 45000);
     const liveOrders = liveEvents.getRecentOrders(req.user.shopId);
 
     const seenIds = new Set<string>();
@@ -665,7 +690,7 @@ export async function listOwnerOrders(req: Request, res: Response) {
       }
     }
 
-    res.json({ orders: finalOrders, recentScan: recentScan || null });
+    res.json({ orders: finalOrders, recentScan: recentScan || null, recentMessages: recentMessages || [] });
   } catch (err: any) {
     console.error('List owner orders failed:', err);
     res.status(500).json({ error: 'Failed to load shop orders.' });

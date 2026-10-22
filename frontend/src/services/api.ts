@@ -1200,6 +1200,7 @@ export const api = {
 
     let serverOrders: any[] = [];
     let serverRecentScan: any = null;
+    let serverRecentMessages: any[] = [];
     try {
       const params = new URLSearchParams();
       if (status) params.append('status', status);
@@ -1208,12 +1209,15 @@ export const api = {
       const res = await fetch(`${API_BASE}/orders/owner?${params.toString()}`, {
         headers: { ...getAuthHeader() },
       });
-      const data = await handleResponse<{ orders: any[]; recentScan?: any }>(res);
+      const data = await handleResponse<{ orders: any[]; recentScan?: any; recentMessages?: any[] }>(res);
       if (data && Array.isArray(data.orders)) {
         serverOrders = data.orders;
       }
       if (data?.recentScan) {
         serverRecentScan = data.recentScan;
+      }
+      if (data?.recentMessages && Array.isArray(data.recentMessages)) {
+        serverRecentMessages = data.recentMessages;
       }
     } catch {}
 
@@ -1261,7 +1265,7 @@ export const api = {
       );
     }
 
-    return { orders: result, recentScan: serverRecentScan };
+    return { orders: result, recentScan: serverRecentScan, recentMessages: serverRecentMessages };
   },
 
   async getOwnerOrderDetail(orderId: string) {
